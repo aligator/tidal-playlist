@@ -1,0 +1,31 @@
+# Binaries
+/tidal-playlist
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+dist/
+build/
+
+# Go
+*.test
+*.out
+go.work
+
+# Configuration and credentials
+config.yaml
+.env
+token.json
+*.session
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

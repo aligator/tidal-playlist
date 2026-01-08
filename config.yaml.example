@@ -1,0 +1,30 @@
+# Tidal Playlist Generator Configuration
+
+# Tidal API credentials
+# Get these from https://developer.tidal.com after registering your app
+tidal:
+  client_id: "your-client-id-here"
+  client_secret: "your-client-secret-here"
+  country_code: "US"
+
+# Playlist generation settings
+playlist:
+  # Default name for generated playlists
+  default_name: "Mixed all"
+
+  # Total number of tracks to collect for the playlist
+  # The algorithm will randomly select exactly this many tracks
+  # by picking random artists, random albums, and random tracks
+  count: 10
+
+# Artist filtering
+filters: # Artists to exclude (blacklist)
+  # Only applies if whitelist is empty
+  blacklist:
+    # - "3510943"
+
+  # Artists to include exclusively (whitelist)
+  # If set, ONLY these artists will be used
+  # Leave empty to use all favorite artists
+  whitelist: []
+    # - "945"
