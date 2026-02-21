@@ -24,6 +24,8 @@
   "exclude": ["web/dist"],
   "imports": {
     "@oak/oak": "jsr:@oak/oak@^17.2.0",
+    "jose": "npm:jose@^6.1.3",
+    "oauth4webapi": "npm:oauth4webapi@^3.8.5",
     "@tidal-music/api": "npm:@tidal-music/api@^0.8.1",
     "@tidal-music/auth": "npm:@tidal-music/auth@^1.4.0",
     "@tidal-music/common": "npm:@tidal-music/common@^0.2.0"

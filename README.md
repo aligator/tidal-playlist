@@ -9,8 +9,12 @@ proxying and serving built assets.
 - `client_id` is served to frontend from backend runtime config (`/api/config`).
 - `redirect_uri` defaults to `${origin}/callback` on backend (or can be set explicitly via
   `TIDAL_REDIRECT_URI`) and is not editable in UI.
-- Frontend uses OAuth PKCE and sends `code` + `code_verifier` to backend.
-- Backend exchanges/refreshes tokens with TIDAL.
+- Frontend starts OAuth through backend (`/api/auth/start`).
+- Backend generates PKCE verifier/challenge + OAuth state, stores state/verifier in a short-lived
+  signed HttpOnly cookie, and returns authorize URL.
+- Frontend submits callback `code` + `state` to backend token endpoint.
+- Backend exchanges initial tokens with TIDAL.
+- Backend does not persist access/refresh tokens.
 - Backend serves static files from Vite build output (`web/dist`).
 
 ## Run
@@ -62,13 +66,6 @@ Vite dev server, use `deno task dev:web`.
 
 ## Notes on state
 
-Current implementation is intentionally stateless on backend for OAuth session tracking:
-
-- frontend stores PKCE `state` + `code_verifier`
-- frontend sends `code_verifier` to backend for token exchange
-
-This works, but stronger security is to store OAuth state server-side in an HttpOnly same-site
-cookie/session and validate callback there.
-
-TODO (deferred hardening): move PKCE `state` validation to a server-backed session (HttpOnly cookie)
-and enforce callback/session binding server-side.
+OAuth state and PKCE verifier are generated server-side and validated server-side using a short-lived
+signed HttpOnly cookie (`/api/auth/start` -> `/api/auth/token` flow). Token persistence remains on the
+frontend SDK/browser side.

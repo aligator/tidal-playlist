@@ -1,10 +1,7 @@
 import type { AppSettings, ItemMetaMap } from '../types.ts';
 
-export const AUTH_URL = 'https://login.tidal.com/authorize';
-
 export const SETTINGS_KEY = 'tidal_web_settings';
 export const TOKEN_KEY = 'tidal_web_token';
-export const PKCE_KEY = 'tidal_web_pkce';
 
 export const SCOPES = [
   'user.read',
@@ -23,11 +20,6 @@ export type TokenState = {
   expires_at: number;
 } & JsonObject;
 
-export type PkceState = {
-  verifier: string;
-  state: string;
-};
-
 export function asObject(value: unknown): JsonObject | null {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? (value as JsonObject)
@@ -36,23 +28,6 @@ export function asObject(value: unknown): JsonObject | null {
 
 export function asString(value: unknown, fallback = ''): string {
   return typeof value === 'string' ? value : fallback;
-}
-
-export function randomString(length = 64): string {
-  const alphabet =
-    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~';
-  const bytes = new Uint8Array(length);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('');
-}
-
-export async function sha256Base64Url(text: string): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    'SHA-256',
-    new TextEncoder().encode(text),
-  );
-  const raw = String.fromCharCode(...new Uint8Array(digest));
-  return btoa(raw).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
 export function unixNow(): number {

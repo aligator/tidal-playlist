@@ -7,18 +7,14 @@ import {
 import type { Credentials } from '@tidal-music/common';
 import type { AppSettings, OAuthConfig } from '../types.ts';
 import {
-  AUTH_URL,
-  PKCE_KEY,
   SCOPES,
   TOKEN_KEY,
   asString,
   parseJwtExpiry,
-  randomString,
   readJson,
-  sha256Base64Url,
   writeJson,
 } from './shared.ts';
-import type { JsonObject, PkceState, TokenState } from './shared.ts';
+import type { JsonObject, TokenState } from './shared.ts';
 
 export class TidalAuth {
   private oauth: OAuthConfig;
@@ -43,31 +39,25 @@ export class TidalAuth {
 
   isLoggedIn(): boolean {
     const token = readJson<TokenState | null>(TOKEN_KEY, null);
-    return Boolean(token?.access_token && token.expires_at > this.unixNow() + 30);
+    return Boolean(token?.access_token);
   }
 
   logout(): void {
     localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(PKCE_KEY);
     sdkLogout();
   }
 
   async beginLogin(): Promise<void> {
-    const verifier = randomString(96);
-    const challenge = await sha256Base64Url(verifier);
-    const state = randomString(32);
-    writeJson<PkceState>(PKCE_KEY, { verifier, state });
-
-    const u = new URL(AUTH_URL);
-    u.searchParams.set('response_type', 'code');
-    u.searchParams.set('client_id', this.oauth.clientId);
-    u.searchParams.set('redirect_uri', this.oauth.redirectUri);
-    u.searchParams.set('scope', SCOPES.join(' '));
-    u.searchParams.set('code_challenge', challenge);
-    u.searchParams.set('code_challenge_method', 'S256');
-    u.searchParams.set('state', state);
-
-    globalThis.location.href = u.toString();
+    const res = await fetch('/api/auth/start', { method: 'GET' });
+    const payload = (await res.json().catch(() => ({}))) as JsonObject;
+    if (!res.ok) {
+      throw new Error(asString(payload.error) || `Login start failed (${res.status})`);
+    }
+    const authorizeUrl = asString(payload.authorizeUrl);
+    if (!authorizeUrl) {
+      throw new Error('Login start failed: missing authorize URL.');
+    }
+    globalThis.location.href = authorizeUrl;
   }
 
   async finishLoginFromUrl(): Promise<boolean> {
@@ -83,20 +73,18 @@ export class TidalAuth {
       return false;
     }
 
-    const pkce = readJson<PkceState | null>(PKCE_KEY, null);
-    if (!pkce?.verifier || !pkce?.state || pkce.state !== state) {
-      throw new Error('Invalid state or missing PKCE verifier.');
+    if (!state) {
+      throw new Error('Invalid OAuth callback state.');
     }
 
     const payload = await this.postBackendToken('/api/auth/token', {
       code,
-      codeVerifier: pkce.verifier,
+      state,
     });
     const tokenState = this.toTokenState(payload);
 
     await this.persistTokenState(tokenState);
 
-    localStorage.removeItem(PKCE_KEY);
     u.searchParams.delete('code');
     u.searchParams.delete('state');
     u.searchParams.delete('error');
@@ -107,31 +95,20 @@ export class TidalAuth {
   async getAccessToken(): Promise<string> {
     await this.ensureSdkInitialized();
 
-    const sdkToken = await this.getSdkTokenSafe();
+    let sdkToken = await this.getSdkTokenSafe();
     if (sdkToken) {
       return sdkToken;
     }
 
     const token = readJson<TokenState | null>(TOKEN_KEY, null);
-    if (!token?.access_token) {
-      throw new Error('Not authenticated.');
+    if (token?.access_token) {
+      await this.migrateTokenToSdk(token);
+      sdkToken = await this.getSdkTokenSafe();
+      if (sdkToken) {
+        return sdkToken;
+      }
     }
-    if (!token.refresh_token) {
-      throw new Error('Token expired and no refresh token available. Login again.');
-    }
-
-    const payload = await this.postBackendToken('/api/auth/refresh', {
-      refreshToken: token.refresh_token,
-    });
-
-    const mergedToken = this.toTokenState(payload, token);
-    await this.persistTokenState(mergedToken);
-
-    const refreshedSdkToken = await this.getSdkTokenSafe();
-    if (!refreshedSdkToken) {
-      throw new Error('Authentication failed to provide an access token.');
-    }
-    return refreshedSdkToken;
+    throw new Error('Not authenticated. Login again.');
   }
 
   private async getSdkTokenSafe(): Promise<string | null> {
@@ -202,7 +179,7 @@ export class TidalAuth {
   }
 
   private async postBackendToken(
-    path: '/api/auth/token' | '/api/auth/refresh',
+    path: '/api/auth/token',
     body: Record<string, unknown>,
   ): Promise<JsonObject> {
     const res = await fetch(path, {
@@ -213,9 +190,7 @@ export class TidalAuth {
 
     const payload = (await res.json().catch(() => ({}))) as JsonObject;
     if (!res.ok) {
-      const defaultMessage = path === '/api/auth/token'
-        ? `Token endpoint failed (${res.status})`
-        : `Refresh failed (${res.status})`;
+      const defaultMessage = `Token endpoint failed (${res.status})`;
       throw new Error(asString(payload.error) || defaultMessage);
     }
     return payload;
@@ -238,9 +213,5 @@ export class TidalAuth {
       expires_in: expiresIn,
       expires_at: parseJwtExpiry(accessToken, payload.expires_in ?? expiresIn),
     };
-  }
-
-  private unixNow(): number {
-    return Math.floor(Date.now() / 1000);
   }
 }
