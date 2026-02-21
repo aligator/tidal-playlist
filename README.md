@@ -69,3 +69,6 @@ Current implementation is intentionally stateless on backend for OAuth session t
 
 This works, but stronger security is to store OAuth state server-side in an HttpOnly same-site
 cookie/session and validate callback there.
+
+TODO (deferred hardening): move PKCE `state` validation to a server-backed session (HttpOnly cookie)
+and enforce callback/session binding server-side.

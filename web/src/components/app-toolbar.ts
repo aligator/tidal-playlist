@@ -150,6 +150,7 @@ export class AppToolbar extends ShadowComponent {
     this.requireElement<HTMLButtonElement>('#export-config').disabled = this.busy;
     this.requireElement<HTMLButtonElement>('#import-config').disabled = this.busy;
     this.requireElement<HTMLButtonElement>('#login').disabled = this.busy;
+    this.requireElement<HTMLButtonElement>('#logout').disabled = this.busy;
     this.requireElement<HTMLButtonElement>('#fetch').disabled = this.busy;
     this.requireElement<HTMLButtonElement>('#save-playlist').disabled = this.busy ||
       !this.canSavePlaylist;

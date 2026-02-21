@@ -1,4 +1,5 @@
 import type { ItemMeta, ItemMetaMap, LookupProvider, LookupResult } from '../types.ts';
+import { parseListField, uniqueCaseInsensitive } from '../tidal/list-utils.ts';
 import { ShadowComponent } from './shadow-component.ts';
 
 function escapeHtml(value: string): string {
@@ -8,31 +9,6 @@ function escapeHtml(value: string): string {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
-}
-
-function parseListField(value: string): string[] {
-  return String(value)
-    .split(/[\n,]/)
-    .map((v) => v.trim())
-    .filter(Boolean);
-}
-
-function uniqueList(values: string[]): string[] {
-  const out: string[] = [];
-  const seen = new Set<string>();
-  for (const value of values) {
-    const trimmed = String(value).trim();
-    if (!trimmed) {
-      continue;
-    }
-    const key = trimmed.toLowerCase();
-    if (seen.has(key)) {
-      continue;
-    }
-    seen.add(key);
-    out.push(trimmed);
-  }
-  return out;
 }
 
 export class ListManager extends ShadowComponent {
@@ -76,8 +52,8 @@ export class ListManager extends ShadowComponent {
         <div class="lookup-block">
           <div class="lookup-row">
             <input class="lookup-input" placeholder="${
-      escapeHtml(lookupPlaceholder)
-    }" autocomplete="off" />
+        escapeHtml(lookupPlaceholder)
+      }" autocomplete="off" />
           </div>
           <div class="lookup-status"></div>
           <div class="lookup-dropdown"></div>
@@ -339,7 +315,7 @@ export class ListManager extends ShadowComponent {
   }
 
   setItems(values: string[]): void {
-    this.items = uniqueList(values ?? []);
+    this.items = uniqueCaseInsensitive(values ?? []);
     this.renderItems();
   }
 
@@ -385,7 +361,7 @@ export class ListManager extends ShadowComponent {
     if (incoming.length === 0) {
       return;
     }
-    this.items = uniqueList([...this.items, ...incoming]);
+    this.items = uniqueCaseInsensitive([...this.items, ...incoming]);
     this.renderItems();
     this.emitChange();
   }

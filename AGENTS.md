@@ -7,6 +7,8 @@
 - Backend: `server/main.ts`
 - Frontend bootstrap: `web/src/main.ts`
 - Frontend orchestration: `web/src/app.ts`
+- Domain playlist build logic: `web/src/domain/playlist-builder.ts`
+- Settings state/persistence: `web/src/state/app-settings-store.ts`
 - TIDAL integrations:
 - Auth/session client logic: `web/src/tidal/auth.ts`
 - API wrapper: `web/src/tidal/api.ts`
@@ -18,124 +20,131 @@
 - Start backend + serve static frontend: `deno task serve`
 - Local dev (build then serve): `deno task dev`
 - Frontend-only Vite dev server: `deno task dev:web`
+- Run tests: `deno task test`
+- Type-check: `deno task check`
 
 ## Current Architecture
 
-- `TidalPlaylistController` in `web/src/app.ts` is the application coordinator and state container.
-- UI is implemented as custom elements under `web/src/components/`.
-- OAuth is PKCE in browser, with token exchange/refresh proxied through backend endpoints to keep
-  the secret private:
+- `TidalPlaylistController` in `web/src/app.ts` is now primarily an orchestration layer.
+- Playlist generation flow moved to `PlaylistBuilder` (`web/src/domain/playlist-builder.ts`).
+- Settings UI/persistence flow moved to `AppSettingsStore` (`web/src/state/app-settings-store.ts`).
+- UI remains custom elements under `web/src/components/`.
+- OAuth is PKCE in browser, with token exchange/refresh proxied through backend endpoints:
 - `POST /api/auth/token`
 - `POST /api/auth/refresh`
-- Backend also serves runtime OAuth config (`GET /api/config`) and static assets of the compiled
-  frontend.
+- Backend serves runtime OAuth config (`GET /api/config`) and static assets of the compiled frontend.
 
-## Findings: Code And Architecture Notes
+## Findings Verification (Updated)
 
-### High Severity
+### Original Findings Status
 
-1. Album pool accepts non-ID entries but later treats them as album IDs, causing runtime API
-   failures.
+1. `Fixed` (High): album pool now supports ID-or-title input safely via explicit resolution.
 
 - Evidence:
-- `web/src/app.ts:521` builds `albumPool` from raw settings text (user can type any string).
-- `web/src/app.ts:553` assigns `chosenAlbumId = albumIdOrTitle`.
-- `web/src/app.ts:560` and `web/src/app.ts:595` call album endpoints with `chosenAlbumId`.
-- Risk: typed album titles (or legacy configs) break fetch flow with repeated failed calls.
+- `web/src/domain/playlist-builder.ts:93` resolves requested album entries through API.
+- `web/src/domain/playlist-builder.ts:141` uses resolved `albumId`, not raw user text.
+- `web/src/tidal/api.ts:346` to `web/src/tidal/api.ts:397` resolves each entry by ID first, then exact title match.
 
-2. Album search has an N+1 API pattern likely to trigger latency/rate-limit issues.
-
-- Evidence:
-- `web/src/tidal/api.ts:260` loads search results once.
-- `web/src/tidal/api.ts:288` then runs `Promise.all` calling `primaryArtistNameFromAlbumInclude`.
-- `web/src/tidal/api.ts:298` each call performs `GET /albums/{id}`.
-- Risk: one user search can fan out to many album detail requests.
-
-### Medium Severity
-
-1. Main controller is a monolith with mixed concerns (UI wiring, state persistence, domain logic,
-   orchestration).
+2. `Fixed` (High): album search no longer has N+1 detail fetches.
 
 - Evidence:
-- `web/src/app.ts` contains initialization, event binding, import/export, auth callback handling,
-  lookup provider setup, and playlist build algorithm in one class.
-- Risk: hard to test, hard to reason about side effects, difficult incremental changes.
+- `web/src/tidal/api.ts:293` to `web/src/tidal/api.ts:316` derives album rows directly from included relationships.
+- `web/src/tidal/api_test.ts:37` to `web/src/tidal/api_test.ts:70` asserts no `/albums/{id}` calls during album search.
 
-2. Backend token response validation is permissive and may return partial token payloads.
-
-- Evidence:
-- `server/main.ts:38` returns nullable/optional token fields.
-- `server/main.ts:141` and `server/main.ts:159` return result directly without asserting required
-  fields.
-- Risk: frontend fails later with less actionable errors.
-
-3. No server-side OAuth state/session enforcement.
+3. `Improved` (Medium): main controller monolith reduced.
 
 - Evidence:
-- Backend has no OAuth state store/cookie validation flow; frontend stores PKCE state in local
-  storage.
-- `README.md` already acknowledges this tradeoff.
-- Risk: weaker auth hardening than server-tracked state/session approach.
+- `web/src/app.ts:9` imports `PlaylistBuilder` and delegates build (`web/src/app.ts:189`).
+- `web/src/app.ts:10` imports `AppSettingsStore` and delegates state IO (`web/src/app.ts:317`, `web/src/app.ts:324`).
+- Remaining note: `TidalPlaylistController` still owns UI event wiring and lifecycle orchestration.
 
-4. Frequent synchronous localStorage writes on nearly every form interaction.
-
-- Evidence:
-- `web/src/app.ts:313` to `web/src/app.ts:319` bind `input`/`change` events.
-- `web/src/app.ts:356` to `web/src/app.ts:373` reads UI + writes settings each time.
-- Risk: avoidable churn and UI jank on slower devices.
-
-### Low Severity
-
-1. Significant helper duplication across modules.
+4. `Fixed` (Medium): backend token payload validation now enforces required fields.
 
 - Evidence:
-- `normalizeMeta` exists in `web/src/app.ts:43` and `web/src/tidal/shared.ts:95`.
-- list parsing/uniqueness logic duplicated in `web/src/components/list-manager.ts:13` and
-  `web/src/tidal/filters.ts:3`.
-- Risk: behavior drift and maintenance overhead.
+- `server/token-validation.ts:25` to `server/token-validation.ts:30` requires `access_token`, `token_type`, `expires_in`.
+- `server/main.ts:71` to `server/main.ts:75` and `server/main.ts:101` to `server/main.ts:105` reject malformed upstream payloads.
 
-2. Toolbar busy-state does not disable logout.
+5. `Open` (Medium): no server-side OAuth state/session enforcement.
 
 - Evidence:
-- Busy state disables save/export/import/login/fetch/save-playlist
-  (`web/src/components/app-toolbar.ts:148`).
-- Logout button is omitted from disable list.
-- Risk: user can alter auth state mid-flight.
+- `server/main.ts:19` keeps explicit TODO for server-side session-backed state checks.
+- `web/src/tidal/auth.ts:86` to `web/src/tidal/auth.ts:89` still validates PKCE state only in browser storage.
 
-3. `TidalApi` constructor takes auth dependency but does not use it.
+6. `Fixed` (Medium): local settings writes are now debounced.
 
 - Evidence:
-- `web/src/tidal/api.ts:30` has `_auth: TidalAuth` but it is unused.
-- Risk: confusing coupling and unclear boundaries.
+- `web/src/app.ts:273` wires UI events to debounced sync.
+- `web/src/state/app-settings-store.ts:102` schedules debounced save; `web/src/state/app-settings-store.ts:155` handles timer.
 
-4. Logging consistency and diagnostics can be improved in backend.
+7. `Fixed` (Low): helper duplication reduced.
 
 - Evidence:
-- Uses `console.log` for internal server errors (`server/main.ts:144`, `server/main.ts:162`) and
-  returns generic messages.
-- Risk: weaker production diagnostics/noise control.
+- Shared list parsing/uniqueness utilities live in `web/src/tidal/list-utils.ts` and are reused by components/domain.
+- `normalizeMeta` is centralized in `web/src/tidal/shared.ts:87` and reused by `web/src/state/app-settings-store.ts:4`.
 
-## Testing And Quality Gaps
+8. `Fixed` (Low): toolbar busy-state now disables logout.
 
-- No test suite present for:
-- playlist build algorithm branching (artist pool vs album pool),
-- import/export config compatibility,
-- OAuth callback and refresh flows,
-- API wrapper pagination and error handling.
-- No lint/check tasks are currently defined in `deno.json` beyond build/serve/dev.
+- Evidence:
+- `web/src/components/app-toolbar.ts:153` disables `#logout` while busy.
 
-## Suggested Refactor Plan
+9. `Fixed` (Low): `TidalApi` no longer has unused auth dependency.
 
-1. Fix album pool semantics first (ID-only invariant or explicit title resolution path).
-2. Remove N+1 album search behavior by reusing included artist relationships where possible.
-3. Split `TidalPlaylistController` into:
+- Evidence:
+- `web/src/tidal/api.ts:27` constructor now only accepts `settings`.
 
-- state store,
-- domain service (playlist build),
-- UI event adapter.
+10. `Fixed` (Low): backend error logging consistency improved.
 
-4. Consolidate shared helper utilities (`normalizeMeta`, list parsing/normalization).
-5. Add minimal automated tests around high-risk flows (playlist generation + auth token lifecycle).
+- Evidence:
+- `server/main.ts:136` to `server/main.ts:144` and `server/main.ts:164` to `server/main.ts:172` use structured `console.error` logging.
+
+### New Findings
+
+#### Medium Severity
+
+1. Redirect URI configuration drift between docs and backend implementation.
+
+- Evidence:
+- `README.md:11` and `README.md:28` document optional `TIDAL_REDIRECT_URI` support.
+- `server/main.ts:29` computes redirect URI only from request origin and ignores env override.
+- `.env.example` has no `TIDAL_REDIRECT_URI` entry.
+- Risk: deployments needing a fixed callback URI (proxy/CDN/alt origin) can break OAuth flow and documentation is misleading.
+
+2. Imported `count` value is not sanitized at import boundary.
+
+- Evidence:
+- `web/src/state/app-settings-store.ts:142` assigns `count: Number(source.count ?? 25)` without finite/integer/min validation.
+- `web/src/domain/playlist-builder.ts:68` fails later at fetch time when count is invalid.
+- Risk: malformed imported config causes deferred runtime errors rather than immediate import validation feedback.
+
+#### Low Severity
+
+1. `TidalAuth` still exposes unused settings dependency/update path.
+
+- Evidence:
+- `web/src/tidal/auth.ts:28` constructor takes `settings` then discards it (`void settings`).
+- `web/src/tidal/auth.ts:33` `updateSettings` is a no-op.
+- Risk: confusing API surface and unclear future auth/settings coupling.
+
+## Testing And Quality Gaps (Current)
+
+- Tests now exist for:
+- playlist generation branching and diagnostics (`web/src/domain/playlist-builder_test.ts`),
+- API album search/album pool resolution (`web/src/tidal/api_test.ts`),
+- token response validation (`server/token-validation_test.ts`),
+- debounced settings persistence (`web/src/state/app-settings-store_test.ts`).
+- Remaining gaps:
+- no tests for OAuth callback + refresh lifecycle in `web/src/tidal/auth.ts`,
+- no integration test for backend token routes (`/api/auth/token`, `/api/auth/refresh`),
+- no explicit import/export compatibility regression tests (round-trip + legacy schema variants).
+- `deno task check` exists (`deno.json`), but no lint task is defined.
+
+## Suggested Next Refactor Steps
+
+1. Implement server-side OAuth state/session validation (HttpOnly same-site cookie/session) and keep frontend behavior aligned.
+2. Resolve redirect URI source of truth: either implement `TIDAL_REDIRECT_URI` override in backend or update docs/env to remove claim.
+3. Validate imported settings at import time (especially `count`) with user-facing error messages.
+4. Remove or wire `TidalAuth` settings dependency to clarify boundaries.
+5. Add focused tests for OAuth callback/refresh and config import/export round trips.
 
 ## Working Conventions For Future Agents
 

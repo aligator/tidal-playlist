@@ -1,11 +1,5 @@
 import type { TidalAlbum } from '../types.ts';
-
-export function parseListField(value: string): string[] {
-  return String(value)
-    .split(/[\n,]/)
-    .map((v) => v.trim())
-    .filter(Boolean);
-}
+export { parseListField } from './list-utils.ts';
 
 export function applyArtistFilters(
   artistIds: string[],

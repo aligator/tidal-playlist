@@ -11,7 +11,10 @@
     "dev:web": "deno run -A --node-modules-dir=auto npm:vite/vite",
     "build": "deno task build:web",
     "dev": "deno task build:web && deno run --env-file=.env --allow-net --allow-read --allow-env server/main.ts",
-    "serve": "deno run --env-file=.env --allow-net --allow-read --allow-env server/main.ts"
+    "serve": "deno run --env-file=.env --allow-net --allow-read --allow-env server/main.ts",
+    "test": "deno run -A --node-modules-dir=auto npm:vitest run",
+    "test:watch": "deno run -A --node-modules-dir=auto npm:vitest",
+    "check": "deno check server/main.ts web/src/main.ts"
   },
   "fmt": {
     "lineWidth": 100,

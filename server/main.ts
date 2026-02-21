@@ -1,4 +1,6 @@
 import { Application, Context, Request, Router, send } from '@oak/oak';
+import { validateTokenResponse } from './token-validation.ts';
+import type { ValidatedTokenResponse } from './token-validation.ts';
 
 const PORT = Number(Deno.env.get('PORT') ?? '8080');
 const CLIENT_ID = Deno.env.get('TIDAL_CLIENT_ID') ?? '';
@@ -14,6 +16,7 @@ if (!CLIENT_ID || !CLIENT_SECRET) {
 }
 
 const router = new Router();
+// TODO(security): replace frontend PKCE-state storage with server-side session-backed state checks.
 
 interface ErrorResponse {
   error: string;
@@ -27,29 +30,8 @@ function redirectUri(req: Request): string {
   return `${new URL(req.url).origin}/callback`;
 }
 
-function validateString(value: unknown): string | undefined {
-  return typeof value === 'string' ? value : undefined;
-}
-
-function validateInt(value: unknown): number | undefined {
-  return typeof value === 'number' && Number.isInteger(value) ? value : undefined;
-}
-
-function validateTokenResponse(payload: unknown) {
-  if (typeof payload !== 'object') {
-    return null;
-  }
-
-  const payloadObject: Record<string, unknown> = payload as Record<string, unknown>;
-
-  return {
-    scope: validateString(payloadObject?.scope),
-    token_type: validateString(payloadObject?.token_type),
-    access_token: validateString(payloadObject?.access_token),
-    refresh_token: validateString(payloadObject?.refresh_token),
-    expires_in: validateInt(payloadObject?.expires_in),
-    user_id: validateInt(payloadObject?.user_id),
-  };
+function asMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function basicAuthHeader(clientId: string, clientSecret: string): string {
@@ -61,7 +43,7 @@ async function fetchExchangeCode(
   code: string,
   codeVerifier: string,
   redirectUri: string,
-) {
+): Promise<ValidatedTokenResponse> {
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
     code,
@@ -86,10 +68,14 @@ async function fetchExchangeCode(
     throw new Error(String(msg));
   }
 
-  return validateTokenResponse(payload);
+  const validated = validateTokenResponse(payload);
+  if (!validated) {
+    throw new Error('invalid upstream token payload');
+  }
+  return validated;
 }
 
-async function fetchRefreshToken(refreshTokenValue: string) {
+async function fetchRefreshToken(refreshTokenValue: string): Promise<ValidatedTokenResponse> {
   const body = new URLSearchParams({
     grant_type: 'refresh_token',
     refresh_token: refreshTokenValue,
@@ -112,7 +98,11 @@ async function fetchRefreshToken(refreshTokenValue: string) {
     throw new Error(String(msg));
   }
 
-  return validateTokenResponse(payload);
+  const validated = validateTokenResponse(payload);
+  if (!validated) {
+    throw new Error('invalid upstream token payload');
+  }
+  return validated;
 }
 
 router.get('/api/config', (ctx) => {
@@ -126,8 +116,8 @@ router.post('/api/auth/token', async (ctx) => {
   try {
     const body = await ctx.request.body.json();
 
-    const code = validateString(body.code);
-    const codeVerifier = validateString(body.codeVerifier);
+    const code = typeof body.code === 'string' ? body.code : undefined;
+    const codeVerifier = typeof body.codeVerifier === 'string' ? body.codeVerifier : undefined;
 
     if (!code || !codeVerifier) {
       return errorResponse(ctx, { error: 'Missing required fields' }, 400);
@@ -140,8 +130,18 @@ router.post('/api/auth/token', async (ctx) => {
     );
     ctx.response.body = tokenData;
     return;
-  } catch (error) {
-    console.log('Internal Server Error: ', error);
+  } catch (error: unknown) {
+    const message = asMessage(error);
+    if (message === 'invalid upstream token payload') {
+      console.error('Token exchange failed: malformed upstream payload', {
+        route: '/api/auth/token',
+      });
+      return errorResponse(ctx, { error: 'invalid upstream token payload' }, 502);
+    }
+    console.error('Token exchange failed', {
+      route: '/api/auth/token',
+      message,
+    });
     return errorResponse(ctx, { error: 'Could not get a token.' }, 500);
   }
 });
@@ -149,7 +149,7 @@ router.post('/api/auth/token', async (ctx) => {
 router.post('/api/auth/refresh', async (ctx) => {
   try {
     const body = await ctx.request.body.json();
-    const refreshToken = validateString(body.refreshToken);
+    const refreshToken = typeof body.refreshToken === 'string' ? body.refreshToken : undefined;
 
     if (!refreshToken) {
       return errorResponse(ctx, { error: 'Missing refreshToken' }, 400);
@@ -158,8 +158,18 @@ router.post('/api/auth/refresh', async (ctx) => {
     const tokenData = await fetchRefreshToken(refreshToken);
     ctx.response.body = tokenData;
     return;
-  } catch (error) {
-    console.log('Internal Server Error: ', error);
+  } catch (error: unknown) {
+    const message = asMessage(error);
+    if (message === 'invalid upstream token payload') {
+      console.error('Token refresh failed: malformed upstream payload', {
+        route: '/api/auth/refresh',
+      });
+      return errorResponse(ctx, { error: 'invalid upstream token payload' }, 502);
+    }
+    console.error('Token refresh failed', {
+      route: '/api/auth/refresh',
+      message,
+    });
     return errorResponse(ctx, { error: 'Could not refresh a token.' }, 500);
   }
 });

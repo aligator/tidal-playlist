@@ -58,3 +58,21 @@ export type PlaylistSummary = {
   id: string;
   name: string;
 };
+
+export type AlbumPoolEntryResolved = {
+  source: 'id' | 'title';
+  raw: string;
+  albumId: string;
+  title: string;
+  artistName?: string;
+  artistId?: string;
+};
+
+export type SelectedSong = {
+  trackId: string;
+  trackTitle: string;
+  artistId: string;
+  artistName: string;
+  albumId: string;
+  albumTitle: string;
+};

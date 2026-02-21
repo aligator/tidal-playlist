@@ -1,7 +1,9 @@
 import { createAPIClient } from '@tidal-music/api';
 import { credentialsProvider as sdkCredentialsProvider } from '@tidal-music/auth';
 import type {
+  AlbumPoolEntryResolved,
   AppSettings,
+  ItemMetaMap,
   PlaylistSummary,
   TidalAlbum,
   TidalArtist,
@@ -9,7 +11,7 @@ import type {
 } from '../types.ts';
 import { asObject, asString } from './shared.ts';
 import type { JsonObject } from './shared.ts';
-import type { TidalAuth } from './auth.ts';
+import { normalizeTextMatch, uniqueCaseInsensitive } from './list-utils.ts';
 
 type ApiResult<T> = {
   data?: T;
@@ -27,7 +29,7 @@ export class TidalApi {
   private settings: AppSettings;
   private client: ReturnType<typeof createAPIClient>;
 
-  constructor(_auth: TidalAuth, settings: AppSettings) {
+  constructor(settings: AppSettings) {
     this.settings = settings;
     this.client = createAPIClient(sdkCredentialsProvider);
   }
@@ -67,6 +69,37 @@ export class TidalApi {
     return entries.filter(
       (entry) => entry.type === type && typeof entry.id === 'string',
     );
+  }
+
+  private albumRowsFromIncluded(
+    included: JsonObject[],
+  ): Array<{ id: string; title: string; artistName: string; artistId: string }> {
+    const artistsById = new Map<string, string>();
+    for (const artistEntry of this.byType(included, 'artists')) {
+      const artistId = asString(artistEntry.id);
+      if (!artistId) {
+        continue;
+      }
+      const artistAttributes = asObject(artistEntry.attributes);
+      artistsById.set(artistId, asString(artistAttributes?.name, artistId));
+    }
+
+    return this.byType(included, 'albums').map((albumEntry) => {
+      const attributes = asObject(albumEntry.attributes);
+      const relationships = asObject(albumEntry.relationships);
+      const artistsRel = asObject(relationships?.artists);
+      const relData = Array.isArray(artistsRel?.data) ? artistsRel.data : [];
+      const firstRelArtist = asObject(relData[0]);
+      const artistId = asString(firstRelArtist?.id);
+      const artistName = artistId ? (artistsById.get(artistId) ?? '') : '';
+
+      return {
+        id: asString(albumEntry.id),
+        title: asString(attributes?.title, asString(albumEntry.id)),
+        artistId,
+        artistName,
+      };
+    });
   }
 
   private async getUserId(): Promise<string> {
@@ -273,29 +306,99 @@ export class TidalApi {
       }),
     ) as JsonLike;
 
-    const included = this.included(data);
-    const albums = this.byType(included, 'albums')
-      .map((entry) => {
-        const attributes = asObject(entry.attributes);
-        return {
-          id: asString(entry.id),
-          title: asString(attributes?.title, asString(entry.id)),
-          artistName: '',
-        };
-      })
+    return this.albumRowsFromIncluded(this.included(data))
+      .map((album) => ({
+        id: album.id,
+        title: album.title,
+        artistName: album.artistName,
+      }))
       .slice(0, limit);
-
-    const enriched = await Promise.all(
-      albums.map(async (album) => ({
-        ...album,
-        artistName: await this.primaryArtistNameFromAlbumInclude(album.id),
-      })),
-    );
-
-    return enriched;
   }
 
-  private async primaryArtistNameFromAlbumInclude(albumId: string): Promise<string> {
+  async resolveAlbumPoolEntries(
+    inputs: string[],
+    metaMap: ItemMetaMap,
+  ): Promise<AlbumPoolEntryResolved[]> {
+    const cache = new Map<string, AlbumPoolEntryResolved | null>();
+    const uniques = uniqueCaseInsensitive(inputs);
+    const resolved: AlbumPoolEntryResolved[] = [];
+
+    for (const raw of uniques) {
+      const key = raw.toLowerCase();
+      if (cache.has(key)) {
+        const cached = cache.get(key);
+        if (cached) {
+          resolved.push(cached);
+        }
+        continue;
+      }
+
+      const next = await this.resolveAlbumPoolEntry(raw, metaMap[key]);
+      cache.set(key, next);
+      if (next) {
+        resolved.push(next);
+      }
+    }
+
+    return resolved;
+  }
+
+  private async resolveAlbumPoolEntry(
+    raw: string,
+    meta: { label: string; subLabel: string } | undefined,
+  ): Promise<AlbumPoolEntryResolved | null> {
+    const byId = await this.fetchAlbumById(raw);
+    if (byId) {
+      return {
+        source: 'id',
+        raw,
+        albumId: byId.id,
+        title: byId.title,
+        artistId: byId.artistId || undefined,
+        artistName: meta?.subLabel || byId.artistName || undefined,
+      };
+    }
+
+    const data = this.unwrap(
+      await this.client.GET('/searchResults/{id}', {
+        params: {
+          path: { id: raw },
+          query: {
+            countryCode: this.settings.countryCode,
+            include: ['albums', 'artists'],
+          },
+        },
+      }),
+    ) as JsonLike;
+
+    const rows = this.albumRowsFromIncluded(this.included(data));
+    const targetTitle = normalizeTextMatch(raw);
+    const exactTitleRows = rows.filter((row) => normalizeTextMatch(row.title) === targetTitle);
+    if (exactTitleRows.length === 0) {
+      return null;
+    }
+
+    const wantedArtist = normalizeTextMatch(meta?.subLabel ?? '');
+    const match = wantedArtist
+      ? exactTitleRows.find((row) => normalizeTextMatch(row.artistName) === wantedArtist)
+      : exactTitleRows[0];
+    if (!match) {
+      return null;
+    }
+
+    return {
+      source: 'title',
+      raw,
+      albumId: match.id,
+      title: match.title || raw,
+      artistId: match.artistId || undefined,
+      artistName: match.artistName || meta?.subLabel || undefined,
+    };
+  }
+
+  private async fetchAlbumById(
+    albumId: string,
+  ): Promise<{ id: string; title: string; artistId: string; artistName: string } | null> {
     try {
       const data = this.unwrap(
         await this.client.GET('/albums/{id}', {
@@ -309,11 +412,18 @@ export class TidalApi {
         }),
       ) as JsonLike;
 
+      const albumData = asObject(data.data);
+      const albumAttributes = asObject(albumData?.attributes);
       const artist = this.byType(this.included(data), 'artists')[0];
       const attributes = asObject(artist?.attributes);
-      return asString(attributes?.name);
+      return {
+        id: asString(albumData?.id, albumId),
+        title: asString(albumAttributes?.title, albumId),
+        artistId: asString(artist?.id),
+        artistName: asString(attributes?.name, asString(artist?.id)),
+      };
     } catch {
-      return '';
+      return null;
     }
   }
 

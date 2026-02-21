@@ -1,13 +1,7 @@
 import { ShadowComponent } from './shadow-component.ts';
+import type { SelectedSong } from '../types.ts';
 
-export type SelectedSongRow = {
-  trackId: string;
-  trackTitle: string;
-  artistId: string;
-  artistName: string;
-  albumId: string;
-  albumTitle: string;
-};
+export type SelectedSongRow = SelectedSong;
 
 export class SelectedSongsPanel extends ShadowComponent {
   private $songs!: HTMLTableSectionElement;
