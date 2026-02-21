@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable", "deno.ns"],
+    "strict": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "useUnknownInCatchVariables": true
+  },
+  "tasks": {
+    "build:web": "deno run -A --node-modules-dir=auto npm:vite/vite build",
+    "dev:web": "deno run -A --node-modules-dir=auto npm:vite/vite",
+    "build": "deno task build:web",
+    "dev": "deno task build:web && deno run --env-file=.env --allow-net --allow-read --allow-env server/main.ts",
+    "serve": "deno run --env-file=.env --allow-net --allow-read --allow-env server/main.ts"
+  },
+  "fmt": {
+    "lineWidth": 100,
+    "semiColons": true,
+    "singleQuote": true
+  },
+  "exclude": ["web/dist"],
+  "imports": {
+    "@oak/oak": "jsr:@oak/oak@^17.2.0",
+    "@tidal-music/api": "npm:@tidal-music/api@^0.8.1",
+    "@tidal-music/auth": "npm:@tidal-music/auth@^1.4.0",
+    "@tidal-music/common": "npm:@tidal-music/common@^0.2.0"
+  }
+}

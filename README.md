@@ -1,165 +1,71 @@
-# Tidal Playlist Generator
+# TIDAL Playlist Web App (Deno)
 
-A CLI tool to automatically create random Tidal playlists from tracks by ALL your liked artists.
+This project is a vanilla JS + Web Components frontend built with Vite, plus a Deno backend for auth
+proxying and serving built assets.
 
-## Features
+## Why backend token proxy mode
 
-- **Automatic Playlist Generation**: Creates playlists from all your favorite Tidal artists
-- **Configurable Track Selection**: Choose how many tracks per artist
-- **Artist Filtering**: Blacklist or whitelist specific artists
-- **Selection Modes**: Top tracks, random, or recent releases
-- **Playlist Override**: Updates existing playlists with the same name
-- **OAuth 2.1 PKCE**: Secure authentication with Tidal
-- **Cross-Platform**: Single binary for Linux, macOS, and Windows
+- `client_secret` stays on the server.
+- `client_id` is served to frontend from backend runtime config (`/api/config`).
+- `redirect_uri` defaults to `${origin}/callback` on backend (or can be set explicitly via
+  `TIDAL_REDIRECT_URI`) and is not editable in UI.
+- Frontend uses OAuth PKCE and sends `code` + `code_verifier` to backend.
+- Backend exchanges/refreshes tokens with TIDAL.
+- Backend serves static files from Vite build output (`web/dist`).
 
-## Prerequisites
+## Run
 
-1. A Tidal account
-2. Register an app at [Tidal Developer Portal](https://developer.tidal.com)
-3. Get your `client_id` and `client_secret`
-
-## Installation
-
-### From Source
+1. Create env file:
 
 ```bash
-# Clone the repository
-git clone https://github.com/aligator/tidal-playlist
-cd tidal-playlist
-
-# Install dependencies
-make deps
-
-# Build
-make build
-
-# Install (optional)
-make install
+cp .env.example .env
 ```
 
-### Download Binary
+2. Edit `.env` and set:
 
-Download pre-built binaries from the [Releases](https://github.com/aligator/tidal-playlist/releases) page.
+- `TIDAL_CLIENT_ID`
+- `TIDAL_CLIENT_SECRET`
+- Optional: `TIDAL_REDIRECT_URI` (must exactly match one URI registered in your TIDAL app)
 
-## Configuration
-
-1. Copy the example config file:
-```bash
-cp config.yaml.example config.yaml
-```
-
-2. Register Your App
-Go to [Tidal Developer Portal](https://developer.tidal.com) and create an app to get your credentials.
-**Important**: Set the redirect URL to `http://localhost:8080/callback` or wherever it is running
-
-3. Edit `config.yaml` with your Tidal API credentials
-
-## Usage
-
-### Authenticate
-
-First, authenticate with Tidal (only needed once):
+3. Build frontend with Deno + Vite:
 
 ```bash
-./tidal-playlist auth
+deno task build
 ```
 
-The token will be saved locally for future use.
-
-### Create a Playlist
+4. Start backend + serve built frontend:
 
 ```bash
-# Using default name from config
-./tidal-playlist create
-
-# With custom name
-./tidal-playlist create "My Mix"
-
-# With custom track count
-./tidal-playlist create "Heavy Rotation" --count 10
-
-# Dry run (preview without creating)
-./tidal-playlist create "Test" --dry-run
-
-# Using custom config file
-./tidal-playlist create --config alt_config.yaml
+deno task serve
 ```
 
-## Examples
+For convenience, `deno task dev` runs build + serve in one command. For frontend-only iteration with
+Vite dev server, use `deno task dev:web`.
 
-### Basic Usage
+5. Open:
 
-```bash
-# Authenticate once
-./tidal-playlist auth
+`http://localhost:8080`
 
-# Create a playlist with 5 tracks per artist
-./tidal-playlist create "My Daily Mix"
-```
+6. In your TIDAL app settings, set redirect URI to:
 
-### Advanced Filtering
+`http://localhost:8080/callback`
 
-Edit `config.yaml`:
+## Behavior parity with original CLI
 
-```yaml
-filters:
-  blacklist:
-    - "3510943"
-  whitelist: []  # Leave empty to use all except blacklisted
-```
+- Fetch liked artists
+- Apply artist whitelist/blacklist
+- Apply album whitelist/blacklist (album ID or exact title)
+- Random selection with replacement
+- For each selected artist: random album -> random track
+- Fetch tracks first, then save playlist explicitly
+- Replace playlist by exact name (delete existing and recreate)
 
-### Whitelist Mode
+## Notes on state
 
-To ONLY include specific artists:
+Current implementation is intentionally stateless on backend for OAuth session tracking:
 
-```yaml
-filters:
-  blacklist: []
-  whitelist:
-    - "945"
-```
+- frontend stores PKCE `state` + `code_verifier`
+- frontend sends `code_verifier` to backend for token exchange
 
-## How It Works
-
-1. **Fetch Favorite Artists**: Retrieves all artists you've liked on Tidal
-2. **Apply Filters**: Filters artists based on whitelist/blacklist
-3. **Collect Tracks**: Fetches tracks from random artists
-5. **Create/Replace Playlist**: Creates a new playlist or replace existing one
-
-## Development
-
-### Build
-
-```bash
-make build
-```
-
-### Run Tests
-
-```bash
-make test
-```
-
-### Build for All Platforms
-
-```bash
-make build-all
-```
-
-This creates binaries in the `build/` directory:
-- `tidal-playlist-linux-amd64`
-- `tidal-playlist-linux-arm64`
-- `tidal-playlist-darwin-amd64`
-- `tidal-playlist-darwin-arm64`
-- `tidal-playlist-windows-amd64.exe`
-
-## Troubleshooting
-
-### Authentication Failed
-
-- Ensure your `client_id` and `client_secret` are correct
-- Check that your app is properly registered at developer.tidal.com
-
-## Disclaimer
-
-This tool is not affiliated with or endorsed by Tidal. Use at your own risk.
+This works, but stronger security is to store OAuth state server-side in an HttpOnly same-site
+cookie/session and validate callback there.

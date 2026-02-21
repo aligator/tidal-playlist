@@ -1,19 +1,23 @@
-# Binaries
+# Existing Go artifacts
 /tidal-playlist
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-dist/
 build/
+dist/
 
 # Go
 *.test
 *.out
 go.work
 
-# Configuration and credentials
+# Node / frontend
+node_modules/
+.vite/
+
+# Local config / credentials
 config.yaml
 .env
 token.json
