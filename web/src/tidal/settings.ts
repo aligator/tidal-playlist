@@ -1,8 +1,10 @@
 import type { AppSettings, OAuthConfig } from '../types.ts';
 import {
+  DEFAULT_TRACK_COUNT,
   SETTINGS_KEY,
   asString,
   defaultSettingsState,
+  normalizeTrackCount,
   normalizeMeta,
   readJson,
   writeJson,
@@ -14,16 +16,18 @@ export function defaultSettings(): AppSettings {
 
 export function loadSettings(): AppSettings {
   const raw = readJson<Record<string, unknown>>(SETTINGS_KEY, {});
-  const poolArtists = String(raw.poolArtists ?? raw.whitelist ?? '');
-  const poolAlbums = String(raw.poolAlbums ?? raw.albumWhitelist ?? '');
-  const includeLikedPool = Boolean(raw.includeLikedPool ?? true);
+  const defaults = defaultSettingsState();
 
   return {
-    ...defaultSettingsState(),
-    ...raw,
-    includeLikedPool,
-    poolArtists,
-    poolAlbums,
+    countryCode: String(raw.countryCode ?? defaults.countryCode).trim().toUpperCase() || 'US',
+    playlistName: String(raw.playlistName ?? defaults.playlistName),
+    playlistDescription: String(raw.playlistDescription ?? defaults.playlistDescription),
+    count: normalizeTrackCount(raw.count, DEFAULT_TRACK_COUNT),
+    includeLikedPool: Boolean(raw.includeLikedPool ?? defaults.includeLikedPool),
+    poolArtists: String(raw.poolArtists ?? raw.whitelist ?? defaults.poolArtists),
+    poolAlbums: String(raw.poolAlbums ?? raw.albumWhitelist ?? defaults.poolAlbums),
+    blacklist: String(raw.blacklist ?? defaults.blacklist),
+    albumBlacklist: String(raw.albumBlacklist ?? defaults.albumBlacklist),
     artistPoolMeta: normalizeMeta(raw.artistPoolMeta ?? raw.artistWhitelistMeta),
     artistBlacklistMeta: normalizeMeta(raw.artistBlacklistMeta),
     albumPoolMeta: normalizeMeta(raw.albumPoolMeta ?? raw.albumWhitelistMeta),
@@ -45,12 +49,11 @@ export async function loadRuntimeConfig(): Promise<OAuthConfig> {
     );
   }
 
-  if (!payload.clientId || !payload.redirectUri) {
-    throw new Error('Backend runtime config is missing OAuth settings.');
+  if (!payload.clientId) {
+    throw new Error('Backend runtime config is missing OAuth client id.');
   }
 
   return {
     clientId: String(payload.clientId),
-    redirectUri: String(payload.redirectUri),
   };
 }

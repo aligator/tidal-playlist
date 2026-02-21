@@ -1,4 +1,9 @@
 const BASE_SHADOW_CSS = `
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
   :host {
     color: var(--text, #1f2937);
   }

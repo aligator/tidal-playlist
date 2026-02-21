@@ -15,7 +15,6 @@ export function createAuthRouter(): Router {
   router.get('/api/config', (ctx) => {
     ctx.response.body = {
       clientId: CLIENT_ID,
-      redirectUri: redirectUri(ctx.request),
     };
   });
 

@@ -4,6 +4,7 @@ import {
   OAUTH_FLOW_SIGNING_SECRET,
   OAUTH_FLOW_TTL_SECONDS,
   OAUTH_SCOPES,
+  REDIRECT_URI_OVERRIDE,
 } from '../config.ts';
 import {
   calculatePKCECodeChallenge,
@@ -18,6 +19,9 @@ type OAuthFlowPayload = {
 };
 
 export function redirectUri(request: Request): string {
+  if (REDIRECT_URI_OVERRIDE) {
+    return REDIRECT_URI_OVERRIDE;
+  }
   return `${new URL(request.url).origin}/callback`;
 }
 

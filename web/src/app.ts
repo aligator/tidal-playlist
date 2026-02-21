@@ -81,8 +81,8 @@ export class TidalPlaylistController {
 
     this.settingsStore = new AppSettingsStore(300);
     this.settings = this.settingsStore.getSettings();
-    this.oauth = { clientId: '', redirectUri: '' };
-    this.auth = new TidalAuth(this.settings, this.oauth);
+    this.oauth = { clientId: '' };
+    this.auth = new TidalAuth(this.oauth);
     this.api = new TidalApi(this.settings);
     this.playlistBuilder = new PlaylistBuilder({
       api: this.api,
@@ -159,7 +159,7 @@ export class TidalPlaylistController {
     this.$toolbar.addEventListener('login', async () => {
       try {
         this.syncSettingsImmediate();
-        if (!this.oauth.clientId || !this.oauth.redirectUri) {
+        if (!this.oauth.clientId) {
           throw new Error(
             'OAuth runtime config is missing. Check backend env.',
           );
@@ -316,13 +316,11 @@ export class TidalPlaylistController {
 
   private syncSettingsDebounced(): void {
     this.settings = this.settingsStore.updateFromUiDebounced(this.settingsWidgets());
-    this.auth.updateSettings(this.settings);
     this.api.updateSettings(this.settings);
   }
 
   private syncSettingsImmediate(): void {
     this.settings = this.settingsStore.updateFromUiImmediate(this.settingsWidgets());
-    this.auth.updateSettings(this.settings);
     this.api.updateSettings(this.settings);
   }
 
@@ -358,7 +356,6 @@ export class TidalPlaylistController {
     this.settingsStore.replace(next);
     this.settingsStore.applyToUi(next, this.settingsWidgets());
     this.settings = next;
-    this.auth.updateSettings(this.settings);
     this.api.updateSettings(this.settings);
   }
 

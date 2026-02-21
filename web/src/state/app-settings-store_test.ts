@@ -87,4 +87,32 @@ describe('AppSettingsStore', () => {
     store.updateFromUiImmediate(widgets);
     expect(writeCount).toBe(2);
   });
+
+  it('rejects imported config with invalid count', () => {
+    const store = new AppSettingsStore(25, {
+      load: () => ({
+        countryCode: 'US',
+        playlistName: 'Mix',
+        playlistDescription: 'Desc',
+        count: 2,
+        includeLikedPool: true,
+        poolArtists: '',
+        poolAlbums: '',
+        blacklist: '',
+        albumBlacklist: '',
+        artistPoolMeta: {},
+        artistBlacklistMeta: {},
+        albumPoolMeta: {},
+        albumBlacklistMeta: {},
+      }),
+      save: () => undefined,
+    });
+
+    expect(() =>
+      store.importSettings({
+        playlistName: 'Broken',
+        count: 0,
+      })
+    ).toThrowError('Invalid config: "count" must be an integer greater than 0.');
+  });
 });

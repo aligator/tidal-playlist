@@ -7,8 +7,8 @@ proxying and serving built assets.
 
 - `client_secret` stays on the server.
 - `client_id` is served to frontend from backend runtime config (`/api/config`).
-- `redirect_uri` defaults to `${origin}/callback` on backend (or can be set explicitly via
-  `TIDAL_REDIRECT_URI`) and is not editable in UI.
+- `redirect_uri` defaults to `${origin}/callback` on backend, and can be overridden with
+  `TIDAL_REDIRECT_URI` for fixed callback deployments.
 - Frontend starts OAuth through backend (`/api/auth/start`).
 - Backend generates PKCE verifier/challenge + OAuth state, stores state/verifier in a short-lived
   signed HttpOnly cookie, and returns authorize URL.
@@ -30,6 +30,7 @@ cp .env.example .env
 - `TIDAL_CLIENT_ID`
 - `TIDAL_CLIENT_SECRET`
 - Optional: `TIDAL_REDIRECT_URI` (must exactly match one URI registered in your TIDAL app)
+- Optional: `OAUTH_FLOW_SECRET` (recommended dedicated signing secret for OAuth flow cookie JWT)
 
 3. Build frontend with Deno + Vite:
 
@@ -53,6 +54,29 @@ Vite dev server, use `deno task dev:web`.
 6. In your TIDAL app settings, set redirect URI to:
 
 `http://localhost:8080/callback`
+
+## Docker
+
+Build locally:
+
+```bash
+docker build -t tidal-playlist:local .
+```
+
+Run:
+
+```bash
+docker run --rm -p 8080:8080 \
+  -e TIDAL_CLIENT_ID=your_client_id \
+  -e TIDAL_CLIENT_SECRET=your_client_secret \
+  tidal-playlist:local
+```
+
+Optional env vars:
+
+- `PORT` (default `8080`)
+- `TIDAL_REDIRECT_URI`
+- `OAUTH_FLOW_SECRET`
 
 ## Behavior parity with original CLI
 

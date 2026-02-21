@@ -5,7 +5,7 @@ import {
   setCredentials as sdkSetCredentials,
 } from '@tidal-music/auth';
 import type { Credentials } from '@tidal-music/common';
-import type { AppSettings, OAuthConfig } from '../types.ts';
+import type { OAuthConfig } from '../types.ts';
 import {
   SCOPES,
   TOKEN_KEY,
@@ -21,13 +21,8 @@ export class TidalAuth {
   private authInitPromise: Promise<void> | null = null;
   private authInitClientId = '';
 
-  constructor(settings: AppSettings, oauth: OAuthConfig) {
-    void settings;
+  constructor(oauth: OAuthConfig) {
     this.oauth = oauth;
-  }
-
-  updateSettings(settings: AppSettings): void {
-    void settings;
   }
 
   updateOAuth(oauth: OAuthConfig): void {

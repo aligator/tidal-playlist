@@ -321,6 +321,7 @@ export class PlaylistSettings extends ShadowComponent {
         }
         input,
         select {
+          box-sizing: border-box;
           width: 100%;
           padding: 0.5rem 0.6rem;
         }

@@ -1,6 +1,7 @@
 export const PORT = Number(Deno.env.get('PORT') ?? '8080');
 export const CLIENT_ID = Deno.env.get('TIDAL_CLIENT_ID') ?? '';
 export const CLIENT_SECRET = Deno.env.get('TIDAL_CLIENT_SECRET') ?? '';
+export const REDIRECT_URI_OVERRIDE = Deno.env.get('TIDAL_REDIRECT_URI')?.trim() ?? '';
 export const WEB_DIST_DIR = 'web/dist';
 export const TOKEN_URL = 'https://auth.tidal.com/v1/oauth2/token';
 export const AUTH_URL = 'https://login.tidal.com/authorize';
@@ -21,5 +22,19 @@ export function assertServerConfig(): void {
       'Missing env vars: TIDAL_CLIENT_ID and TIDAL_CLIENT_SECRET are required in backend proxy mode.',
     );
     Deno.exit(1);
+  }
+
+  if (REDIRECT_URI_OVERRIDE) {
+    try {
+      const parsed = new URL(REDIRECT_URI_OVERRIDE);
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        throw new Error('invalid protocol');
+      }
+    } catch {
+      console.error(
+        'Invalid env var: TIDAL_REDIRECT_URI must be an absolute http(s) URL.',
+      );
+      Deno.exit(1);
+    }
   }
 }

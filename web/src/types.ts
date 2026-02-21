@@ -26,7 +26,6 @@ export type AppSettings = PlaylistSettingsFormValues & {
 
 export type OAuthConfig = {
   clientId: string;
-  redirectUri: string;
 };
 
 export type LookupResult = {
