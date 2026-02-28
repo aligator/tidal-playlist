@@ -1,5 +1,5 @@
 import { Router } from '@oak/oak';
-import { CLIENT_ID, OAUTH_FLOW_COOKIE, OAUTH_FLOW_TTL_SECONDS } from '../config.ts';
+import { CLIENT_ID, getImpressum, OAUTH_FLOW_COOKIE, OAUTH_FLOW_TTL_SECONDS } from '../config.ts';
 import { asMessage, errorResponse } from '../http/errors.ts';
 import {
   createOAuthStart,
@@ -16,6 +16,21 @@ export function createAuthRouter(): Router {
     ctx.response.body = {
       clientId: CLIENT_ID,
     };
+  });
+
+  router.get('/api/impressum/available', (ctx) => {
+    const impressum = getImpressum();
+    ctx.response.body = { available: !!impressum };
+  });
+
+  router.get('/api/impressum', (ctx) => {
+    const impressum = getImpressum();
+    if (!impressum) {
+      ctx.response.status = 404;
+      ctx.response.body = { error: 'Impressum not configured' };
+      return;
+    }
+    ctx.response.body = impressum;
   });
 
   router.get('/api/auth/start', async (ctx) => {

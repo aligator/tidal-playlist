@@ -3,6 +3,9 @@ export const CLIENT_ID = Deno.env.get('TIDAL_CLIENT_ID') ?? '';
 export const CLIENT_SECRET = Deno.env.get('TIDAL_CLIENT_SECRET') ?? '';
 export const REDIRECT_URI_OVERRIDE = Deno.env.get('TIDAL_REDIRECT_URI')?.trim() ?? '';
 export const WEB_DIST_DIR = 'web/dist';
+export const IMPRESSUM_NAME = Deno.env.get('IMPRESSUM_NAME') ?? '';
+export const IMPRESSUM_ADDRESS = (Deno.env.get('IMPRESSUM_ADDRESS') ?? '').replace(/\\n/g, '\n');
+export const IMPRESSUM_EMAIL = Deno.env.get('IMPRESSUM_EMAIL') ?? '';
 export const TOKEN_URL = 'https://auth.tidal.com/v1/oauth2/token';
 export const AUTH_URL = 'https://login.tidal.com/authorize';
 export const OAUTH_SCOPES = [
@@ -36,4 +39,15 @@ export function assertServerConfig(): void {
       Deno.exit(1);
     }
   }
+}
+
+export function getImpressum(): { name: string; address: string; email: string } | null {
+  if (!IMPRESSUM_NAME || !IMPRESSUM_ADDRESS || !IMPRESSUM_EMAIL) {
+    return null;
+  }
+  return {
+    name: IMPRESSUM_NAME,
+    address: IMPRESSUM_ADDRESS,
+    email: IMPRESSUM_EMAIL,
+  };
 }

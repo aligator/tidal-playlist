@@ -4,3 +4,4 @@ import './list-manager.ts';
 import './app-toolbar.ts';
 import './log-panel.ts';
 import './selected-songs-panel.ts';
+import './impressum-modal.ts';
