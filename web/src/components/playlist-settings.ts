@@ -291,46 +291,53 @@ export class PlaylistSettings extends ShadowComponent {
 
     this.renderShadow(
       `
-      <label>Country code (ISO 3166-1 alpha-2)
-        <select id="country-code">${renderCountryOptions(countryCode)}</select>
-      </label>
+      <div class="settings-grid">
+        <label>Country code (ISO 3166-1 alpha-2)
+          <select id="country-code">${renderCountryOptions(countryCode)}</select>
+        </label>
 
-      <label>Playlist name
-        <input id="playlist-name" value="${playlistName}" />
-      </label>
+        <label>Playlist name
+          <input id="playlist-name" value="${playlistName}" />
+        </label>
 
-      <label>Playlist description
-        <input id="playlist-description" value="${playlistDescription}" />
-      </label>
+        <label>Playlist description
+          <textarea id="playlist-description">${playlistDescription}</textarea>
+        </label>
 
-      <label>Track count
-        <input id="count" type="number" min="1" value="${count}" />
-      </label>
+        <label>Track count
+          <input id="count" type="number" min="1" value="${count}" />
+        </label>
 
-      <label>Album pool weight (0 = artists only, 1 = albums only)
-        <input
-          id="album-pool-weight"
-          type="number"
-          min="0"
-          max="1"
-          step="0.05"
-          value="${albumPoolWeight}"
-        />
-      </label>
+        <label>(experimental) Album pool weight (0 = artists only, 1 = albums only)
+          <input
+            id="album-pool-weight"
+            type="number"
+            min="0"
+            max="1"
+            step="0.05"
+            value="${albumPoolWeight}"
+          />
+        </label>
 
-      <label>Shuffle playlist after build (experimental)
-        <input
-          id="shuffle-playlist"
-          type="checkbox"${shuffleChecked}
-        />
-      </label>
+        <label class="shuffle-toggle">
+          <input
+            id="shuffle-playlist"
+            type="checkbox"${shuffleChecked}
+          />
+          Shuffle playlist after build
+        </label>
+      </div>
     `,
       `
         :host {
-          display: grid;
-          gap: 0.75rem;
+          display: block;
         }
-        label {
+        .settings-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 0.65rem;
+        }
+        label:not(.shuffle-toggle) {
           display: flex;
           flex-direction: column;
           gap: 0.35rem;
@@ -340,11 +347,33 @@ export class PlaylistSettings extends ShadowComponent {
           background: var(--panel, #fff);
           font-size: 0.93rem;
         }
-        input,
-        select {
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
           box-sizing: border-box;
           width: 100%;
           padding: 0.5rem 0.6rem;
+        }
+        textarea {
+          min-height: 4rem;
+          resize: vertical;
+          font-family: inherit;
+        }
+        .shuffle-toggle {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.93rem;
+          margin-top: 0.6rem;
+          padding: 0;
+          border: none;
+          background: none;
+        }
+        input[type="checkbox"] {
+          width: auto;
+          cursor: pointer;
         }
       `,
     );
@@ -361,7 +390,7 @@ export class PlaylistSettings extends ShadowComponent {
     const playlistNameInput = this.requireElement<HTMLInputElement>(
       '#playlist-name',
     );
-    const playlistDescriptionInput = this.requireElement<HTMLInputElement>(
+    const playlistDescriptionInput = this.requireElement<HTMLTextAreaElement>(
       '#playlist-description',
     );
     const countInput = this.requireElement<HTMLInputElement>('#count');
