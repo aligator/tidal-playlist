@@ -23,13 +23,14 @@ export class AppToolbar extends ShadowComponent {
     this.renderShadow(
       `
       <div class="toolbar">
-        <button id="export-config">Export Config</button>
-        <button id="import-config">Import Config</button>
-        <input id="import-config-file" type="file" accept="application/json,.json" hidden />
         <button id="login">Login</button>
         <button id="logout">Logout</button>
         <button id="fetch">Fetch Tracks</button>
         <button id="save-playlist" disabled>Save Playlist</button>
+        <button id="export-config">Export Config</button>
+        <button id="import-config">Import Config</button>
+        <input id="import-config-file" type="file" accept="application/json,.json" hidden />
+        <br>
         <span id="status" class="status">Not authenticated</span>
       </div>
     `,
