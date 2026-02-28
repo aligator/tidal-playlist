@@ -1,4 +1,4 @@
-FROM denoland/deno:2.1.4 AS build
+FROM denoland/deno:2.7.1 AS build
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ RUN deno task build
 COPY server ./server
 RUN deno cache --lock=deno.lock --frozen --node-modules-dir=auto server/main.ts
 
-FROM denoland/deno:2.1.4
+FROM denoland/deno:2.7.1
 
 WORKDIR /app
 
