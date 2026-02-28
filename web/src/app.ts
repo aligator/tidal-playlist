@@ -128,11 +128,6 @@ export class TidalPlaylistController {
   }
 
   private bindEvents(): void {
-    this.$toolbar.addEventListener('save-settings', () => {
-      this.syncSettingsImmediate();
-      this.log('Settings saved.');
-    });
-
     this.$toolbar.addEventListener('export-config', () => {
       try {
         this.exportConfig();
