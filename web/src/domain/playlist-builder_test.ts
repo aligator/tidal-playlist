@@ -8,6 +8,7 @@ function settings(overrides: Partial<AppSettings> = {}): AppSettings {
     playlistName: 'mix',
     playlistDescription: 'mix',
     count: 2,
+    albumPoolWeight: 0.2,
     includeLikedArtistsPool: false,
     includeLikedAlbumsPool: false,
     poolArtists: '',

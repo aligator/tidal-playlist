@@ -138,7 +138,7 @@ export class PlaylistBuilder {
           await this.sleep(this.requestGapMs);
         }
         const useAlbumPool = resolvedAlbums.length > 0 &&
-          (artistPool.length === 0 || Math.random() < 0.5);
+          (artistPool.length === 0 || Math.random() < settings.albumPoolWeight);
 
         const chosenAlbumFromPool = useAlbumPool ? pickOne(resolvedAlbums) : null;
         let chosenAlbumId = '';

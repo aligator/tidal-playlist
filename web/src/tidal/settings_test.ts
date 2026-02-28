@@ -45,11 +45,13 @@ describe('loadSettings', () => {
       SETTINGS_KEY,
       JSON.stringify({
         count: 'NaN',
+        albumPoolWeight: 2,
       }),
     );
 
     const loaded = loadSettings();
     expect(loaded.count).toBe(25);
+    expect(loaded.albumPoolWeight).toBe(0.2);
   });
 
   it('keeps persisted count when valid integer', () => {
@@ -59,10 +61,12 @@ describe('loadSettings', () => {
       SETTINGS_KEY,
       JSON.stringify({
         count: 42,
+        albumPoolWeight: 0.8,
       }),
     );
 
     const loaded = loadSettings();
     expect(loaded.count).toBe(42);
+    expect(loaded.albumPoolWeight).toBe(0.8);
   });
 });

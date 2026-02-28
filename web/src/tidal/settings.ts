@@ -17,12 +17,17 @@ export function defaultSettings(): AppSettings {
 export function loadSettings(): AppSettings {
   const raw = readJson<Record<string, unknown>>(SETTINGS_KEY, {});
   const defaults = defaultSettingsState();
+  const rawAlbumPoolWeight = Number(raw.albumPoolWeight ?? defaults.albumPoolWeight);
+  const albumPoolWeight = Number.isFinite(rawAlbumPoolWeight)
+    ? Math.min(1, Math.max(0, rawAlbumPoolWeight))
+    : defaults.albumPoolWeight;
 
   return {
     countryCode: String(raw.countryCode ?? defaults.countryCode).trim().toUpperCase() || 'US',
     playlistName: String(raw.playlistName ?? defaults.playlistName),
     playlistDescription: String(raw.playlistDescription ?? defaults.playlistDescription),
     count: normalizeTrackCount(raw.count, DEFAULT_TRACK_COUNT),
+    albumPoolWeight,
     includeLikedArtistsPool: Boolean(raw.includeLikedArtists ?? defaults.includeLikedArtistsPool),
     includeLikedAlbumsPool: Boolean(raw.includeLikedAlbums ?? defaults.includeLikedAlbumsPool),
     poolArtists: String(raw.poolArtists ?? raw.whitelist ?? defaults.poolArtists),

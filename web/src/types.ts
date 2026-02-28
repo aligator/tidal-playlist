@@ -10,6 +10,7 @@ export type PlaylistSettingsFormValues = {
   playlistName: string;
   playlistDescription: string;
   count: number;
+  albumPoolWeight: number;
 };
 
 export type AppSettings = PlaylistSettingsFormValues & {
