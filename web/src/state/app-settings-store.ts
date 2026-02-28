@@ -13,7 +13,12 @@ export type SettingsWidgets = {
     setValues(values: AppSettings): void;
     getValues(): Pick<
       AppSettings,
-      'countryCode' | 'playlistName' | 'playlistDescription' | 'count' | 'albumPoolWeight'
+      | 'countryCode'
+      | 'playlistName'
+      | 'playlistDescription'
+      | 'count'
+      | 'albumPoolWeight'
+      | 'shufflePlaylist'
     >;
   };
   artistPool: {
@@ -96,6 +101,7 @@ export class AppSettingsStore {
       ...base,
       includeLikedArtistsPool: widgets.includeLikedArtistsPool.checked,
       includeLikedAlbumsPool: widgets.includeLikedAlbumsPool.checked,
+      shufflePlaylist: Boolean(base.shufflePlaylist),
       poolArtists: widgets.artistPool.getItems().join('\n'),
       poolAlbums: widgets.albumPool.getItems().join('\n'),
       blacklist: widgets.artistBlacklist.getItems().join('\n'),
@@ -157,6 +163,7 @@ export class AppSettingsStore {
       ),
       count,
       albumPoolWeight,
+      shufflePlaylist: typeof source.shufflePlaylist === 'boolean' ? source.shufflePlaylist : false,
       includeLikedArtistsPool: Boolean(source.includeLikedArtistsPool ?? true),
       includeLikedAlbumsPool: Boolean(source.includeLikedAlbumsPool ?? true),
       poolArtists: String(source.poolArtists ?? source.whitelist ?? ''),

@@ -33,6 +33,7 @@ class FakePlaylistSettings {
       playlistDescription: values.playlistDescription,
       count: values.count,
       albumPoolWeight: values.albumPoolWeight,
+      shufflePlaylist: values.shufflePlaylist,
     };
   }
 
@@ -52,6 +53,7 @@ describe('AppSettingsStore', () => {
         playlistDescription: 'Desc',
         count: 2,
         albumPoolWeight: 0.2,
+        shufflePlaylist: false,
         includeLikedArtistsPool: true,
         includeLikedAlbumsPool: true,
         poolArtists: '',
@@ -75,6 +77,7 @@ describe('AppSettingsStore', () => {
         playlistDescription: 'Desc',
         count: 2,
         albumPoolWeight: 0.2,
+        shufflePlaylist: false,
       }),
       artistPool: new FakeListManager(['artist-1']),
       artistBlacklist: new FakeListManager([]),
@@ -101,6 +104,7 @@ describe('AppSettingsStore', () => {
         playlistDescription: 'Desc',
         count: 2,
         albumPoolWeight: 0.2,
+        shufflePlaylist: false,
         includeLikedArtistsPool: true,
         includeLikedAlbumsPool: true,
         poolArtists: '',

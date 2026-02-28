@@ -11,6 +11,7 @@ export type PlaylistSettingsFormValues = {
   playlistDescription: string;
   count: number;
   albumPoolWeight: number;
+  shufflePlaylist: boolean;
 };
 
 export type AppSettings = PlaylistSettingsFormValues & {

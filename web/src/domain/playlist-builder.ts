@@ -231,6 +231,18 @@ export class PlaylistBuilder {
       throw new Error('No tracks collected.');
     }
 
+    if (settings.shufflePlaylist && trackIds.length > 1) {
+      const indices = trackIds.map((_, index) => index);
+      for (let i = indices.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indices[i], indices[j]] = [indices[j], indices[i]];
+      }
+      const shuffledTrackIds = indices.map((index) => trackIds[index]);
+      const shuffledSelectedSongs = indices.map((index) => selectedSongs[index]);
+      trackIds.splice(0, trackIds.length, ...shuffledTrackIds);
+      selectedSongs.splice(0, selectedSongs.length, ...shuffledSelectedSongs);
+    }
+
     this.logger(`Collected ${trackIds.length} tracks.`);
     return { trackIds, selectedSongs, diagnostics };
   }

@@ -46,6 +46,7 @@ describe('loadSettings', () => {
       JSON.stringify({
         count: 'NaN',
         albumPoolWeight: 2,
+        shufflePlaylist: false,
       }),
     );
 
@@ -62,6 +63,7 @@ describe('loadSettings', () => {
       JSON.stringify({
         count: 42,
         albumPoolWeight: 0.8,
+        shufflePlaylist: true,
       }),
     );
 

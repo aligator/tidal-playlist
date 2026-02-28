@@ -28,6 +28,7 @@ export function loadSettings(): AppSettings {
     playlistDescription: String(raw.playlistDescription ?? defaults.playlistDescription),
     count: normalizeTrackCount(raw.count, DEFAULT_TRACK_COUNT),
     albumPoolWeight,
+    shufflePlaylist: Boolean(raw.shufflePlaylist ?? defaults.shufflePlaylist),
     includeLikedArtistsPool: Boolean(raw.includeLikedArtists ?? defaults.includeLikedArtistsPool),
     includeLikedAlbumsPool: Boolean(raw.includeLikedAlbums ?? defaults.includeLikedAlbumsPool),
     poolArtists: String(raw.poolArtists ?? raw.whitelist ?? defaults.poolArtists),
