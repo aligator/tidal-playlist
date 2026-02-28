@@ -1,12 +1,12 @@
 import type { AppSettings, OAuthConfig } from '../types.ts';
 import {
-  DEFAULT_TRACK_COUNT,
-  SETTINGS_KEY,
   asString,
+  DEFAULT_TRACK_COUNT,
   defaultSettingsState,
-  normalizeTrackCount,
   normalizeMeta,
+  normalizeTrackCount,
   readJson,
+  SETTINGS_KEY,
   writeJson,
 } from './shared.ts';
 
@@ -23,7 +23,8 @@ export function loadSettings(): AppSettings {
     playlistName: String(raw.playlistName ?? defaults.playlistName),
     playlistDescription: String(raw.playlistDescription ?? defaults.playlistDescription),
     count: normalizeTrackCount(raw.count, DEFAULT_TRACK_COUNT),
-    includeLikedPool: Boolean(raw.includeLikedPool ?? defaults.includeLikedPool),
+    includeLikedArtistsPool: Boolean(raw.includeLikedArtists ?? defaults.includeLikedArtistsPool),
+    includeLikedAlbumsPool: Boolean(raw.includeLikedAlbums ?? defaults.includeLikedAlbumsPool),
     poolArtists: String(raw.poolArtists ?? raw.whitelist ?? defaults.poolArtists),
     poolAlbums: String(raw.poolAlbums ?? raw.albumWhitelist ?? defaults.poolAlbums),
     blacklist: String(raw.blacklist ?? defaults.blacklist),

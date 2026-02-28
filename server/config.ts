@@ -8,7 +8,6 @@ export const AUTH_URL = 'https://login.tidal.com/authorize';
 export const OAUTH_SCOPES = [
   'user.read',
   'collection.read',
-  'collection.write',
   'playlists.read',
   'playlists.write',
 ] as const;

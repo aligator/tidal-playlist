@@ -74,8 +74,8 @@ export class PlaylistBuilder {
     const artistBlacklist = parseListField(settings.blacklist);
     const albumBlacklist = parseListField(settings.albumBlacklist);
 
-    const likedArtists = settings.includeLikedPool ? await this.api.favoriteArtistIds() : [];
-    const likedAlbums = settings.includeLikedPool ? await this.api.favoriteAlbumIds() : [];
+    const likedArtists = settings.includeLikedArtistsPool ? await this.api.favoriteArtistIds() : [];
+    const likedAlbums = settings.includeLikedAlbumsPool ? await this.api.favoriteAlbumIds() : [];
 
     const artistPool = uniqueCaseInsensitive([
       ...likedArtists,
@@ -113,8 +113,6 @@ export class PlaylistBuilder {
 
     const trackIds: string[] = [];
     const selectedSongs: SelectedSong[] = [];
-    const pickFromArtists = this.randomPickWithReplacement(artistPool, settings.count);
-    const pickFromAlbums = this.randomPickWithReplacement(resolvedAlbums, settings.count);
     const diagnostics: PlaylistBuildDiagnostics = {
       artistPoolCount: artistPool.length,
       albumPoolCount: resolvedAlbums.length,
@@ -123,88 +121,110 @@ export class PlaylistBuilder {
       skippedTrackLookupFailures: 0,
       skippedEmptyTracks: 0,
     };
+    const seenTrackIds = new Set<string>();
+    const maxAttemptsPerSlot = Math.max(
+      5,
+      Math.min(25, (artistPool.length + resolvedAlbums.length) * 2 || 5),
+    );
+    const pickOne = <T>(items: T[]): T => items[Math.floor(Math.random() * items.length)];
 
     for (let i = 0; i < settings.count; i += 1) {
-      if (i > 0 && this.requestGapMs > 0) {
-        await this.sleep(this.requestGapMs);
-      }
-      const useAlbumPool = resolvedAlbums.length > 0 &&
-        (artistPool.length === 0 || Math.random() < 0.5);
+      let attempts = 0;
+      let picked = false;
 
-      const chosenAlbumFromPool = useAlbumPool ? pickFromAlbums[i] : null;
-      let chosenAlbumId = '';
-      let chosenAlbumTitle = '';
-      let chosenArtistId = '';
-      let chosenArtistName = '';
+      while (!picked && attempts < maxAttemptsPerSlot) {
+        attempts += 1;
+        if ((i > 0 || attempts > 1) && this.requestGapMs > 0) {
+          await this.sleep(this.requestGapMs);
+        }
+        const useAlbumPool = resolvedAlbums.length > 0 &&
+          (artistPool.length === 0 || Math.random() < 0.5);
 
-      if (chosenAlbumFromPool) {
-        chosenAlbumId = chosenAlbumFromPool.albumId;
-        chosenAlbumTitle = chosenAlbumFromPool.title || chosenAlbumFromPool.raw;
-        chosenArtistId = chosenAlbumFromPool.artistId ?? '';
-        chosenArtistName = chosenAlbumFromPool.artistName ?? '';
+        const chosenAlbumFromPool = useAlbumPool ? pickOne(resolvedAlbums) : null;
+        let chosenAlbumId = '';
+        let chosenAlbumTitle = '';
+        let chosenArtistId = '';
+        let chosenArtistName = '';
 
-        if (!chosenArtistName || !chosenArtistId) {
-          const primaryArtist = await this.api.primaryArtistFromAlbum(chosenAlbumId);
-          if (primaryArtist) {
-            chosenArtistId = primaryArtist.id;
-            if (!chosenArtistName) {
-              chosenArtistName = primaryArtist.name;
+        if (chosenAlbumFromPool) {
+          chosenAlbumId = chosenAlbumFromPool.albumId;
+          chosenAlbumTitle = chosenAlbumFromPool.title || chosenAlbumFromPool.raw;
+          chosenArtistId = chosenAlbumFromPool.artistId ?? '';
+          chosenArtistName = chosenAlbumFromPool.artistName ?? '';
+
+          if (!chosenArtistName || !chosenArtistId) {
+            const primaryArtist = await this.api.primaryArtistFromAlbum(chosenAlbumId);
+            if (primaryArtist) {
+              chosenArtistId = primaryArtist.id;
+              if (!chosenArtistName) {
+                chosenArtistName = primaryArtist.name;
+              }
             }
           }
+        } else {
+          const artistId = pickOne(artistPool);
+          const artist = await this.api.artist(artistId).catch(
+            (): TidalArtist => ({
+              id: artistId,
+              attributes: { name: artistId },
+            }),
+          );
+          chosenArtistId = artistId;
+          chosenArtistName = artist.attributes.name || artistId;
+          const albums = await this.api.artistAlbums(artistId, 100);
+          const filteredAlbums = applyAlbumFilters(albums, [], albumBlacklist);
+          if (filteredAlbums.length === 0) {
+            this.logger(`${chosenArtistName}: no albums available in pool.`);
+            diagnostics.skippedNoAlbums += 1;
+            continue;
+          }
+          const album = filteredAlbums[Math.floor(Math.random() * filteredAlbums.length)];
+          chosenAlbumId = album.id;
+          chosenAlbumTitle = album.title;
         }
-      } else {
-        const artistId = pickFromArtists[i];
-        const artist = await this.api.artist(artistId).catch(
-          (): TidalArtist => ({
-            id: artistId,
-            attributes: { name: artistId },
-          }),
-        );
-        chosenArtistId = artistId;
-        chosenArtistName = artist.attributes.name || artistId;
-        const albums = await this.api.artistAlbums(artistId, 100);
-        const filteredAlbums = applyAlbumFilters(albums, [], albumBlacklist);
-        if (filteredAlbums.length === 0) {
-          this.logger(`${chosenArtistName}: no albums available in pool.`);
-          diagnostics.skippedNoAlbums += 1;
+
+        const chosenAlbumLabel = chosenArtistName
+          ? `${chosenArtistName}: ${chosenAlbumTitle}`
+          : chosenAlbumTitle;
+
+        let tracks: Array<{ id: string; title: string }> = [];
+        try {
+          tracks = await this.api.albumTracks(chosenAlbumId);
+        } catch (error: unknown) {
+          this.logger(
+            `${chosenAlbumLabel}: track lookup failed (${toErrorMessage(error)}).`,
+          );
+          diagnostics.skippedTrackLookupFailures += 1;
           continue;
         }
-        const album = filteredAlbums[Math.floor(Math.random() * filteredAlbums.length)];
-        chosenAlbumId = album.id;
-        chosenAlbumTitle = album.title;
-      }
+        if (tracks.length === 0) {
+          this.logger(`${chosenAlbumLabel}: has no tracks.`);
+          diagnostics.skippedEmptyTracks += 1;
+          continue;
+        }
 
-      const chosenAlbumLabel = chosenArtistName
-        ? `${chosenArtistName}: ${chosenAlbumTitle}`
-        : chosenAlbumTitle;
+        const track = tracks[Math.floor(Math.random() * tracks.length)];
+        if (seenTrackIds.has(track.id)) {
+          this.logger(`${chosenAlbumLabel} -> ${track.title} (duplicate, retry)`);
+          continue;
+        }
 
-      let tracks: Array<{ id: string; title: string }> = [];
-      try {
-        tracks = await this.api.albumTracks(chosenAlbumId);
-      } catch (error: unknown) {
-        this.logger(
-          `${chosenAlbumLabel}: track lookup failed (${toErrorMessage(error)}).`,
-        );
-        diagnostics.skippedTrackLookupFailures += 1;
-        continue;
+        seenTrackIds.add(track.id);
+        trackIds.push(track.id);
+        selectedSongs.push({
+          trackId: track.id,
+          trackTitle: track.title,
+          artistId: chosenArtistId,
+          artistName: chosenArtistName,
+          albumId: chosenAlbumId,
+          albumTitle: chosenAlbumTitle,
+        });
+        this.logger(`${chosenAlbumLabel} -> ${track.title}`);
+        picked = true;
       }
-      if (tracks.length === 0) {
-        this.logger(`${chosenAlbumLabel}: has no tracks.`);
-        diagnostics.skippedEmptyTracks += 1;
-        continue;
+      if (!picked) {
+        this.logger(`Slot ${i + 1}: no unique track found after ${attempts} attempts.`);
       }
-
-      const track = tracks[Math.floor(Math.random() * tracks.length)];
-      trackIds.push(track.id);
-      selectedSongs.push({
-        trackId: track.id,
-        trackTitle: track.title,
-        artistId: chosenArtistId,
-        artistName: chosenArtistName,
-        albumId: chosenAlbumId,
-        albumTitle: chosenAlbumTitle,
-      });
-      this.logger(`${chosenAlbumLabel} -> ${track.title}`);
     }
 
     if (trackIds.length === 0) {

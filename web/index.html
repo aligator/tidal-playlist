@@ -1,64 +1,74 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
+    <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <title>TIDAL Playlist Builder</title>
         <link rel="stylesheet" href="/src/styles.css" />
-  </head>
-  <body>
-    <main class="app">
-      <h1>TIDAL Playlist Builder</h1>
-      <p class="subtitle">
-        Build your own playlists - just as you want.
-      </p>
+    </head>
+    <body>
+        <main class="app">
+            <h1>TIDAL Playlist Builder</h1>
+            <p class="subtitle">Build your own playlists - just as you want.</p>
 
-      <section class="grid">
-        <playlist-settings></playlist-settings>
+            <section class="grid">
+                <playlist-settings></playlist-settings>
 
-        <section class="list-group">
-          <h3>Pool</h3>
-          <label class="pool-toggle">
-            <input id="include-liked-pool" type="checkbox" checked />
-            include likes
-          </label>
-          <div class="list-managers">
-            <list-manager
-              id="artist-pool"
-              title="Additional artists in pool"
-              lookup-placeholder="Search TIDAL artists to add to pool"
-            ></list-manager>
-            <list-manager
-              id="album-pool"
-              title="Additional albums in pool"
-              lookup-placeholder="Search TIDAL albums to add to pool"
-            ></list-manager>
-          </div>
-        </section>
+                <section class="list-group">
+                    <h3>Pool</h3>
+                    <label class="pool-toggle">
+                        <input
+                            id="include-liked-artists-pool"
+                            type="checkbox"
+                            checked
+                        />
+                        include liked artists
+                    </label>
+                    <div class="list-managers">
+                        <list-manager
+                            id="artist-pool"
+                            title="Additional artists in pool"
+                            lookup-placeholder="Search TIDAL artists to add to pool"
+                        ></list-manager>
+                        <label class="pool-toggle">
+                            <input
+                                id="include-liked-albums-pool"
+                                type="checkbox"
+                                checked
+                            />
+                            include liked albums
+                        </label>
+                        <list-manager
+                            id="album-pool"
+                            title="Additional albums in pool"
+                            lookup-placeholder="Search TIDAL albums to add to pool"
+                        ></list-manager>
+                    </div>
+                </section>
 
-        <section class="list-group">
-          <h3>Blacklist</h3>
-          <div class="list-managers">
-            <list-manager
-              id="artist-blacklist"
-              title="Artist blacklist"
-              lookup-placeholder="Search TIDAL artists to exclude"
-            ></list-manager>
-            <list-manager
-              id="album-blacklist"
-              title="Album blacklist"
-              lookup-placeholder="Search TIDAL albums to exclude"
-            ></list-manager>
-          </div>
-        </section>
-      </section>
+                <section class="list-group">
+                    <h3>Blacklist</h3>
+                    <div class="list-managers">
+                        <list-manager
+                            id="artist-blacklist"
+                            title="Artist blacklist"
+                            lookup-placeholder="Search TIDAL artists to exclude"
+                        ></list-manager>
+                        <list-manager
+                            id="album-blacklist"
+                            title="Album blacklist"
+                            lookup-placeholder="Search TIDAL albums to exclude"
+                        ></list-manager>
+                    </div>
+                </section>
+            </section>
 
-      <app-toolbar></app-toolbar>
-      <selected-songs-panel></selected-songs-panel>
-      <log-panel></log-panel>
-    </main>
+            <app-toolbar></app-toolbar>
+            <selected-songs-panel></selected-songs-panel>
+            <log-panel></log-panel>
+        </main>
 
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+        <script type="module" src="/src/main.ts"></script>
+    </body>
 </html>

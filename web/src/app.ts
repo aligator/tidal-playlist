@@ -45,7 +45,8 @@ export class TidalPlaylistController {
   private readonly $artistBlacklist: ListManager;
   private readonly $albumPool: ListManager;
   private readonly $albumBlacklist: ListManager;
-  private readonly $includeLikedPool: HTMLInputElement;
+  private readonly $includeLikedArtistsPool: HTMLInputElement;
+  private readonly $includeLikedAlbumsPool: HTMLInputElement;
   private readonly $toolbar: AppToolbar;
   private readonly $songs: SelectedSongsPanel;
   private readonly $log: LogPanel;
@@ -71,9 +72,13 @@ export class TidalPlaylistController {
       root,
       '#album-blacklist',
     );
-    this.$includeLikedPool = requireElement<HTMLInputElement>(
+    this.$includeLikedArtistsPool = requireElement<HTMLInputElement>(
       root,
-      '#include-liked-pool',
+      '#include-liked-artists-pool',
+    );
+    this.$includeLikedAlbumsPool = requireElement<HTMLInputElement>(
+      root,
+      '#include-liked-albums-pool',
     );
     this.$toolbar = requireElement<AppToolbar>(root, 'app-toolbar');
     this.$songs = requireElement<SelectedSongsPanel>(root, 'selected-songs-panel');
@@ -123,7 +128,8 @@ export class TidalPlaylistController {
       artistBlacklist: this.$artistBlacklist,
       albumPool: this.$albumPool,
       albumBlacklist: this.$albumBlacklist,
-      includeLikedPool: this.$includeLikedPool,
+      includeLikedArtistsPool: this.$includeLikedArtistsPool,
+      includeLikedAlbumsPool: this.$includeLikedAlbumsPool,
     };
   }
 
@@ -272,7 +278,8 @@ export class TidalPlaylistController {
     this.$artistBlacklist.addEventListener('items-change', debouncedSync);
     this.$albumPool.addEventListener('items-change', debouncedSync);
     this.$albumBlacklist.addEventListener('items-change', debouncedSync);
-    this.$includeLikedPool.addEventListener('change', debouncedSync);
+    this.$includeLikedArtistsPool.addEventListener('change', debouncedSync);
+    this.$includeLikedAlbumsPool.addEventListener('change', debouncedSync);
   }
 
   private addToBlacklist(

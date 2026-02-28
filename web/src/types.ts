@@ -13,7 +13,8 @@ export type PlaylistSettingsFormValues = {
 };
 
 export type AppSettings = PlaylistSettingsFormValues & {
-  includeLikedPool: boolean;
+  includeLikedArtistsPool: boolean;
+  includeLikedAlbumsPool: boolean;
   poolArtists: string;
   poolAlbums: string;
   blacklist: string;

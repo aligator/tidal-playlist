@@ -50,7 +50,8 @@ describe('AppSettingsStore', () => {
         playlistName: 'Mix',
         playlistDescription: 'Desc',
         count: 2,
-        includeLikedPool: true,
+        includeLikedArtistsPool: true,
+        includeLikedAlbumsPool: true,
         poolArtists: '',
         poolAlbums: '',
         blacklist: '',
@@ -76,7 +77,8 @@ describe('AppSettingsStore', () => {
       artistBlacklist: new FakeListManager([]),
       albumPool: new FakeListManager(['album-1']),
       albumBlacklist: new FakeListManager([]),
-      includeLikedPool: { checked: true } as HTMLInputElement,
+      includeLikedArtistsPool: { checked: true } as HTMLInputElement,
+      includeLikedAlbumsPool: { checked: true } as HTMLInputElement,
     };
 
     store.updateFromUiDebounced(widgets);
@@ -95,7 +97,8 @@ describe('AppSettingsStore', () => {
         playlistName: 'Mix',
         playlistDescription: 'Desc',
         count: 2,
-        includeLikedPool: true,
+        includeLikedArtistsPool: true,
+        includeLikedAlbumsPool: true,
         poolArtists: '',
         poolAlbums: '',
         blacklist: '',
