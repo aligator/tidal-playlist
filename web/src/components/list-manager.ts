@@ -104,6 +104,7 @@ export class ListManager extends ShadowComponent {
           background: var(--panel, #fff);
           box-shadow: 0 6px 18px rgb(0 0 0 / 12%);
           padding: 0.25rem;
+          overflow-y: auto:
         }
         .lookup-dropdown:not(:empty) {
           display: block;
