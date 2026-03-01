@@ -8,6 +8,15 @@
       "settings": {
         "deno": {
           "enable": true,
+          "unstable": true,
+        },
+      },
+    },
+    "tailwindcss-language-server": {
+      "settings": {
+        "classFunctions": ["cva", "cx"],
+        "experimental": {
+          "classRegex": ["[cls|class]\\s\\:\\=\\s\"([^\"]*)"],
         },
       },
     },

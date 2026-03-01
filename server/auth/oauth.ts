@@ -1,6 +1,7 @@
 import type { Request } from '@oak/oak';
 import {
   AUTH_URL,
+  IS_DEV,
   OAUTH_FLOW_SIGNING_SECRET,
   OAUTH_FLOW_TTL_SECONDS,
   OAUTH_SCOPES,
@@ -21,6 +22,9 @@ type OAuthFlowPayload = {
 export function redirectUri(request: Request): string {
   if (REDIRECT_URI_OVERRIDE) {
     return REDIRECT_URI_OVERRIDE;
+  }
+  if (!IS_DEV) {
+    throw new Error('TIDAL_REDIRECT_URI is required outside development.');
   }
   return `${new URL(request.url).origin}/callback`;
 }

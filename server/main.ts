@@ -1,5 +1,5 @@
 import { Application, Router, send } from '@oak/oak';
-import { PORT, WEB_DIST_DIR, assertServerConfig } from './config.ts';
+import { assertServerConfig, PORT, WEB_DIST_DIR } from './config.ts';
 import { createAuthRouter } from './routes/auth.ts';
 
 assertServerConfig();
@@ -23,6 +23,29 @@ router.all('/(.*)', async (ctx) => {
 });
 
 const app = new Application();
+app.use(async (ctx, next) => {
+  await next();
+
+  ctx.response.headers.set(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "script-src 'self'",
+      "style-src 'self' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "img-src 'self' data:",
+      "connect-src 'self' https://openapi.tidal.com https://auth.tidal.com https://login.tidal.com;",
+      "frame-ancestors 'none'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join('; '),
+  );
+  ctx.response.headers.set('X-Content-Type-Options', 'nosniff');
+  ctx.response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  ctx.response.headers.set('X-Frame-Options', 'DENY');
+  ctx.response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+});
 app.use(router.routes());
 app.use(router.allowedMethods());
 
