@@ -1,7 +1,8 @@
 import { css, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { StyledElement } from '../../styled-element.ts';
-import { type ApiTokenResponse, finishLogin, startLogin } from '../tidal/auth.ts';
+import { TidalAuth } from '../tidal/tidal-auth.ts';
+import { loadRuntimeConfig } from '../tidal/settings.ts';
 
 const name = 'auth-guard';
 
@@ -22,6 +23,8 @@ export class AuthGuard extends StyledElement {
 
   @state()
   private errorMessage = '';
+
+  private tidalAuth: TidalAuth | null = null;
 
   override connectedCallback() {
     super.connectedCallback();
@@ -65,14 +68,22 @@ export class AuthGuard extends StyledElement {
     `;
   }
 
-  private async runGuard() {
+  private async runGuard(): Promise<void> {
     this.status = AuthGuardStatus.CHECKING;
     this.errorMessage = '';
 
     try {
-      const token = await finishLogin();
-      if (token) {
-        this.onAuthenticated(token);
+      const { clientId } = await loadRuntimeConfig();
+      this.tidalAuth = new TidalAuth({ clientId });
+
+      if (this.tidalAuth.isLoggedIn()) {
+        this.onAuthenticated(this.tidalAuth);
+        return;
+      }
+
+      const completed = await this.tidalAuth.finishLoginFromUrl();
+      if (completed) {
+        this.onAuthenticated(this.tidalAuth);
         return;
       }
 
@@ -83,24 +94,28 @@ export class AuthGuard extends StyledElement {
     }
   }
 
-  private onAuthenticated(token: ApiTokenResponse) {
+  private onAuthenticated(tidalAuth: TidalAuth): void {
     this.status = AuthGuardStatus.AUTHENTICATED;
     this.dispatchEvent(
-      new CustomEvent<ApiTokenResponse>('auth-token', {
-        detail: token,
+      new CustomEvent<TidalAuth>('auth-ready', {
+        detail: tidalAuth,
         bubbles: true,
         composed: true,
       }),
     );
   }
 
-  private handleRetry = () => {
+  private handleRetry = (): void => {
     void this.runGuard();
   };
 
-  private handleLogin = async () => {
+  private handleLogin = async (): Promise<void> => {
     try {
-      await startLogin();
+      if (!this.tidalAuth) {
+        const { clientId } = await loadRuntimeConfig();
+        this.tidalAuth = new TidalAuth({ clientId });
+      }
+      await this.tidalAuth.beginLogin();
     } catch (error) {
       this.errorMessage = error instanceof Error ? error.message : String(error);
       this.status = AuthGuardStatus.ERROR;

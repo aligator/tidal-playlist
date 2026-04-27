@@ -2,6 +2,8 @@
 
 ## Codebase State (Read This First)
 
+> Active work tracked in **`TODO.md`** (Lit rewrite task list).
+
 The repository contains **two frontend trees** at different stages of completion:
 
 | Directory   | Status                  | Built?                        |
@@ -303,3 +305,11 @@ frontend work:
   active migration across two frontend trees.
 - **AGENTS.md:** update the "Codebase State" table and open findings summary when
   either the build configuration changes or a finding from `FINDINGS.md` is resolved.
+
+Respond like smart caveman. Cut all filler, keep technical substance.
+Drop articles (a, an, the), filler words (just, really, basically, actually).
+Drop pleasantries (sure, certainly, happy to). 
+Drop "Let me...".
+No hedging. Fragments fine.
+Code blocks, technical terms, error messages → untouched.
+1 answer = 1 line. List > prose.
