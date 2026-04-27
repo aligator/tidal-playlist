@@ -394,12 +394,12 @@ Backend untouched throughout.
 - [x] Verify build + manual nav between placeholder views
 
 ### Step 3 — Custom Primitives
-- [ ] `<ui-top-bar>` — title, trailing slot, optional back button
-- [ ] `<ui-bottom-sheet>` — slot-based, `open` prop, swipe-to-dismiss
-- [ ] `<ui-snackbar>` — queue, auto-dismiss success (3 s), persist error, Undo action support, max 1 visible
-- [ ] `<ui-search-sheet>` — composes `<ui-bottom-sheet>` + debounced search input + results slot; domain-agnostic
-- [ ] Register all in `index.ts`
-- [ ] Verify build
+- [x] `<ui-top-bar>` — title, trailing slot, optional back button
+- [x] `<ui-bottom-sheet>` — slot-based, `open` prop, swipe-to-dismiss
+- [x] `<ui-snackbar>` — queue, auto-dismiss success (3 s), persist error, Undo action support, max 1 visible
+- [x] `<ui-search-sheet>` — composes `<ui-bottom-sheet>` + debounced search input + results slot; domain-agnostic
+- [x] Register all in `index.ts`
+- [x] Verify build
 
 ### Step 4 — Auth Module
 - [ ] `modules/auth/store.ts` — `authentication` signal, `isAuthenticated` computed, `login()`, `logout()`

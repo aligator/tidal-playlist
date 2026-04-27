@@ -7,3 +7,7 @@ import './components/selected-songs-panel.ts';
 import './components/impressum-modal.ts';
 import './components/playlist-settings.ts';
 import './components/list-manager.ts';
+import './components/ui-top-bar.ts';
+import './components/ui-bottom-sheet.ts';
+import './components/ui-snackbar.ts';
+import './components/ui-search-sheet.ts';
