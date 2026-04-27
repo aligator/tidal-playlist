@@ -402,11 +402,11 @@ Backend untouched throughout.
 - [x] Verify build
 
 ### Step 4 — Auth Module
-- [ ] `modules/auth/store.ts` — `authentication` signal, `isAuthenticated` computed, `login()`, `logout()`
-- [ ] `modules/auth/api.ts` — `startLogin()`, `finishLogin()` (already exists — migrate + wire to signal)
-- [ ] `modules/auth/login-page.ts` — `<login-page>`: connect button, spinner state, OAuth callback return loading state, error snackbar
-- [ ] `modules/auth/auth-guard.ts` — reads `isAuthenticated` in `render()`; pushes 'login' view when false
-- [ ] Wire auth-guard into app-shell
+- [x] `modules/auth/store.ts` — `authentication` signal, `isAuthenticated` computed, `login()`, `logout()`
+- [x] `modules/auth/api.ts` — `startLogin()`, `finishLogin()` (already exists — migrate + wire to signal)
+- [x] `modules/auth/login-page.ts` — `<login-page>`: connect button, spinner state, OAuth callback return loading state, error snackbar
+- [x] `modules/auth/auth-guard.ts` — reads `isAuthenticated` in `render()`; pushes 'login' view when false
+- [x] Wire auth-guard into app-shell
 - [ ] Verify full OAuth login flow end-to-end
 
 ### Step 5 — Settings Module

@@ -1,12 +1,6 @@
-import './main-element.ts';
 import './app-shell.ts';
+import './modules/auth/login-page.ts';
 import './modules/auth/auth-guard.ts';
-import './components/app-toolbar.ts';
-import './components/log-panel.ts';
-import './components/selected-songs-panel.ts';
-import './components/impressum-modal.ts';
-import './components/playlist-settings.ts';
-import './components/list-manager.ts';
 import './components/ui-top-bar.ts';
 import './components/ui-bottom-sheet.ts';
 import './components/ui-snackbar.ts';

@@ -253,11 +253,9 @@ export class UiSnackbar extends LitElement {
     this._clearTimer();
     this._visible = false;
 
-    // Wait for exit animation then show next
     setTimeout(() => {
       this._current = null;
-      // Defer slightly to allow DOM to clear
-      setTimeout(() => this._showNext(), 50);
+      this._showNext();
     }, 260);
   }
 

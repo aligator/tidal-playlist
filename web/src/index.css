@@ -1,6 +1,17 @@
-/* MD3 color tokens — on :root directly, never inside @layer */
+/* MD3 tokens — on :root directly, never inside @layer */
 :root {
   color-scheme: light dark;
+
+  /* Typescale */
+  --md-sys-typescale-display-large-size:    3.5625rem;
+  --md-sys-typescale-headline-large-size:   2rem;
+  --md-sys-typescale-headline-medium-size:  1.75rem;
+  --md-sys-typescale-title-large-size:      1.375rem;
+  --md-sys-typescale-title-medium-size:     1rem;
+  --md-sys-typescale-body-large-size:       1rem;
+  --md-sys-typescale-body-medium-size:      0.875rem;
+  --md-sys-typescale-label-large-size:      0.875rem;
+  --md-sys-typescale-label-medium-size:     0.75rem;
 
   --md-sys-color-primary:                light-dark(#006689, #7ad0ff);
   --md-sys-color-on-primary:             light-dark(#ffffff, #003549);

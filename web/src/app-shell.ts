@@ -187,26 +187,31 @@ export class AppShell extends SignalWatcher(LitElement) {
     const view = currentView.get();
     // Active tab index: only the 3 main views affect the indicator
     const activeIndex = MAIN_VIEWS.indexOf(view as MainView);
+    const showNav = view !== 'login';
 
     return html`
       <div class="shell">
         <!-- Side nav rail — visible at ≥ 768 px via CSS @media -->
-        <nav class="side-nav" role="navigation" aria-label="Main navigation">
-          ${NAV_TABS.map(
-            (tab) => html`
-              <button
-                class="side-nav-tab"
-                role="tab"
-                aria-selected="${view === tab.view ? 'true' : 'false'}"
-                aria-label="${tab.label}"
-                @click="${() => this._onTabClick(tab.view)}"
-              >
-                <span class="nav-icon" aria-hidden="true">${tab.icon}</span>
-                <span>${tab.label}</span>
-              </button>
-            `,
-          )}
-        </nav>
+        ${showNav
+          ? html`
+              <nav class="side-nav" role="navigation" aria-label="Main navigation">
+                ${NAV_TABS.map(
+                  (tab) => html`
+                    <button
+                      class="side-nav-tab"
+                      role="tab"
+                      aria-selected="${view === tab.view ? 'true' : 'false'}"
+                      aria-label="${tab.label}"
+                      @click="${() => this._onTabClick(tab.view)}"
+                    >
+                      <span class="nav-icon" aria-hidden="true">${tab.icon}</span>
+                      <span>${tab.label}</span>
+                    </button>
+                  `,
+                )}
+              </nav>
+            `
+          : ''}
 
         <!-- Main content -->
         <main class="content">
@@ -214,29 +219,36 @@ export class AppShell extends SignalWatcher(LitElement) {
         </main>
       </div>
 
-      <!-- Bottom navigation bar — visible on mobile via CSS -->
-      <md-navigation-bar
-        .activeIndex="${activeIndex >= 0 ? activeIndex : 0}"
-        @navigation-bar-activated="${this._onNavBarActivated}"
-      >
-        ${NAV_TABS.map(
-          (tab) => html`
-            <md-navigation-tab
-              .label="${tab.label}"
-              .active="${view === tab.view}"
-            ></md-navigation-tab>
-          `,
-        )}
-      </md-navigation-bar>
+      <!-- Bottom navigation bar — visible on mobile via CSS, hidden on login -->
+      ${showNav
+        ? html`
+            <md-navigation-bar
+              .activeIndex="${activeIndex >= 0 ? activeIndex : 0}"
+              @navigation-bar-activated="${this._onNavBarActivated}"
+            >
+              ${NAV_TABS.map(
+                (tab) => html`
+                  <md-navigation-tab
+                    .label="${tab.label}"
+                    .active="${view === tab.view}"
+                  ></md-navigation-tab>
+                `,
+              )}
+            </md-navigation-bar>
+          `
+        : ''}
     `;
   }
 
   private _renderView(view: string) {
+    if (view === 'login') {
+      return html`<login-page></login-page>`;
+    }
+
     const placeholders: Record<string, string> = {
       playlist: 'Playlist View',
       library: 'Library View',
       settings: 'Settings View',
-      login: 'Login View',
       result: 'Result View',
     };
     const label = placeholders[view] ?? `Unknown View: ${view}`;
@@ -248,8 +260,9 @@ export class AppShell extends SignalWatcher(LitElement) {
   }
 
   private _onNavBarActivated(event: Event): void {
-    const e = event as CustomEvent<{ activeIndex: number }>;
-    const tab = NAV_TABS[e.detail.activeIndex];
+    if (!(event instanceof CustomEvent)) return;
+    const detail = (event as CustomEvent).detail as { activeIndex?: number };
+    const tab = NAV_TABS[detail.activeIndex ?? 0];
     if (tab) {
       viewStack.set([tab.view]);
     }

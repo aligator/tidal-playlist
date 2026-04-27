@@ -76,7 +76,7 @@ export class UiSearchSheet extends LitElement {
   loading = false;
 
   @query('.search-input')
-  private _inputEl!: HTMLInputElement;
+  private _inputEl?: HTMLInputElement;
 
   private _debounceTimer: ReturnType<typeof setTimeout> | null = null;
 

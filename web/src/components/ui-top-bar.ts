@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import '@material/web/icon/icon.js';
 
 const name = 'ui-top-bar';
 
@@ -88,7 +89,7 @@ export class UiTopBar extends LitElement {
                 aria-label="Go back"
                 @click="${this._onBack}"
               >
-                ←
+                <md-icon>arrow_back</md-icon>
               </button>
             `
           : ''}
