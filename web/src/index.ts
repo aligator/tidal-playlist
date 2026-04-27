@@ -1,4 +1,5 @@
 import './main-element.ts';
+import './app-shell.ts';
 import './modules/auth/auth-guard.ts';
 import './components/app-toolbar.ts';
 import './components/log-panel.ts';

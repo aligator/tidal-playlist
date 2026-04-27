@@ -385,13 +385,13 @@ Backend untouched throughout.
 - [x] Verify build + manual dark mode check
 
 ### Step 2 — App Shell Skeleton
-- [ ] Create `web/src/app-shell.ts` — `<app-shell>` Lit element
-- [ ] Implement `viewStack`, `currentView`, `pushView()`, `popView()` signal router
-- [ ] Add `<md-navigation-bar>` + `<md-navigation-tab>` (Playlist · Library · Settings)
-- [ ] Add `@media` + `matchMedia` responsive swap to side rail at ≥ 768 px
-- [ ] Render placeholder `<div>` per view slot (no real views yet)
-- [ ] Wire `index.ts` to mount `<app-shell>` instead of `<main-element>`
-- [ ] Verify build + manual nav between placeholder views
+- [x] Create `web/src/app-shell.ts` — `<app-shell>` Lit element
+- [x] Implement `viewStack`, `currentView`, `pushView()`, `popView()` signal router
+- [x] Add `<md-navigation-bar>` + `<md-navigation-tab>` (Playlist · Library · Settings)
+- [x] Add `@media` + `matchMedia` responsive swap to side rail at ≥ 768 px
+- [x] Render placeholder `<div>` per view slot (no real views yet)
+- [x] Wire `index.ts` to mount `<app-shell>` instead of `<main-element>`
+- [x] Verify build + manual nav between placeholder views
 
 ### Step 3 — Custom Primitives
 - [ ] `<ui-top-bar>` — title, trailing slot, optional back button
