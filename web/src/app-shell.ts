@@ -255,12 +255,15 @@ export class AppShell extends SignalWatcher(LitElement) {
       return html`<library-view></library-view>`;
     }
 
-    const placeholders: Record<string, string> = {
-      playlist: 'Playlist View',
-      result: 'Result View',
-    };
-    const label = placeholders[view] ?? `Unknown View: ${view}`;
-    return html`<div class="view-placeholder">${label}</div>`;
+    if (view === 'playlist') {
+      return html`<playlist-view></playlist-view>`;
+    }
+
+    if (view === 'result') {
+      return html`<result-view></result-view>`;
+    }
+
+    return html`<div class="view-placeholder">Unknown View: ${view}</div>`;
   }
 
   private _onTabClick(view: MainView): void {

@@ -1,4 +1,6 @@
 import './app-shell.ts';
+import './modules/playlist/playlist-view.ts';
+import './modules/playlist/result-view.ts';
 import './modules/auth/login-page.ts';
 import './modules/auth/auth-guard.ts';
 import './modules/settings/settings-view.ts';

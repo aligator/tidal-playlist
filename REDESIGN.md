@@ -424,11 +424,11 @@ Backend untouched throughout.
 - [ ] Verify add/remove/block flows
 
 ### Step 7 — Playlist Module
-- [ ] `modules/playlist/builder.ts` — migrate `PlaylistBuilder` (pure algorithm, no signals)
-- [ ] `modules/playlist/store.ts` — `buildStatus`, `result`, `settings` signals; `buildPlaylist()`, `savePlaylist()`; pool count computed from library signals + liked toggles
-- [ ] `modules/playlist/result-view.ts` — `<result-view>`: track list with block action (snackbar "Added to Blocked" + Undo), Save button with inline error+retry, empty state (0 tracks)
-- [ ] `modules/playlist/playlist-view.ts` — `<playlist-view>`: pool section (liked toggles + reactive count + "Manage Library →"), settings fields (slider with axis labels), name/description (expandable), Build button (disabled when no sources, spinner during build), linear progress bar
-- [ ] Wire playlist-view + result-view into app-shell (`pushView('result')` after build)
+- [x] `modules/playlist/builder.ts` — migrate `PlaylistBuilder` (pure algorithm, no signals)
+- [x] `modules/playlist/store.ts` — `buildStatus`, `result`, `settings` signals; `buildPlaylist()`, `savePlaylist()`; pool count computed from library signals + liked toggles
+- [x] `modules/playlist/result-view.ts` — `<result-view>`: track list with block action (snackbar "Added to Blocked" + Undo), Save button with inline error+retry, empty state (0 tracks)
+- [x] `modules/playlist/playlist-view.ts` — `<playlist-view>`: pool section (liked toggles + reactive count + "Manage Library →"), settings fields (slider with axis labels), name/description (expandable), Build button (disabled when no sources, spinner during build), linear progress bar
+- [x] Wire playlist-view + result-view into app-shell (`pushView('result')` after build)
 - [ ] Verify full build → result → save → back flow
 
 ### Step 8 — Wire & Harden
