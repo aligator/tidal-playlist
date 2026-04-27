@@ -2,6 +2,9 @@ import { css, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { StyledElement } from '../styled-element.ts';
 
+// TODO: why is this not a domain-level module? impressum is also a domain...
+// maybe better a basic modal component thats used by it...
+
 @customElement('impressum-modal')
 export class ImpressumModal extends StyledElement {
   @state()

@@ -21,7 +21,9 @@ export function pushView(view: string): void {
 
 export function popView(): void {
   const stack = viewStack.get();
-  if (stack.length > 1) viewStack.set(stack.slice(0, -1));
+  if (stack.length > 1) {
+    viewStack.set(stack.slice(0, -1));
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -245,10 +247,13 @@ export class AppShell extends SignalWatcher(LitElement) {
       return html`<login-page></login-page>`;
     }
 
+    if (view === 'settings') {
+      return html`<settings-view></settings-view>`;
+    }
+
     const placeholders: Record<string, string> = {
       playlist: 'Playlist View',
       library: 'Library View',
-      settings: 'Settings View',
       result: 'Result View',
     };
     const label = placeholders[view] ?? `Unknown View: ${view}`;
@@ -260,7 +265,9 @@ export class AppShell extends SignalWatcher(LitElement) {
   }
 
   private _onNavBarActivated(event: Event): void {
-    if (!(event instanceof CustomEvent)) return;
+    if (!(event instanceof CustomEvent)) {
+      return;
+    }
     const detail = (event as CustomEvent).detail as { activeIndex?: number };
     const tab = NAV_TABS[detail.activeIndex ?? 0];
     if (tab) {

@@ -26,7 +26,9 @@ export async function finishLogin(): Promise<ApiTokenResponse | null> {
   const { code, state, error, errorDescription } = getCallbackParams();
 
   if (error) throw new Error(errorDescription ?? error);
-  if (!code || !state) return null; // not on callback route
+  if (!code || !state) {
+    return null;
+  }
 
   const res = await fetch('/api/auth/token', {
     method: 'POST',

@@ -410,11 +410,11 @@ Backend untouched throughout.
 - [ ] Verify full OAuth login flow end-to-end
 
 ### Step 5 — Settings Module
-- [ ] `modules/settings/persistence.ts` — `loadSettings()`, `saveSettings()` (migrate from existing)
-- [ ] `modules/settings/store.ts` — `AppSettings` signal, `Signal.subtle.Watch` for debounced persistence, `importSettings()` with validation
-- [ ] `modules/settings/settings-view.ts` — `<settings-view>`: export, import (with `<md-dialog>` confirmation), logout, impressum link
-- [ ] Wire settings-view into app-shell
-- [ ] Verify settings persist across reload
+- [x] `modules/settings/persistence.ts` — `loadSettings()`, `saveSettings()` (migrate from existing)
+- [x] `modules/settings/store.ts` — `AppSettings` signal, `Signal.subtle.Watch` for debounced persistence, `importSettings()` with validation
+- [x] `modules/settings/settings-view.ts` — `<settings-view>`: export, import (with `<md-dialog>` confirmation), logout, impressum link
+- [x] Wire settings-view into app-shell
+- [x] Verify settings persist across reload
 
 ### Step 6 — Library Module
 - [ ] `modules/library/store.ts` — `artists`, `albums`, `blocked` as `signal<string[]>`, add/remove actions (immutable set pattern)

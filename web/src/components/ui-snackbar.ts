@@ -129,8 +129,12 @@ export class UiSnackbar extends LitElement {
   ): void {
     // Drop duplicate: skip if same message already queued or currently shown
     const alreadyQueued = UiSnackbar._queue.some((i) => i.message === message);
-    if (alreadyQueued) return;
-    if (UiSnackbar.instance?._current?.message === message) return;
+    if (alreadyQueued) {
+      return;
+    }
+    if (UiSnackbar.instance?._current?.message === message) {
+      return;
+    }
 
     const item: SnackbarItem = {
       message,
@@ -261,7 +265,9 @@ export class UiSnackbar extends LitElement {
 
   private _onAction(): void {
     const cb = this._current?.action?.callback;
-    if (cb) cb();
+    if (cb) {
+      cb();
+    }
     this._dismiss();
   }
 

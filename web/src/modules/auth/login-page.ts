@@ -85,7 +85,9 @@ export class LoginPage extends SignalWatcher(LitElement) {
     const hasCode = url.searchParams.has('code');
     const hasState = url.searchParams.has('state');
 
-    if (!hasCode || !hasState) return;
+    if (!hasCode || !hasState) {
+      return;
+    }
 
     this._loginState = 'callback';
     try {
