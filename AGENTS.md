@@ -4,22 +4,9 @@
 
 > Active work tracked in **`TODO.md`** (Lit rewrite task list).
 
-The repository contains **two frontend trees** at different stages of completion:
-
-| Directory   | Status                  | Built?                        |
-|-------------|-------------------------|-------------------------------|
-| `web2/src/` | Functional, full app    | **No** — no build task points here |
-| `web/src/`  | Incomplete Lit rewrite  | **Yes** — `vite.config.ts` root = `web/` |
-
-`vite.config.ts` builds `web/src/`, which is a stub shell with no playlist
-functionality, no settings UI, and no TIDAL API calls. The Docker image and
-`deno task build` output are therefore non-functional for end users.
-
-`web2/src/` contains all working application code. Any feature work, bug fixes,
-or security patches to the actual app belong in `web2/src/`. The `web/src/` Lit
-rewrite is in-progress; do not treat it as equivalent.
-
-**Before editing any frontend file, confirm which tree it lives in.**
+Single frontend tree: `web/src/` — Lit 3 rewrite, **in progress**. Playlist
+functionality, settings UI, and TIDAL API integration are not yet implemented.
+`deno task build` produces a stub shell; the app is not end-user functional yet.
 
 ---
 
@@ -27,9 +14,7 @@ rewrite is in-progress; do not treat it as equivalent.
 
 - **Runtime:** Deno 2.x
 - **Backend:** Oak (`@oak/oak`) — `server/`
-- **Frontend (functional):** Vanilla TypeScript, native Custom Elements + Shadow DOM,
-  no framework — `web2/src/`
-- **Frontend (in-progress rewrite):** Lit 3 + `@lit-labs/signals` — `web/src/`
+- **Frontend:** Lit 3 + `@lit-labs/signals` — `web/src/` (in-progress rewrite)
 - **Build:** Vite (npm via Deno node-modules compat)
 - **Auth:** Backend-proxied PKCE OAuth 2.0 flow; signed HttpOnly cookie for
   state/verifier transport; tokens handled client-side after exchange
@@ -39,16 +24,13 @@ rewrite is in-progress; do not treat it as equivalent.
 ## Quick Commands
 
 ```
-deno task build        # Build web/src/ with Vite → web/dist/ (currently the stub)
+deno task build        # Build web/src/ with Vite → web/dist/
 deno task serve        # Start backend; serves web/dist/
 deno task dev          # build + serve in one step
 deno task dev:web      # Vite dev server only (web/ root)
 deno task test         # Run Vitest (see Testing section)
-deno task check        # deno check server/main.ts web/src/main.ts
+deno task check        # deno check server/main.ts web/src/index.ts
 ```
-
-> There is no task that builds `web2/src/`. To run the full app locally, either
-> temporarily change `vite.config.ts` root to `web2` or add a dedicated task.
 
 ---
 
@@ -70,53 +52,39 @@ tidal-playlist/
 │   └── http/
 │       └── errors.ts               errorResponse(), asMessage()
 │
-├── web2/                           FUNCTIONAL FRONTEND (vanilla custom elements)
-│   ├── index.html                  App shell; mounts all custom elements
-│   ├── tsconfig.json
-│   └── src/
-│       ├── main.ts                 Entry — instantiates TidalPlaylistController
-│       ├── app.ts                  TidalPlaylistController — top-level orchestrator
-│       ├── tidal.ts                Barrel re-export for tidal/ modules
-│       ├── types.ts                Shared TypeScript types (AppSettings, TidalArtist, etc.)
-│       ├── components/
-│       │   ├── shadow-component.ts Abstract base: attachShadow, renderShadow(), requireElement()
-│       │   ├── app-toolbar.ts      Login/Logout/Fetch/Save/Export/Import buttons + status
-│       │   ├── playlist-settings.ts Country code, playlist name/description, count, weight
-│       │   ├── list-manager.ts     Reusable add/remove list with TIDAL search lookup
-│       │   ├── log-panel.ts        Append-only log textarea
-│       │   ├── selected-songs-panel.ts  Track table with per-row blacklist actions
-│       │   ├── impressum-modal.ts  Optional legal info modal (⚠ see C-1 in FINDINGS.md)
-│       │   └── index.ts            Registers all custom elements (import for side-effects)
-│       ├── domain/
-│       │   └── playlist-builder.ts PlaylistBuilder class — all playlist generation logic
-│       ├── state/
-│       │   └── app-settings-store.ts AppSettingsStore — settings load/save/debounce/import
-│       └── tidal/
-│           ├── api.ts              TidalApi — all TIDAL API calls (artists, albums, tracks, playlists)
-│           ├── auth.ts             TidalAuth — SDK init, token lifecycle, beginLogin/finishLoginFromUrl
-│           ├── shared.ts           Constants, readJson/writeJson, parseJwtExpiry, defaultSettings
-│           ├── settings.ts         loadSettings(), saveSettings(), loadRuntimeConfig()
-│           ├── filters.ts          applyArtistFilters(), applyAlbumFilters(), randomPickWithReplacement()
-│           └── list-utils.ts       parseListField(), uniqueCaseInsensitive(), normalizeTextMatch()
-│
-├── web/                            IN-PROGRESS LIT REWRITE (stub — do not treat as functional)
+├── web/                            FRONTEND (Lit 3 rewrite — in progress)
 │   ├── index.html                  References /src/index.js (Vite resolves to index.ts)
 │   └── src/
-│       ├── index.ts                Imports main-element and auth-guard for registration
-│       ├── main-element.ts         <main-element> shell (no real content; has CSS/HTML bugs)
+│       ├── index.ts                Entry — imports main-element and auth-guard for registration
+│       ├── main-element.ts         <main-element> shell (no real content yet)
 │       ├── styled-element.ts       StyledElement base (Lit + global CSS injection)
 │       ├── index.css               Global styles
+│       ├── types.ts
+│       ├── components/
+│       │   ├── app-toolbar.ts
+│       │   ├── impressum-modal.ts  (⚠ see C-1 in FINDINGS.md)
+│       │   ├── list-manager.ts
+│       │   ├── log-panel.ts
+│       │   └── selected-songs-panel.ts
 │       └── modules/
+│           ├── app-settings-store.ts
+│           ├── playlist-builder.ts
 │           ├── auth/
 │           │   ├── auth-guard.ts   <auth-guard> — functional; dispatches auth-token CustomEvent
 │           │   └── auth-store.ts   authentication signal — declared, never populated (dead code)
 │           └── tidal/
-│               └── auth.ts         startLogin() / finishLogin() — functional; token not consumed
+│               ├── api.ts
+│               ├── auth.ts         startLogin() / finishLogin() — functional; token not consumed
+│               ├── filters.ts
+│               ├── list-utils.ts
+│               ├── settings.ts
+│               ├── shared.ts
+│               └── tidal-auth.ts
 │
 ├── Dockerfile                      Multi-stage; final image runs server/main.ts --cached-only
 ├── deno.json                       Tasks, compiler options, import map
 ├── deno.lock
-├── vite.config.ts                  root: 'web' — builds web/src/ only
+├── vite.config.ts                  root: 'web' — builds web/src/
 ├── vitest.config.ts                include: server/**/*_test.ts, web/src/**/*_test.ts
 └── .github/workflows/
     └── docker-image.yml            Build + push to GHCR on main/tags; no security scanning
@@ -209,36 +177,15 @@ Browser                 Backend                  TIDAL
 | `exchangeCode()`          | `server/auth/token-client.ts`   | POST to TIDAL token endpoint            |
 | `validateTokenResponse()` | `server/token-validation.ts`    | Validate shape of upstream token payload|
 
-### Functional Frontend (`web2/src/`)
+### Frontend (`web/src/`)
 
-| Class                   | File                                     | Responsibility                                    |
-|-------------------------|------------------------------------------|---------------------------------------------------|
-| `TidalPlaylistController` | `web2/src/app.ts`                      | Orchestrator: wires UI events to domain/state     |
-| `TidalAuth`             | `web2/src/tidal/auth.ts`                 | TIDAL SDK init, token persist/migrate, login flow |
-| `TidalApi`              | `web2/src/tidal/api.ts`                  | All TIDAL API calls via `@tidal-music/api` client |
-| `PlaylistBuilder`       | `web2/src/domain/playlist-builder.ts`    | Playlist generation algorithm                     |
-| `AppSettingsStore`      | `web2/src/state/app-settings-store.ts`   | Settings load/save/debounce/import/export         |
-| `ListManager`           | `web2/src/components/list-manager.ts`    | Reusable add/remove list + TIDAL search           |
-| `ShadowComponent`       | `web2/src/components/shadow-component.ts`| Base class for all vanilla custom elements        |
-
----
-
-## Playlist Generation Algorithm (`PlaylistBuilder.build`)
-
-1. Resolve artist pool: liked artists (optional) + `poolArtists`, filtered by `blacklist`.
-2. Resolve album pool: liked albums (optional) + `poolAlbums`, filtered by `albumBlacklist`.
-   Albums can be specified by TIDAL ID or exact title (resolved via search).
-3. For each of `settings.count` slots, with up to `maxAttemptsPerSlot` retries:
-   - Randomly decide artist-pool or album-pool pick (weighted by `albumPoolWeight`).
-   - For artist-pool: fetch artist's albums, apply album blacklist, pick a random album.
-   - For album-pool: pick a random resolved album entry.
-   - Fetch tracks for the chosen album, pick a random track.
-   - Skip duplicates (track already in `seenTrackIds`).
-4. Optionally shuffle final `trackIds` array (Fisher-Yates).
-5. Return `{ trackIds, selectedSongs, diagnostics }`.
-
-**Before modifying this algorithm, document expected parity with the behaviour list
-in `README.md`.**
+| Module / Element        | File                                        | Status         |
+|-------------------------|---------------------------------------------|----------------|
+| `<auth-guard>`          | `web/src/modules/auth/auth-guard.ts`        | Functional     |
+| `startLogin/finishLogin`| `web/src/modules/tidal/auth.ts`             | Functional; token not consumed |
+| `<main-element>`        | `web/src/main-element.ts`                   | Shell only     |
+| `AppSettingsStore`      | `web/src/modules/app-settings-store.ts`     | In progress    |
+| `PlaylistBuilder`       | `web/src/modules/playlist-builder.ts`       | In progress    |
 
 ---
 
@@ -252,17 +199,6 @@ deno task test        # runs Vitest
 - `vitest.config.ts` includes `server/**/*_test.ts` and `web/src/**/*_test.ts`.
 - `web/src/` has no test files. The `web/src/**/*_test.ts` glob matches nothing.
 - The only reachable test is `server/token-validation_test.ts`.
-
-**Known gaps:**
-- No tests for `PlaylistBuilder` (logic lives in `web2/src/domain/`).
-- No tests for `AppSettingsStore` (lives in `web2/src/state/`).
-- No tests for `TidalApi` album resolution (lives in `web2/src/tidal/`).
-- No integration tests for `/api/auth/start` or `/api/auth/token`.
-- No tests for OAuth callback + SDK token lifecycle in `web2/src/tidal/auth.ts`.
-- No import/export compatibility regression tests.
-
-To add tests for `web2/src/` code, either update the `include` glob in
-`vitest.config.ts` to add `web2/src/**/*_test.ts`, or move tests to `server/` scope.
 
 ---
 
@@ -282,34 +218,20 @@ frontend work:
 | M-1 | MEDIUM   | HSTS header missing                                           |
 | M-3 | MEDIUM   | No rate limiting on `/api/auth/start` or `/api/auth/token`    |
 | M-4 | MEDIUM   | `IS_DEV` silently defaults to `development` when env unset    |
-| M-6 | MEDIUM   | `vite.config.ts` builds stub (`web/`), not the functional app |
 
 ---
 
 ## Working Conventions
 
-- **Which frontend to edit:** `web2/src/` for any fix or feature. `web/src/` only if
-  explicitly continuing the Lit rewrite.
+- **Frontend:** all work goes in `web/src/`. Lit 3 + `@lit-labs/signals`.
 - **Auth changes:** any modification to the OAuth flow must account for both the
-  backend cookie lifecycle and the frontend SDK credential migration in
-  `web2/src/tidal/auth.ts`. Re-read the flow diagram above before touching either.
-- **Algorithm changes:** document expected parity with the `README.md` behaviour list
-  before modifying `PlaylistBuilder`.
+  backend cookie lifecycle and the frontend SDK credential handling in
+  `web/src/modules/tidal/auth.ts`. Re-read the flow diagram above before touching either.
 - **Secret handling:** `CLIENT_SECRET` must never appear in any frontend file or HTTP
   response. `CLIENT_ID` is intentionally public.
 - **Error messages:** prefer generic client-facing messages; log specifics
-  server-side only. See M-2 in `FINDINGS.md` for an existing violation.
+  server-side only.
 - **Cookie attributes:** always use `oauthCookieOptions()` for the flow cookie. Do not
   inline cookie options. Fix H-2 before adding any new cookies.
-- **Commit size:** keep changes small and behaviour-preserving; the codebase is in
-  active migration across two frontend trees.
-- **AGENTS.md:** update the "Codebase State" table and open findings summary when
-  either the build configuration changes or a finding from `FINDINGS.md` is resolved.
-
-Respond like smart caveman. Cut all filler, keep technical substance.
-Drop articles (a, an, the), filler words (just, really, basically, actually).
-Drop pleasantries (sure, certainly, happy to). 
-Drop "Let me...".
-No hedging. Fragments fine.
-Code blocks, technical terms, error messages → untouched.
-1 answer = 1 line. List > prose.
+- **AGENTS.md:** update the "Codebase State" section and open findings summary when
+  the build configuration changes or a finding from `FINDINGS.md` is resolved.
