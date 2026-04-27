@@ -251,9 +251,12 @@ export class AppShell extends SignalWatcher(LitElement) {
       return html`<settings-view></settings-view>`;
     }
 
+    if (view === 'library') {
+      return html`<library-view></library-view>`;
+    }
+
     const placeholders: Record<string, string> = {
       playlist: 'Playlist View',
-      library: 'Library View',
       result: 'Result View',
     };
     const label = placeholders[view] ?? `Unknown View: ${view}`;

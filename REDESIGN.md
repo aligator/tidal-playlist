@@ -417,10 +417,10 @@ Backend untouched throughout.
 - [x] Verify settings persist across reload
 
 ### Step 6 — Library Module
-- [ ] `modules/library/store.ts` — `artists`, `albums`, `blocked` as `signal<string[]>`, add/remove actions (immutable set pattern)
-- [ ] `modules/library/search-sheet.ts` — `<library-search-sheet>`: composes `<ui-search-sheet>`, calls TIDAL search, emits selected item
-- [ ] `modules/library/library-view.ts` — `<library-view>`: `<md-tabs>` (Artists · Albums · Blocked), `<md-list>` per tab, remove with Undo snackbar, `[+]` opens search sheet, empty states per tab
-- [ ] Wire library-view into app-shell
+- [x] `modules/library/store.ts` — `artists`, `albums`, `blocked` as `signal<string[]>`, add/remove actions (immutable set pattern)
+- [x] `modules/library/search-sheet.ts` — `<library-search-sheet>`: composes `<ui-search-sheet>`, calls TIDAL search, emits selected item
+- [x] `modules/library/library-view.ts` — `<library-view>`: `<md-tabs>` (Artists · Albums · Blocked), `<md-list>` per tab, remove with Undo snackbar, `[+]` opens search sheet, empty states per tab
+- [x] Wire library-view into app-shell
 - [ ] Verify add/remove/block flows
 
 ### Step 7 — Playlist Module
