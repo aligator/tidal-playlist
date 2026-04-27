@@ -4,6 +4,7 @@ import { settings } from '../settings/store.ts';
 import { artists, albums } from '../library/store.ts';
 import { TidalApi } from '../tidal/api.ts';
 import { PlaylistBuilder } from './builder.ts';
+import { handleAuthFailure } from '../auth/store.ts';
 
 // ---------------------------------------------------------------------------
 // Signals
@@ -71,6 +72,12 @@ export async function buildPlaylist(): Promise<void> {
     buildStatus.set('done');
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
+    if (
+      message.includes('401') ||
+      message.toLowerCase().includes('unauthorized')
+    ) {
+      handleAuthFailure();
+    }
     buildError.set(message);
     buildStatus.set('error');
   }
@@ -81,5 +88,16 @@ export async function savePlaylist(name: string, description: string): Promise<v
   const currentSettings = settings.get();
   const api = new TidalApi(currentSettings);
   const trackIds = result.get().map((song) => song.trackId);
-  await api.replacePlaylist(name, description, trackIds);
+  try {
+    await api.replacePlaylist(name, description, trackIds);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (
+      message.includes('401') ||
+      message.toLowerCase().includes('unauthorized')
+    ) {
+      handleAuthFailure();
+    }
+    throw err;
+  }
 }

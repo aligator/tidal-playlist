@@ -432,12 +432,12 @@ Backend untouched throughout.
 - [ ] Verify full build → result → save → back flow
 
 ### Step 8 — Wire & Harden
-- [ ] Connect all modules in app-shell (replace placeholders)
-- [ ] Add `window.addEventListener('unhandledrejection')` → snackbar error boundary
-- [ ] Token expiry: catch `TidalAuth` failures → set `authentication` to `null` → re-login
-- [ ] Verify responsive layout (mobile + desktop breakpoint)
-- [ ] Run `deno task check` — zero errors
-- [ ] Run `deno task build` — zero errors
+- [x] Connect all modules in app-shell (replace placeholders)
+- [x] Add `window.addEventListener('unhandledrejection')` → snackbar error boundary
+- [x] Token expiry: catch `TidalAuth` failures → set `authentication` to `null` → re-login
+- [x] Verify responsive layout (mobile + desktop breakpoint)
+- [x] Run `deno task check` — zero errors
+- [x] Run `deno task build` — zero errors
 
 ### Step 9 — Cleanup
 - [ ] Delete `web/src/main-element.ts`

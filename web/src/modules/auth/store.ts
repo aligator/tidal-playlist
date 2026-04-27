@@ -1,4 +1,5 @@
 import { signal, computed } from '@lit-labs/signals';
+import { pushView } from '../../app-shell.ts';
 
 export type ApiTokenResponse = {
   access_token: string;
@@ -15,4 +16,10 @@ export const isAuthenticated = computed(() => authentication.get() !== null);
 
 export async function logout(): Promise<void> {
   authentication.set(null);
+}
+
+/** Nullifies the auth signal and navigates to login; call on token expiry or 401 responses. */
+export function handleAuthFailure(): void {
+  authentication.set(null);
+  pushView('login');
 }

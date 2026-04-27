@@ -189,7 +189,7 @@ export class AppShell extends SignalWatcher(LitElement) {
     const view = currentView.get();
     // Active tab index: only the 3 main views affect the indicator
     const activeIndex = MAIN_VIEWS.indexOf(view as MainView);
-    const showNav = view !== 'login';
+    const showNav = view !== 'login' && view !== 'result';
 
     return html`
       <div class="shell">

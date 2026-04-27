@@ -10,3 +10,12 @@ import './components/ui-top-bar.ts';
 import './components/ui-bottom-sheet.ts';
 import './components/ui-snackbar.ts';
 import './components/ui-search-sheet.ts';
+import { showSnackbar } from './components/ui-snackbar.ts';
+
+window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
+  event.preventDefault();
+  const msg = event.reason instanceof Error
+    ? event.reason.message
+    : String(event.reason);
+  showSnackbar(msg || 'An unexpected error occurred.', 'error');
+});
