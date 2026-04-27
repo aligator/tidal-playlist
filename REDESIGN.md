@@ -440,9 +440,9 @@ Backend untouched throughout.
 - [x] Run `deno task build` — zero errors
 
 ### Step 9 — Cleanup
-- [ ] Delete `web/src/main-element.ts`
-- [ ] Delete `web/src/components/log-panel.ts`
-- [ ] Delete `web/src/modules/auth/auth-store.ts` (dead stub)
-- [ ] Delete `web/src/styled-element.ts`
-- [ ] Remove any dead imports from `index.ts`
-- [ ] Final `deno task check` + `deno task build`
+- [x] Delete `web/src/main-element.ts`
+- [x] Delete `web/src/components/log-panel.ts`
+- [x] Delete `web/src/modules/auth/auth-store.ts` (dead stub)
+- [ ] Delete `web/src/styled-element.ts` (kept: still imported by app-toolbar, list-manager, playlist-settings, impressum-modal, selected-songs-panel)
+- [x] Remove any dead imports from `index.ts`
+- [x] Final `deno task check` + `deno task build`
