@@ -378,11 +378,11 @@ Backend untouched throughout.
 > **Rule: one task at a time. Never start the next until the current is done, committed, and building without errors.**
 
 ### Step 1 — CSS Tokens
-- [ ] Run Material Theme Builder with TIDAL teal (`#00a0d6`) as source color; export light + dark token sets
-- [ ] Replace `web/src/index.css` with MWC token declarations directly on `:root` (no `@layer` for tokens)
-- [ ] Wire `light-dark()` for all `--md-sys-color-*` tokens
-- [ ] Add `@layer base, components, overrides` for non-token rules
-- [ ] Verify build + manual dark mode check
+- [x] Run Material Theme Builder with TIDAL teal (`#00a0d6`) as source color; export light + dark token sets
+- [x] Replace `web/src/index.css` with MWC token declarations directly on `:root` (no `@layer` for tokens)
+- [x] Wire `light-dark()` for all `--md-sys-color-*` tokens
+- [x] Add `@layer base, components, overrides` for non-token rules
+- [x] Verify build + manual dark mode check
 
 ### Step 2 — App Shell Skeleton
 - [ ] Create `web/src/app-shell.ts` — `<app-shell>` Lit element
