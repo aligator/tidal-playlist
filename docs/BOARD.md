@@ -30,7 +30,6 @@ Statuses: **Open** · **In Progress** · **Done** · **Closed** (won't fix / dea
 
 | ID | Title | File(s) |
 |----|-------|---------|
-| [UX-1](tickets/ux/UX-1.md) | Progress bar stuck — value always 0 | `web/src/modules/playlist/playlist-view.ts` |
 | [UX-3](tickets/ux/UX-3.md) | `impressum-modal` uses native `<dialog>` not `md-dialog` | `web/src/components/impressum-modal.ts` |
 | [UX-4](tickets/ux/UX-4.md) | No confirmation before destructive playlist save | `web/src/modules/tidal/api.ts` |
 | [UX-6](tickets/ux/UX-6.md) | Dead CSS part selector in `ui-search-sheet.ts` | `web/src/components/ui-search-sheet.ts` |
@@ -86,6 +85,7 @@ Statuses: **Open** · **In Progress** · **Done** · **Closed** (won't fix / dea
 | [L-7](tickets/low/L-7.md) | No security scanning in CI | Trivy scan after build; fails on HIGH/CRITICAL; SARIF uploaded to GitHub Security |
 | [L-8](tickets/low/L-8.md) | Frontend tests unreachable / nonexistent | 34 tests across `filters`, `list-utils`, `shared`, `PlaylistBuilder` — all passing |
 | [UX-7](tickets/ux/UX-7.md) | `defaultCountryCodeFromBrowser()` extracts wrong subtag | `Intl.Locale.region` — `nb-NO` now returns `NO` not `NB` |
+| [UX-1](tickets/ux/UX-1.md) | Progress bar stuck — value always 0 | Removed dead `.value` binding; `?indeterminate` drives animation |
 | [H-1](tickets/high/H-1.md) | `OAUTH_FLOW_SECRET` entropy not validated | `assertServerConfig()` rejects secrets < 32 bytes |
 | [H-2](tickets/high/H-2.md) | `Secure` cookie flag wrong behind reverse proxy | `secure: !IS_DEV` — no longer depends on request protocol |
 | [H-3](tickets/high/H-3.md) | `authorizeUrl` not validated — 3 files | Origin asserted `=== 'https://login.tidal.com'` before redirect |

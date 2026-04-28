@@ -171,7 +171,6 @@ export class PlaylistView extends SignalWatcher(LitElement) {
 
       <md-linear-progress
         ?indeterminate="${isBuilding}"
-        .value="${isBuilding ? 0 : 0}"
         style="opacity: ${isBuilding ? '1' : '0'};"
       ></md-linear-progress>
 

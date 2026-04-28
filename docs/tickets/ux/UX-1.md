@@ -2,7 +2,7 @@
 id: UX-1
 severity: BUG
 area: Frontend/UX
-status: Open
+status: Done
 ---
 
 # UX-1 · Progress bar stuck — never shows during playlist build
