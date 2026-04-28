@@ -9,7 +9,6 @@ Statuses: **Open** · **In Progress** · **Done** · **Closed** (won't fix / dea
 
 | ID | Title | File(s) |
 |----|-------|---------|
-| [H-6](tickets/high/H-6.md) | `style-src` CSP blocks MWC inline styles — widespread UI breakage | `server/main.ts` |
 
 ---
 
@@ -17,14 +16,11 @@ Statuses: **Open** · **In Progress** · **Done** · **Closed** (won't fix / dea
 
 | ID | Title | File(s) |
 |----|-------|---------|
-| [M-1](tickets/medium/M-1.md) | HSTS header missing | `server/main.ts` |
-| [M-2](tickets/medium/M-2.md) | Internal error detail exposed to clients | `server/routes/auth.ts` |
 | [M-3](tickets/medium/M-3.md) | No rate limiting on auth endpoints | `server/routes/auth.ts` |
 | [M-4](tickets/medium/M-4.md) | `IS_DEV` defaults to development when env unset | `server/config.ts` |
 | [M-5](tickets/medium/M-5.md) | `replacePlaylist` deletes all name-matching playlists | `web/src/modules/tidal/api.ts` |
 | [M-6](tickets/medium/M-6.md) | POST body size unbounded on `/api/auth/token` | `server/routes/auth.ts` |
 | [M-7](tickets/medium/M-7.md) | `tidal-auth.ts` fetch missing `credentials: 'include'` | `web/src/modules/tidal/tidal-auth.ts` |
-| [M-8](tickets/medium/M-8.md) | `connect-src` missing `api.tidal.com` — TrueTime blocked | `server/main.ts` |
 
 ---
 
@@ -99,3 +95,7 @@ Statuses: **Open** · **In Progress** · **Done** · **Closed** (won't fix / dea
 | [H-2](tickets/high/H-2.md) | `Secure` cookie flag wrong behind reverse proxy | `secure: !IS_DEV` — no longer depends on request protocol |
 | [H-3](tickets/high/H-3.md) | `authorizeUrl` not validated — 3 files | Origin asserted `=== 'https://login.tidal.com'` before redirect |
 | [H-4](tickets/high/H-4.md) | Tokens in `localStorage` | Token ops moved to `sessionStorage`; settings remain in `localStorage` |
+| [H-6](tickets/high/H-6.md) | `style-src` CSP blocks MWC inline styles | `'unsafe-inline'` already present — board was stale |
+| [M-1](tickets/medium/M-1.md) | HSTS header missing | `Strict-Transport-Security` already set behind `!IS_DEV` guard — board was stale |
+| [M-8](tickets/medium/M-8.md) | `connect-src` missing `api.tidal.com` | `https://api.tidal.com` already in `connect-src` — board was stale |
+| [M-2](tickets/medium/M-2.md) | Internal error detail exposed to clients | 502 body changed to `'Authentication failed'`; detail logged server-side |

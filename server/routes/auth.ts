@@ -78,7 +78,7 @@ export function createAuthRouter(): Router {
         console.error('Token exchange failed: malformed upstream payload', {
           route: '/api/auth/token',
         });
-        return errorResponse(ctx, 'invalid upstream token payload', 502);
+        return errorResponse(ctx, 'Authentication failed', 502);
       }
       console.error('Token exchange failed', {
         route: '/api/auth/token',
