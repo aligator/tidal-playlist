@@ -26,12 +26,12 @@ export class TidalAuth {
   }
 
   isLoggedIn(): boolean {
-    const token = readJson<TokenState | null>(TOKEN_KEY, null);
+    const token = readJson<TokenState | null>(TOKEN_KEY, null, sessionStorage);
     return Boolean(token?.access_token);
   }
 
   logout(): void {
-    localStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
     sdkLogout();
   }
 
@@ -91,7 +91,7 @@ export class TidalAuth {
       return sdkToken;
     }
 
-    const token = readJson<TokenState | null>(TOKEN_KEY, null);
+    const token = readJson<TokenState | null>(TOKEN_KEY, null, sessionStorage);
     if (token?.access_token) {
       await this.migrateTokenToSdk(token);
       sdkToken = await this.getSdkTokenSafe();
@@ -112,7 +112,7 @@ export class TidalAuth {
   }
 
   private async persistTokenState(tokenState: TokenState): Promise<void> {
-    writeJson<TokenState>(TOKEN_KEY, tokenState);
+    writeJson<TokenState>(TOKEN_KEY, tokenState, sessionStorage);
     await this.migrateTokenToSdk(tokenState);
   }
 

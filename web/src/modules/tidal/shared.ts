@@ -34,9 +34,9 @@ export function unixNow(): number {
   return Math.floor(Date.now() / 1000);
 }
 
-export function readJson<T>(key: string, fallback: T): T {
+export function readJson<T>(key: string, fallback: T, storage: Storage = localStorage): T {
   try {
-    const raw = localStorage.getItem(key);
+    const raw = storage.getItem(key);
     if (!raw) {
       return fallback;
     }
@@ -46,8 +46,8 @@ export function readJson<T>(key: string, fallback: T): T {
   }
 }
 
-export function writeJson<T>(key: string, value: T): void {
-  localStorage.setItem(key, JSON.stringify(value));
+export function writeJson<T>(key: string, value: T, storage: Storage = localStorage): void {
+  storage.setItem(key, JSON.stringify(value));
 }
 
 export function parseJwtExpiry(accessToken: string, expiresIn: unknown): number {
