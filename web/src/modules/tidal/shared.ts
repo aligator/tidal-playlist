@@ -50,6 +50,7 @@ export function writeJson<T>(key: string, value: T, storage: Storage = localStor
   storage.setItem(key, JSON.stringify(value));
 }
 
+// Reads expiry from JWT payload only — no signature verification (intentional: browser has no key).
 export function parseJwtExpiry(accessToken: string, expiresIn: unknown): number {
   try {
     const payload = accessToken.split('.')[1];

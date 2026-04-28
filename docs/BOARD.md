@@ -23,7 +23,6 @@ Statuses: **Open** · **In Progress** · **Done** · **Closed** (won't fix / dea
 
 | ID | Title | File(s) |
 |----|-------|---------|
-| [L-1](tickets/low/L-1.md) | JWT decoded without signature verification | `web/src/modules/tidal/shared.ts` |
 | [L-2](tickets/low/L-2.md) | Signing key cached without secret-change detection | `server/auth/oauth.ts` |
 | [L-3](tickets/low/L-3.md) | Cookie `secure` flag may mismatch between set and delete | `server/routes/auth.ts` |
 | [L-4](tickets/low/L-4.md) | Dead `redirectUri` in POST body | `web/src/modules/auth/api.ts` |
@@ -86,6 +85,7 @@ Statuses: **Open** · **In Progress** · **Done** · **Closed** (won't fix / dea
 | [C-1](tickets/closed/C-1.md) | XSS in `impressum-modal.ts` | Resolved — server data escaped |
 | [M-6-old](tickets/closed/M-6-old.md) | Stub frontend served | Resolved — Lit rewrite complete |
 | [H-5](tickets/high/H-5.md) | No timeout on upstream token fetch | `AbortSignal.timeout(10_000)` + 504 on TimeoutError |
+| [L-1](tickets/low/L-1.md) | JWT decoded without signature verification | Comment added — intentional browser limitation documented |
 | [H-1](tickets/high/H-1.md) | `OAUTH_FLOW_SECRET` entropy not validated | `assertServerConfig()` rejects secrets < 32 bytes |
 | [H-2](tickets/high/H-2.md) | `Secure` cookie flag wrong behind reverse proxy | `secure: !IS_DEV` — no longer depends on request protocol |
 | [H-3](tickets/high/H-3.md) | `authorizeUrl` not validated — 3 files | Origin asserted `=== 'https://login.tidal.com'` before redirect |
