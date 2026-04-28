@@ -37,7 +37,7 @@ export function assertServerConfig(): void {
     Deno.exit(1);
   }
 
-  if (new TextEncoder().encode(OAUTH_FLOW_SIGNING_SECRET).length < 32) {
+  if (!IS_DEV && new TextEncoder().encode(OAUTH_FLOW_SIGNING_SECRET).length < 32) {
     console.error(
       'Invalid env var: OAUTH_FLOW_SECRET must be at least 32 bytes. A short or guessable value allows offline brute-force of signed flow cookies.',
     );
