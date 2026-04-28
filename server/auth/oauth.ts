@@ -39,9 +39,10 @@ export function oauthCookieOptions(_request: Request) {
 }
 
 let flowSigningKey: CryptoKey | null = null;
+let flowSigningKeySecret = '';
 
 async function getFlowSigningKey(): Promise<CryptoKey> {
-  if (flowSigningKey) {
+  if (flowSigningKey && flowSigningKeySecret === OAUTH_FLOW_SIGNING_SECRET) {
     return flowSigningKey;
   }
   flowSigningKey = await crypto.subtle.importKey(
@@ -51,6 +52,7 @@ async function getFlowSigningKey(): Promise<CryptoKey> {
     false,
     ['sign', 'verify'],
   );
+  flowSigningKeySecret = OAUTH_FLOW_SIGNING_SECRET;
   return flowSigningKey;
 }
 
