@@ -14,6 +14,7 @@ async function postToken(body: URLSearchParams): Promise<ValidatedTokenResponse>
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body,
+    signal: AbortSignal.timeout(10_000),
   });
 
   const payload = await response.json().catch(() => ({}));

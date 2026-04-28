@@ -69,6 +69,10 @@ export function createAuthRouter(): Router {
       );
       return;
     } catch (error: unknown) {
+      if (error instanceof DOMException && error.name === 'TimeoutError') {
+        console.error('Token exchange timed out', { route: '/api/auth/token' });
+        return errorResponse(ctx, 'Could not get a token.', 504);
+      }
       const message = asMessage(error);
       if (message === 'invalid upstream token payload') {
         console.error('Token exchange failed: malformed upstream payload', {

@@ -69,14 +69,10 @@ browser storage, or accept trade-off after XSS surface fully eliminated.
 
 ---
 
-### H-5 · No upstream fetch timeout in token exchange
+### ~~H-5 · No upstream fetch timeout in token exchange~~ **FIXED ✓**
 
-**File:** `server/auth/token-client.ts` L9–17
-
-`fetch(TOKEN_URL, {...})` has no `AbortController` / `signal`. Hung TIDAL response
-holds a Deno async task indefinitely. Under load this exhausts the event loop.
-
-**Fix:** wrap with `AbortSignal.timeout(10_000)`.
+`AbortSignal.timeout(10_000)` added to `postToken()` fetch. Route handler returns
+`504` on `TimeoutError`, `502` on malformed payload, `500` otherwise.
 
 ---
 
@@ -670,7 +666,7 @@ contributors don't assume CSPRNG properties.
 | H-2  | HIGH     | Backend/Auth     | `Secure` cookie flag wrong behind reverse proxy         | Open        |
 | H-3  | HIGH     | Frontend/Auth    | `authorizeUrl` not validated — now 3 files              | Worse       |
 | H-4  | HIGH     | Frontend/Auth    | Tokens in `localStorage`                                | Open        |
-| H-5  | HIGH     | Backend          | No timeout on upstream token fetch                      | Open        |
+| H-5  | HIGH     | Backend          | No timeout on upstream token fetch                      | **FIXED** ✓ |
 | H-6  | HIGH     | Frontend/CSP     | `style-src` blocks MWC inline styles — widespread breakage | NEW 🎭   |
 | M-1  | MEDIUM   | Backend          | HSTS header missing                                     | Open        |
 | M-2  | MEDIUM   | Backend          | Internal error detail exposed to clients                | Open        |
