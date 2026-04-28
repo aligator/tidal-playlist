@@ -24,6 +24,20 @@ router.all('/(.*)', async (ctx) => {
 
 const app = new Application();
 app.use(async (ctx, next) => {
+  const start = Date.now();
+  await next();
+  const ms = Date.now() - start;
+  const ip = ctx.request.ip ?? 'unknown';
+  const anonIp = ip.includes('.') ? ip.replace(/\.\d+$/, '.0') : ip.replace(/:[^:]+$/, ':0');
+  console.log(JSON.stringify({
+    method: ctx.request.method,
+    path: ctx.request.url.pathname,
+    status: ctx.response.status,
+    ms,
+    ip: anonIp,
+  }));
+});
+app.use(async (ctx, next) => {
   await next();
 
   ctx.response.headers.set(
