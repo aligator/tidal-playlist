@@ -2,7 +2,7 @@ export const PORT = Number(Deno.env.get('PORT') ?? '8080');
 export const CLIENT_ID = Deno.env.get('TIDAL_CLIENT_ID') ?? '';
 export const CLIENT_SECRET = Deno.env.get('TIDAL_CLIENT_SECRET') ?? '';
 export const REDIRECT_URI_OVERRIDE = Deno.env.get('TIDAL_REDIRECT_URI')?.trim() ?? '';
-export const APP_ENV = (Deno.env.get('DENO_ENV') ?? Deno.env.get('NODE_ENV') ?? 'development')
+export const APP_ENV = (Deno.env.get('DENO_ENV') ?? Deno.env.get('NODE_ENV') ?? 'production')
   .trim()
   .toLowerCase();
 export const IS_DEV = APP_ENV === 'dev' || APP_ENV === 'development';

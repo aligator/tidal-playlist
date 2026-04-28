@@ -502,8 +502,11 @@ export class TidalApi {
   ): Promise<string> {
     const existing = await this.userPlaylists();
     const matches = existing.filter((playlist) => playlist.name === name);
-    for (const playlist of matches) {
-      await this.deletePlaylist(playlist.id);
+    if (matches.length > 1) {
+      console.warn(`replacePlaylist: ${matches.length} playlists named "${name}" found — deleting only the first`);
+    }
+    if (matches.length > 0) {
+      await this.deletePlaylist(matches[0].id);
     }
 
     const playlistId = await this.createPlaylist(name, description);

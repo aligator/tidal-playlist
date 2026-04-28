@@ -1,6 +1,7 @@
 import { Router } from '@oak/oak';
 import { CLIENT_ID, getImpressum, OAUTH_FLOW_COOKIE, OAUTH_FLOW_TTL_SECONDS } from '../config.ts';
 import { asMessage, errorResponse } from '../http/errors.ts';
+import { rateLimitMiddleware } from '../http/rate-limit.ts';
 import {
   createOAuthStart,
   oauthCookieOptions,
@@ -8,6 +9,8 @@ import {
   verifyFlowPayload,
 } from '../auth/oauth.ts';
 import { exchangeCode } from '../auth/token-client.ts';
+
+const authRateLimit = rateLimitMiddleware(10, 60_000);
 
 export function createAuthRouter(): Router {
   const router = new Router();
@@ -33,7 +36,7 @@ export function createAuthRouter(): Router {
     ctx.response.body = impressum;
   });
 
-  router.get('/api/auth/start', async (ctx) => {
+  router.get('/api/auth/start', authRateLimit, async (ctx) => {
     const start = await createOAuthStart(ctx.request, CLIENT_ID);
     await ctx.cookies.set(
       OAUTH_FLOW_COOKIE,
@@ -46,8 +49,12 @@ export function createAuthRouter(): Router {
     ctx.response.body = { authorizeUrl: start.authorizeUrl };
   });
 
-  router.post('/api/auth/token', async (ctx) => {
+  router.post('/api/auth/token', authRateLimit, async (ctx) => {
     try {
+      const contentLength = Number(ctx.request.headers.get('content-length') ?? '0');
+      if (contentLength > 4096) {
+        return errorResponse(ctx, 'Request too large', 413);
+      }
       const body = await ctx.request.body.json();
       const code = typeof body.code === 'string' ? body.code : '';
       const state = typeof body.state === 'string' ? body.state : '';

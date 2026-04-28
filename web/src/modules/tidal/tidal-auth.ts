@@ -36,7 +36,7 @@ export class TidalAuth {
   }
 
   async beginLogin(): Promise<void> {
-    const res = await fetch('/api/auth/start', { method: 'GET' });
+    const res = await fetch('/api/auth/start', { method: 'GET', credentials: 'include' });
     const payload = (await res.json().catch(() => ({}))) as JsonObject;
     if (!res.ok) {
       throw new Error(asString(payload.error) || `Login start failed (${res.status})`);
