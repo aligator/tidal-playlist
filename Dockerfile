@@ -23,5 +23,7 @@ COPY --from=build /app/web/dist ./web/dist
 
 USER deno
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -sf http://localhost:8080/api/config || exit 1
 
 CMD ["run", "--cached-only", "--frozen", "--allow-net", "--allow-read=web/dist", "--allow-env", "server/main.ts"]
