@@ -23,8 +23,6 @@ Statuses: **Open** · **In Progress** · **Done** · **Closed** (won't fix / dea
 
 | ID | Title | File(s) |
 |----|-------|---------|
-| [L-3](tickets/low/L-3.md) | Cookie `secure` flag may mismatch between set and delete | `server/routes/auth.ts` |
-| [L-4](tickets/low/L-4.md) | Dead `redirectUri` in POST body | `web/src/modules/auth/api.ts` |
 | [L-5](tickets/low/L-5.md) | No request access logging | `server/` |
 | [L-6](tickets/low/L-6.md) | No `HEALTHCHECK` in Dockerfile | `Dockerfile` |
 | [L-7](tickets/low/L-7.md) | No dependency or container security scanning in CI | `.github/workflows/` |
@@ -86,6 +84,7 @@ Statuses: **Open** · **In Progress** · **Done** · **Closed** (won't fix / dea
 | [H-5](tickets/high/H-5.md) | No timeout on upstream token fetch | `AbortSignal.timeout(10_000)` + 504 on TimeoutError |
 | [L-1](tickets/low/L-1.md) | JWT decoded without signature verification | Comment added — intentional browser limitation documented |
 | [L-2](tickets/low/L-2.md) | Signing key cached without secret-change detection | Cache invalidates when `OAUTH_FLOW_SIGNING_SECRET` value changes |
+| [L-3](tickets/low/L-3.md) | Cookie `secure` flag mismatch between set and delete | Resolved by H-2 — `secure: !IS_DEV` is deterministic |
 | [H-1](tickets/high/H-1.md) | `OAUTH_FLOW_SECRET` entropy not validated | `assertServerConfig()` rejects secrets < 32 bytes |
 | [H-2](tickets/high/H-2.md) | `Secure` cookie flag wrong behind reverse proxy | `secure: !IS_DEV` — no longer depends on request protocol |
 | [H-3](tickets/high/H-3.md) | `authorizeUrl` not validated — 3 files | Origin asserted `=== 'https://login.tidal.com'` before redirect |

@@ -3,7 +3,6 @@ import type { ApiTokenResponse } from './store.ts';
 
 export type { ApiTokenResponse };
 
-const CALLBACK_PATH = '/callback';
 
 function getCallbackParams() {
   const url = new URL(globalThis.location.href);
@@ -37,11 +36,7 @@ export async function finishLogin(): Promise<ApiTokenResponse | null> {
     method: 'POST',
     credentials: 'include',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      code,
-      state,
-      redirectUri: `${globalThis.location.origin}${CALLBACK_PATH}`,
-    }),
+    body: JSON.stringify({ code, state }),
   });
 
   if (!res.ok) throw new Error(`token exchange failed: ${res.status}`);
