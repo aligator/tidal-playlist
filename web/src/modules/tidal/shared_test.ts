@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { normalizeTrackCount, parseJwtExpiry, unixNow } from './shared.ts';
+import { describe, expect, it, vi } from 'vitest';
+import { defaultCountryCodeFromBrowser, normalizeTrackCount, parseJwtExpiry, unixNow } from './shared.ts';
 
 function makeJwt(payload: Record<string, unknown>): string {
   const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
@@ -54,5 +54,31 @@ describe('normalizeTrackCount', () => {
 
   it('uses custom fallback', () => {
     expect(normalizeTrackCount('bad', 10)).toBe(10);
+  });
+});
+
+describe('defaultCountryCodeFromBrowser', () => {
+  it('extracts region from nb-NO (not language subtag NB)', () => {
+    vi.stubGlobal('navigator', { languages: ['nb-NO'], language: 'nb-NO' });
+    expect(defaultCountryCodeFromBrowser()).toBe('NO');
+    vi.unstubAllGlobals();
+  });
+
+  it('extracts region from pt-BR', () => {
+    vi.stubGlobal('navigator', { languages: ['pt-BR'], language: 'pt-BR' });
+    expect(defaultCountryCodeFromBrowser()).toBe('BR');
+    vi.unstubAllGlobals();
+  });
+
+  it('falls back to US when no region in locale', () => {
+    vi.stubGlobal('navigator', { languages: ['en'], language: 'en' });
+    expect(defaultCountryCodeFromBrowser()).toBe('US');
+    vi.unstubAllGlobals();
+  });
+
+  it('falls back to US when navigator undefined', () => {
+    vi.stubGlobal('navigator', undefined);
+    expect(defaultCountryCodeFromBrowser()).toBe('US');
+    vi.unstubAllGlobals();
   });
 });

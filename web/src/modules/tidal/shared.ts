@@ -109,22 +109,13 @@ export function defaultCountryCodeFromBrowser(): string {
     : [navigator.language];
 
   for (const tag of preferred) {
-    const value = String(tag ?? '').trim();
-    if (!value) {
-      continue;
-    }
-
-    const regionMatch = value.match(/(?:^|[-_])([A-Za-z]{2})(?:$|[-_])/);
-    if (regionMatch) {
-      return regionMatch[1].toUpperCase();
-    }
-
-    const language = value.split(/[-_]/)[0]?.toLowerCase() ?? '';
-    if (language === 'en') {
-      return fallback;
-    }
-    if (/^[a-z]{2}$/.test(language)) {
-      return language.toUpperCase();
+    try {
+      const region = new Intl.Locale(String(tag ?? '')).region?.toUpperCase();
+      if (region && /^[A-Z]{2}$/.test(region)) {
+        return region;
+      }
+    } catch {
+      // invalid tag — try next
     }
   }
 

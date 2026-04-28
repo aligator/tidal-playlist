@@ -2,7 +2,7 @@
 id: UX-7
 severity: BUG
 area: Frontend/UX
-status: Open
+status: Done
 discovered: Playwright live session
 ---
 
