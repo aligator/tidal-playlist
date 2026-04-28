@@ -9,7 +9,6 @@ Statuses: **Open** · **In Progress** · **Done** · **Closed** (won't fix / dea
 
 | ID | Title | File(s) |
 |----|-------|---------|
-| [H-3](tickets/high/H-3.md) | `authorizeUrl` not validated — 3 files | `web/src/modules/auth/api.ts`, `tidal/auth.ts`, `tidal/tidal-auth.ts` |
 | [H-4](tickets/high/H-4.md) | Tokens in `localStorage` | `web/src/modules/tidal/shared.ts` |
 | [H-6](tickets/high/H-6.md) | `style-src` CSP blocks MWC inline styles — widespread UI breakage | `server/main.ts` |
 
@@ -99,3 +98,4 @@ Statuses: **Open** · **In Progress** · **Done** · **Closed** (won't fix / dea
 | [H-5](tickets/high/H-5.md) | No timeout on upstream token fetch | `AbortSignal.timeout(10_000)` + 504 on TimeoutError |
 | [H-1](tickets/high/H-1.md) | `OAUTH_FLOW_SECRET` entropy not validated | `assertServerConfig()` rejects secrets < 32 bytes |
 | [H-2](tickets/high/H-2.md) | `Secure` cookie flag wrong behind reverse proxy | `secure: !IS_DEV` — no longer depends on request protocol |
+| [H-3](tickets/high/H-3.md) | `authorizeUrl` not validated — 3 files | Origin asserted `=== 'https://login.tidal.com'` before redirect |

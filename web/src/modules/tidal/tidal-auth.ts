@@ -45,6 +45,9 @@ export class TidalAuth {
     if (!authorizeUrl) {
       throw new Error('Login start failed: missing authorize URL.');
     }
+    if (new URL(authorizeUrl).origin !== 'https://login.tidal.com') {
+      throw new Error('Unexpected authorize URL origin');
+    }
     globalThis.location.href = authorizeUrl;
   }
 

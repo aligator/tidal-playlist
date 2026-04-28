@@ -22,6 +22,9 @@ export async function startLogin() {
   const res = await fetch('/api/auth/start', { credentials: 'include' });
   if (!res.ok) throw new Error(`auth start failed: ${res.status}`);
   const { authorizeUrl } = (await res.json()) as { authorizeUrl: string };
+  if (new URL(authorizeUrl).origin !== 'https://login.tidal.com') {
+    throw new Error('Unexpected authorize URL origin');
+  }
   globalThis.location.href = authorizeUrl;
 }
 
