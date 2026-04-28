@@ -29,11 +29,11 @@ export function redirectUri(request: Request): string {
   return `${new URL(request.url).origin}/callback`;
 }
 
-export function oauthCookieOptions(request: Request) {
+export function oauthCookieOptions(_request: Request) {
   return {
     httpOnly: true,
     sameSite: 'lax' as const,
-    secure: new URL(request.url).protocol === 'https:',
+    secure: !IS_DEV,
     path: '/',
   };
 }

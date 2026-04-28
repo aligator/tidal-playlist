@@ -9,8 +9,6 @@ Statuses: **Open** · **In Progress** · **Done** · **Closed** (won't fix / dea
 
 | ID | Title | File(s) |
 |----|-------|---------|
-| [H-1](tickets/high/H-1.md) | `OAUTH_FLOW_SECRET` entropy not validated | `server/config.ts` |
-| [H-2](tickets/high/H-2.md) | `Secure` cookie flag wrong behind reverse proxy | `server/auth/oauth.ts` |
 | [H-3](tickets/high/H-3.md) | `authorizeUrl` not validated — 3 files | `web/src/modules/auth/api.ts`, `tidal/auth.ts`, `tidal/tidal-auth.ts` |
 | [H-4](tickets/high/H-4.md) | Tokens in `localStorage` | `web/src/modules/tidal/shared.ts` |
 | [H-6](tickets/high/H-6.md) | `style-src` CSP blocks MWC inline styles — widespread UI breakage | `server/main.ts` |
@@ -99,3 +97,5 @@ Statuses: **Open** · **In Progress** · **Done** · **Closed** (won't fix / dea
 | [C-1](tickets/closed/C-1.md) | XSS in `impressum-modal.ts` | Resolved — server data escaped |
 | [M-6-old](tickets/closed/M-6-old.md) | Stub frontend served | Resolved — Lit rewrite complete |
 | [H-5](tickets/high/H-5.md) | No timeout on upstream token fetch | `AbortSignal.timeout(10_000)` + 504 on TimeoutError |
+| [H-1](tickets/high/H-1.md) | `OAUTH_FLOW_SECRET` entropy not validated | `assertServerConfig()` rejects secrets < 32 bytes |
+| [H-2](tickets/high/H-2.md) | `Secure` cookie flag wrong behind reverse proxy | `secure: !IS_DEV` — no longer depends on request protocol |

@@ -37,6 +37,13 @@ export function assertServerConfig(): void {
     Deno.exit(1);
   }
 
+  if (new TextEncoder().encode(OAUTH_FLOW_SIGNING_SECRET).length < 32) {
+    console.error(
+      'Invalid env var: OAUTH_FLOW_SECRET must be at least 32 bytes. A short or guessable value allows offline brute-force of signed flow cookies.',
+    );
+    Deno.exit(1);
+  }
+
   if (!IS_DEV && !REDIRECT_URI_OVERRIDE) {
     console.error(
       'Missing env var: TIDAL_REDIRECT_URI is required outside development.',
