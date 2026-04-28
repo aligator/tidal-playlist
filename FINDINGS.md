@@ -1,6 +1,6 @@
 # Security & UI/UX Review — FINDINGS.md
 
-Reviewed: full codebase (`server/`, `web/src/`, `Dockerfile`).  
+Reviewed: full codebase (`server/`, `web/src/`, `Dockerfile`) + live Playwright session.  
 Branch: `lit`. UI refactored to Lit web components. `web2/` removed.  
 Severity: **CRITICAL → HIGH → MEDIUM → LOW → INFO**.
 
@@ -80,6 +80,37 @@ holds a Deno async task indefinitely. Under load this exhausts the event loop.
 
 ---
 
+### H-6 · `style-src` CSP blocks Material Web inline style injection — widespread UI breakage  *(NEW — Playwright)*
+
+**File:** `server/main.ts` L34
+
+```
+"style-src 'self' https://fonts.googleapis.com"
+```
+
+Material Web (`@material/web`) uses `element.style.setProperty()` extensively to apply
+CSS custom-property tokens and interactive states (ripple positioning, slider thumb,
+focus ring, `md-list-item` text layout, `md-outlined-select` value label). Every such
+call is blocked by the current CSP. Confirmed effects:
+
+- **Settings page**: `md-list-item` rows render only last 2–3 chars ("llo", "vnl" — clipped text from "Export config", "Import config"). Page is effectively unreadable.
+- **Slider**: thumb renders at position 0 visually even though JS value is 20. User sees no feedback.
+- **Country / Tracks selects**: visual label not applied; selects appear empty.
+- **Icons**: Material Symbols font-variation-settings blocked; ligature glyphs render incorrectly ("adc", "_fc").
+- **9+ CSP errors on every page load / navigation.**
+
+**Trade-off:** Adding `'unsafe-inline'` to `style-src` permits CSS injection via XSS.
+Styles are lower-risk than scripts, but the threat is real.
+
+**Fix options (pick one):**
+1. Add `'unsafe-inline'` to `style-src` only — acceptable if XSS surface is fully controlled.
+2. Use a per-request nonce injected into the CSP header and passed to each MWC component (complex, requires SSR integration).
+3. Pre-compute and whitelist all required style hashes (fragile — breaks on MWC version bumps).
+
+Recommended: option 1, combined with a strict `script-src` (already in place) and the existing `frame-ancestors 'none'`.
+
+---
+
 ## MEDIUM
 
 ### M-1 · No `Strict-Transport-Security` (HSTS) header
@@ -146,6 +177,25 @@ Frontend should show confirmation dialog before calling `replacePlaylist`.
 full memory buffering — trivial memory-exhaustion DoS.
 
 **Fix:** check `Content-Length` header or use Oak's `maxBodySize` option before parsing.
+
+---
+
+### M-8 · `connect-src` missing `https://api.tidal.com` — TrueTime blocked on load  *(NEW — Playwright)*
+
+**File:** `server/main.ts` L37
+
+`@tidal-music/true-time` (pulled in by `@tidal-music/auth`) pings
+`https://api.tidal.com/v1/ping` on startup to synchronise clock offset. This domain
+is not in `connect-src`. The browser blocks the request and throws:
+
+```
+TypeError: Failed to fetch  (index-DTp7haYV.js:929)
+```
+
+on every page load. TrueTime falls back to `Date.now()`, degrading token-expiry
+accuracy. The error also pollutes the console making other errors harder to spot.
+
+**Fix:** add `https://api.tidal.com` to `connect-src`.
 
 ---
 
@@ -268,9 +318,10 @@ country code format, weight ∈ [0,1]).
 
 **File:** `web/src/components/impressum-modal.ts` L140–173
 
-Everything else uses MWC dialog. Native `<dialog>` breaks theming consistency.
+~~Everything else uses MWC dialog. Native `<dialog>` breaks theming consistency.~~
 
-**Fix:** migrate to `md-dialog`.
+**Update:** `impressum-modal.ts` uses native `<dialog>` — fix by migrating to `md-dialog`.
+Also wire it into `playlist-view.ts` (see A-15). Do **not** delete.
 
 ---
 
@@ -287,9 +338,81 @@ deletes all same-name playlists). User has no warning.
 
 **File:** `web/src/components/list-manager.ts`
 
-Handles lookup state, dropdown, add/remove, and item display. Should be split into:
-- `list-input.ts` — search/lookup/add
-- `item-list.ts` — display/remove
+**Update:** `list-manager.ts` is **dead code** (see A-11). Close as dead-code removal.
+
+---
+
+### UX-7 · `defaultCountryCodeFromBrowser()` extracts language subtag, not region  *(NEW — Playwright)*
+
+**File:** `web/src/modules/tidal/shared.ts` L99–131
+
+Regex `/(?:^|[-_])([A-Za-z]{2})(?:$|[-_])/` matches the **first** 2-letter segment of
+a BCP 47 locale tag. For `nb-NO` (Norwegian) it captures `NB` (language), not `NO`
+(country/region). `NB` is not in `COUNTRY_CODES` → the Country select is blank on
+first load; user must scroll 20 options to find their country every session.
+
+Affects any locale where language subtag ≠ region subtag: `nb-NO`, `zh-CN`, `zh-TW`,
+`pt-BR`, `fr-CA`, etc.
+
+Additional gap: derived code is never validated against `COUNTRY_CODES`; even if it
+matched a real country it might not be in the supported list.
+
+**Fix:**
+```typescript
+// Use Intl.Locale to extract region reliably
+function defaultCountryCodeFromBrowser(): string {
+  const fallback = 'US';
+  for (const tag of (navigator.languages?.length ? navigator.languages : [navigator.language])) {
+    try {
+      const region = new Intl.Locale(tag).region?.toUpperCase();
+      if (region && /^[A-Z]{2}$/.test(region)) return region;
+    } catch { /* invalid tag */ }
+  }
+  return fallback;
+}
+```
+Also add: `if (!COUNTRY_CODES.includes(countryCode)) countryCode = 'US'` in `loadSettings()`.
+
+---
+
+### UX-8 · Mobile bottom nav tabs missing icons — `md-navigation-tab` icon slot never populated  *(NEW — Playwright)*
+
+**File:** `web/src/app-shell.ts` L231–238
+
+`NAV_TABS` defines an `icon` field (`queue_music`, `library_music`, `settings`) used
+correctly in the desktop side-nav. For the mobile `md-navigation-bar`, the template
+renders:
+
+```html
+<md-navigation-tab .label="${tab.label}" .active="${view === tab.view}"></md-navigation-tab>
+```
+
+No `active-icon` or `inactive-icon` slot is provided. Material Design navigation bars
+require icons; tabs show labels only. The active indicator pill renders but without an
+icon above the label.
+
+**Fix:**
+```html
+<md-navigation-tab .label="${tab.label}" .active="${view === tab.view}">
+  <md-icon slot="active-icon">${tab.icon}</md-icon>
+  <md-icon slot="inactive-icon">${tab.icon}</md-icon>
+</md-navigation-tab>
+```
+
+---
+
+### UX-9 · Build Playlist button obscured by fixed bottom nav on mobile when description expanded  *(NEW — Playwright)*
+
+**File:** `web/src/app-shell.ts` CSS, `web/src/modules/playlist/playlist-view.ts`
+
+On mobile (390×844), with description field visible, the Build Playlist button sits at
+`y=783–823` while the fixed bottom nav occupies approximately `y=790–844`. The button
+is partially or fully behind the nav bar and cannot reliably be tapped.
+
+The `padding-bottom` reserved for the bottom nav (see `.shell` CSS) appears to not
+account for the additional height when the description textarea is shown.
+
+**Fix:** make Build Playlist button `position: sticky; bottom: calc(56px + env(safe-area-inset-bottom))` so it always floats above the nav bar; or ensure scroll container bottom padding matches nav bar height + button height.
 
 ---
 
@@ -304,6 +427,159 @@ Handles lookup state, dropdown, add/remove, and item display. Should be split in
 ---
 
 ## INFO / ARCHITECTURE
+
+### A-11 · Three legacy components are entirely dead — 637 LOC to delete  *(NEW)*
+
+**Files:**
+- `web/src/components/app-toolbar.ts` — 150 LOC, all native `<button>`, pre-Lit toolbar
+- `web/src/components/selected-songs-panel.ts` — 213 LOC, raw `<table>` + custom action buttons
+- `web/src/components/list-manager.ts` — 474+ LOC, custom dropdown with raw `<input>`
+
+None of the three are imported by any other file in `web/src/`. UX-2, UX-5 can be closed
+as dead-code removal.
+
+**Fix:** delete all three; remove from bundle.
+
+**`impressum-modal.ts` is NOT included here** — see A-15. Impressum must be on the
+main page; deleting this file without a replacement would remove a legal requirement.
+
+---
+
+### A-15 · `impressum-modal.ts` not wired into main page — Impressum missing from playlist view  *(NEW)*
+
+**File:** `web/src/components/impressum-modal.ts`, `web/src/modules/playlist/playlist-view.ts`
+
+`impressum-modal.ts` exists but is not imported anywhere. `settings-view.ts` has its
+own copy of the impressum logic (`md-dialog` + fetch), but the Impressum is only
+reachable via the Settings tab — not on the main playlist page where it should be
+visible for legal compliance (§ 5 TMG requires it to be directly accessible).
+
+**Fix:** import and embed `<impressum-modal>` in `playlist-view.ts` below the Build
+button (or in a footer). Alternatively, migrate `impressum-modal.ts` to use `md-dialog`
+(fixes UX-3) and wire it into both `playlist-view.ts` and `settings-view.ts` to avoid
+the current duplication of fetch logic.
+
+---
+
+### A-12 · `settings-view.ts` double-fires handlers — `md-list-item` + inner button both have same `@click`  *(NEW)*
+
+**File:** `web/src/modules/settings/settings-view.ts` L122–156
+
+Each settings row binds the same handler on both the `md-list-item` and its slotted
+`md-icon-button` / `md-text-button`. Clicking the inner button fires the event, which
+then bubbles up and triggers the `md-list-item` handler too — two calls per click:
+
+```html
+<!-- Export: click fires _onExport TWICE -->
+<md-list-item @click="${this._onExport}">
+  <md-icon-button @click="${this._onExport}">…</md-icon-button>
+</md-list-item>
+
+<!-- Import: opens file picker TWICE -->
+<md-list-item @click="${this._onImportClick}">
+  <md-icon-button @click="${this._onImportClick}">…</md-icon-button>
+</md-list-item>
+
+<!-- Logout: calls logout TWICE -->
+<md-list-item @click="${this._onLogout}">
+  <md-text-button @click="${this._onLogout}">Logout</md-text-button>
+</md-list-item>
+```
+
+Export creates two `Blob` URLs and triggers two download dialogs. Import calls
+`fileInput.click()` twice opening two file-picker dialogs (or one and an immediate
+second that races). Logout is idempotent but wasteful.
+
+**Fix:** remove `@click` from the inner button/icon-button — let the `md-list-item` be
+the sole click target. The trailing button is decorative in this pattern.
+
+---
+
+### A-13 · `ui-top-bar.ts` back button is native `<button>` — should be `md-icon-button`  *(NEW)*
+
+**File:** `web/src/components/ui-top-bar.ts` L87–93
+
+```html
+<button class="back-btn" aria-label="Go back" @click="${this._onBack}">
+  <md-icon>arrow_back</md-icon>
+</button>
+```
+
+40+ lines of hand-rolled CSS replicate `md-icon-button` (ripple, hover, active, 44×44
+touch target, border-radius 50%). `md-icon-button` is already available and used
+everywhere else.
+
+**Fix:**
+```typescript
+import '@material/web/iconbutton/icon-button.js';
+// in template:
+html`<md-icon-button aria-label="Go back" @click="${this._onBack}">
+  <md-icon>arrow_back</md-icon>
+</md-icon-button>`
+// Remove .back-btn CSS block entirely.
+```
+
+---
+
+### A-14 · `ui-search-sheet.ts` search input is raw `<input>` — should be `md-filled-text-field`  *(NEW)*
+
+**File:** `web/src/components/ui-search-sheet.ts` L118–127
+
+```html
+<input class="search-input" type="search" … />
+```
+
+30+ lines of CSS manually reproduce Material-style focus, caret colour, placeholder
+colour, and font inheritance. `md-filled-text-field` handles all of this and stays on-
+theme when design tokens change.
+
+**Fix:**
+```typescript
+import '@material/web/textfield/filled-text-field.js';
+// in template:
+html`<md-filled-text-field
+  type="search"
+  .placeholder="${this.placeholder}"
+  autocomplete="off"
+  @input="${this._onInput}"
+></md-filled-text-field>`
+// Remove .search-row, .search-input CSS.
+```
+
+---
+
+### A-9 · `playlist-settings.ts` is dead code — raw inputs never rendered  *(NEW — Playwright)*
+
+**File:** `web/src/components/playlist-settings.ts`
+
+UX-2 identified raw `<input>` / `<select>` elements in this file. Playwright testing
+confirms the component is **never imported or rendered** — the live UI uses
+`playlist-view.ts` with proper `md-outlined-select` / `md-filled-text-field`. However
+the file still exists and contains ~400 LOC of stale code with raw inputs, confusing
+future contributors.
+
+**Update UX-2 status:** not a live UI defect; reclassify as dead code (close UX-2,
+open this A-9 to track deletion).
+
+**Fix:** delete `web/src/components/playlist-settings.ts`.
+
+---
+
+### A-10 · Country select shows ISO codes only — no human-readable country names  *(NEW — Playwright)*
+
+**File:** `web/src/modules/playlist/playlist-view.ts` L225–235
+
+`COUNTRY_CODES` list renders `AT`, `AU`, `BE` … without labels. Users who don't know
+ISO 3166-1 alpha-2 codes cannot select their country without guessing.
+
+**Fix:** map codes to names inline or via `Intl.DisplayNames`:
+```typescript
+const countryName = new Intl.DisplayNames(['en'], { type: 'region' });
+// In template:
+html`<div slot="headline">${code} — ${countryName.of(code)}</div>`
+```
+
+---
 
 ### A-1 · Dead duplicate `playlist-builder.ts` at module root
 
@@ -395,13 +671,15 @@ contributors don't assume CSPRNG properties.
 | H-3  | HIGH     | Frontend/Auth    | `authorizeUrl` not validated — now 3 files              | Worse       |
 | H-4  | HIGH     | Frontend/Auth    | Tokens in `localStorage`                                | Open        |
 | H-5  | HIGH     | Backend          | No timeout on upstream token fetch                      | Open        |
+| H-6  | HIGH     | Frontend/CSP     | `style-src` blocks MWC inline styles — widespread breakage | NEW 🎭   |
 | M-1  | MEDIUM   | Backend          | HSTS header missing                                     | Open        |
 | M-2  | MEDIUM   | Backend          | Internal error detail exposed to clients                | Open        |
 | M-3  | MEDIUM   | Backend          | No rate limiting on auth endpoints                      | Open        |
 | M-4  | MEDIUM   | Backend          | `IS_DEV` defaults to development when env unset         | Open        |
 | M-5  | MEDIUM   | Frontend         | `replacePlaylist` deletes all name-matching playlists   | Open        |
 | M-6  | MEDIUM   | Backend          | POST body size unbounded on `/api/auth/token`           | Open        |
-| M-7  | MEDIUM   | Frontend/Auth    | `tidal-auth.ts` fetch missing `credentials: 'include'` | NEW         |
+| M-7  | MEDIUM   | Frontend/Auth    | `tidal-auth.ts` fetch missing `credentials: 'include'` | Open        |
+| M-8  | MEDIUM   | Frontend/CSP     | `connect-src` missing `api.tidal.com` — TrueTime blocked | NEW 🎭    |
 | L-1  | LOW      | Frontend         | JWT decoded without signature verification              | Open        |
 | L-2  | LOW      | Backend          | Signing key cached without secret-change detection      | Open        |
 | L-3  | LOW      | Backend/Auth     | Cookie delete `secure` flag may mismatch set flag       | Open        |
@@ -410,19 +688,31 @@ contributors don't assume CSPRNG properties.
 | L-6  | LOW      | Ops              | No `HEALTHCHECK` in Dockerfile                          | Open        |
 | L-7  | LOW      | CI/CD            | No dependency or container security scanning            | Open        |
 | L-8  | LOW      | Testing          | Frontend tests unreachable / nonexistent                | Open        |
-| UX-1 | BUG      | Frontend/UX      | Progress bar stuck — value always 0                     | NEW         |
-| UX-2 | MEDIUM   | Frontend/UX      | Raw inputs instead of MWC components in settings        | NEW         |
-| UX-3 | LOW      | Frontend/UX      | `impressum-modal` uses native dialog not `md-dialog`    | NEW         |
-| UX-4 | MEDIUM   | Frontend/UX      | No confirmation before destructive playlist save        | NEW         |
-| UX-5 | LOW      | Frontend/UX      | `list-manager.ts` too large, split needed               | NEW         |
-| UX-6 | LOW      | Frontend/UX      | Dead CSS part selector in `ui-search-sheet.ts`          | NEW         |
-| A-1  | INFO     | Architecture     | Dead duplicate `playlist-builder.ts` at module root     | NEW         |
-| A-2  | INFO     | Architecture     | `app-settings-store.ts` imported nowhere                | NEW         |
-| A-3  | INFO     | Architecture     | Three competing auth implementations                    | NEW         |
+| UX-1 | BUG      | Frontend/UX      | Progress bar stuck — value always 0                     | Open        |
+| UX-2 | MEDIUM   | Frontend/UX      | Raw inputs in `playlist-settings.ts`                    | **Dead code** → see A-9 |
+| UX-3 | LOW      | Frontend/UX      | `impressum-modal` uses native dialog not `md-dialog`    | Open        |
+| UX-4 | MEDIUM   | Frontend/UX      | No confirmation before destructive playlist save        | Open        |
+| UX-5 | LOW      | Frontend/UX      | `list-manager.ts` too large, split needed               | Open        |
+| UX-6 | LOW      | Frontend/UX      | Dead CSS part selector in `ui-search-sheet.ts`          | Open        |
+| UX-7 | BUG      | Frontend/UX      | `defaultCountryCodeFromBrowser()` wrong subtag → blank select | NEW 🎭 |
+| UX-8 | BUG      | Frontend/UX      | Mobile bottom nav tabs missing icons                    | NEW 🎭      |
+| UX-9 | BUG      | Frontend/UX      | Build Playlist button behind bottom nav when desc visible | NEW 🎭    |
+| A-1  | INFO     | Architecture     | Dead duplicate `playlist-builder.ts` at module root     | Open        |
+| A-2  | INFO     | Architecture     | `app-settings-store.ts` imported nowhere                | Open        |
+| A-3  | INFO     | Architecture     | Three competing auth implementations                    | Open        |
 | A-4  | INFO     | Architecture     | Build/test tasks use unrestricted `-A` flag             | Open        |
 | A-5  | INFO     | Architecture     | No lint task in `deno.json` or CI                       | Open        |
 | A-6  | INFO     | Architecture     | `index.html` references `.js` for `.ts` source         | Open        |
 | A-7  | INFO     | Architecture     | Sequential playlist deletes, no partial-fail guard      | Open        |
 | A-8  | INFO     | Architecture     | `Math.random()` for all randomisation                   | Open        |
+| A-9  | INFO     | Architecture     | `playlist-settings.ts` dead code with raw inputs        | NEW 🎭      |
+| A-10 | INFO     | Frontend/UX      | Country select ISO codes only — no country names        | NEW 🎭      |
+| A-11 | INFO     | Architecture     | 3 dead legacy components — 637 LOC to delete            | NEW         |
+| A-15 | BUG      | Frontend/Legal   | Impressum missing from main page — not wired in         | NEW         |
+| A-12 | BUG      | Frontend/UX      | `settings-view` double-fires handlers — export/import/logout fire twice | NEW |
+| A-13 | LOW      | Frontend/UX      | `ui-top-bar` back button is native `<button>`, not `md-icon-button` | NEW |
+| A-14 | LOW      | Frontend/UX      | `ui-search-sheet` search input is raw `<input>`, not `md-filled-text-field` | NEW |
 | ~~C-1~~ | ~~CRITICAL~~ | ~~Frontend~~ | ~~XSS in impressum modal~~                          | **FIXED** ✓ |
 | ~~M-6-old~~ | ~~MEDIUM~~ | ~~Frontend~~ | ~~Stub frontend served~~                           | **FIXED** ✓ |
+
+🎭 = discovered via Playwright live session

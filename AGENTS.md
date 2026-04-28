@@ -2,7 +2,7 @@
 
 ## Codebase State (Read This First)
 
-> Active work tracked in **`TODO.md`** (Lit rewrite task list).
+> Security and UX findings tracked in **`docs/BOARD.md`** — individual tickets under `docs/tickets/`.
 
 Single frontend tree: `web/src/` — Lit 3 rewrite, **in progress**. Playlist
 functionality, settings UI, and TIDAL API integration are not yet implemented.
@@ -204,8 +204,9 @@ deno task test        # runs Vitest
 
 ## Open Security Findings
 
-Full details in `FINDINGS.md`. Critical and high items that affect any auth or
-frontend work:
+Full details in `FINDINGS.md`. Ticket board (all severities, statuses, links): `docs/BOARD.md`.  
+Individual ticket files: `docs/tickets/{high,medium,low,ux,arch,closed}/`.  
+Critical and high items that affect any auth or frontend work:
 
 | ID  | Sev      | Summary                                                       |
 |-----|----------|---------------------------------------------------------------|
