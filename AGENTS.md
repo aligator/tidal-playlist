@@ -62,7 +62,7 @@ tidal-playlist/
 │       ├── types.ts
 │       ├── components/
 │       │   ├── app-toolbar.ts
-│       │   ├── impressum-modal.ts  (⚠ see C-1 in FINDINGS.md)
+│       │   ├── impressum-modal.ts  (⚠ see C-1)
 │       │   ├── list-manager.ts
 │       │   ├── log-panel.ts
 │       │   └── selected-songs-panel.ts
@@ -154,10 +154,10 @@ Browser                 Backend                  TIDAL
 |-----------------------|--------------------|---------------------------------------------------|
 | `TIDAL_CLIENT_ID`     | Always             |                                                   |
 | `TIDAL_CLIENT_SECRET` | Always             | Never leaves the backend                          |
-| `OAUTH_FLOW_SECRET`   | Always             | HMAC-SHA256 key for flow cookie JWT. **Minimum 32 bytes of entropy.** A short or guessable value is a HIGH security risk (see H-1 in FINDINGS.md). |
+| `OAUTH_FLOW_SECRET`   | Always             | HMAC-SHA256 key for flow cookie JWT. **Minimum 32 bytes of entropy.** A short or guessable value is a HIGH security risk (see H-1). |
 | `TIDAL_REDIRECT_URI`  | Outside dev        | Must exactly match a URI registered in your TIDAL app. Required when `DENO_ENV` / `NODE_ENV` ≠ `development`. |
 | `PORT`                | No (default 8080)  |                                                   |
-| `DENO_ENV` / `NODE_ENV` | Strongly recommended | Set to `production` in all non-local environments. Absence silently enables dev mode (see M-4 in FINDINGS.md). |
+| `DENO_ENV` / `NODE_ENV` | Strongly recommended | Set to `production` in all non-local environments. Absence silently enables dev mode (see M-4). |
 | `IMPRESSUM_NAME`      | No                 | All three impressum vars must be set together     |
 | `IMPRESSUM_ADDRESS`   | No                 | Use `\n` for line breaks                          |
 | `IMPRESSUM_EMAIL`     | No                 |                                                   |
@@ -173,7 +173,7 @@ Browser                 Backend                  TIDAL
 | `assertServerConfig()`    | `server/config.ts`              | Fail-fast on missing/invalid env vars   |
 | `createOAuthStart()`      | `server/auth/oauth.ts`          | Build authorize URL + sign flow cookie  |
 | `verifyFlowPayload()`     | `server/auth/oauth.ts`          | Verify + decode signed flow cookie JWT  |
-| `oauthCookieOptions()`    | `server/auth/oauth.ts`          | Cookie attributes (⚠ see H-2 in FINDINGS.md) |
+| `oauthCookieOptions()`    | `server/auth/oauth.ts`          | Cookie attributes (⚠ see H-2) |
 | `exchangeCode()`          | `server/auth/token-client.ts`   | POST to TIDAL token endpoint            |
 | `validateTokenResponse()` | `server/token-validation.ts`    | Validate shape of upstream token payload|
 
@@ -204,7 +204,7 @@ deno task test        # runs Vitest
 
 ## Open Security Findings
 
-Full details in `FINDINGS.md`. Ticket board (all severities, statuses, links): `docs/BOARD.md`.  
+Ticket board (all severities, statuses, links): `docs/BOARD.md`.  
 Individual ticket files: `docs/tickets/{high,medium,low,ux,arch,closed}/`.  
 Critical and high items that affect any auth or frontend work:
 
@@ -234,5 +234,5 @@ Critical and high items that affect any auth or frontend work:
   server-side only.
 - **Cookie attributes:** always use `oauthCookieOptions()` for the flow cookie. Do not
   inline cookie options. Fix H-2 before adding any new cookies.
-- **AGENTS.md:** update the "Codebase State" section and open findings summary when
-  the build configuration changes or a finding from `FINDINGS.md` is resolved.
+- **AGENTS.md:** update the "Codebase State" section summary when
+  the build configuration changes.
