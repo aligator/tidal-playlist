@@ -97,6 +97,11 @@ export class AppShell extends SignalWatcher(LitElement) {
     /* Side nav rail (desktop ≥ 768 px) — CSS only, no JS matchMedia       */
     /* ------------------------------------------------------------------ */
 
+    /* Hidden on mobile; @media below overrides to flex on desktop */
+    .side-nav {
+      display: none;
+    }
+
     @media (min-width: 768px) {
       .shell {
         flex-direction: row;
@@ -145,7 +150,7 @@ export class AppShell extends SignalWatcher(LitElement) {
       }
 
       .side-nav-tab .nav-icon {
-        font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif;
+        font-family: 'Material Symbols Outlined', sans-serif;
         font-size: 24px;
         line-height: 1;
         font-style: normal;
@@ -160,11 +165,6 @@ export class AppShell extends SignalWatcher(LitElement) {
       md-navigation-bar {
         display: none;
       }
-    }
-
-    /* Hide side-nav by default (mobile); shown via @media above */
-    .side-nav {
-      display: none;
     }
 
     /* ------------------------------------------------------------------ */
@@ -233,7 +233,10 @@ export class AppShell extends SignalWatcher(LitElement) {
                   <md-navigation-tab
                     .label="${tab.label}"
                     .active="${view === tab.view}"
-                  ></md-navigation-tab>
+                  >
+                    <md-icon slot="active-icon">${tab.icon}</md-icon>
+                    <md-icon slot="inactive-icon">${tab.icon}</md-icon>
+                  </md-navigation-tab>
                 `,
               )}
             </md-navigation-bar>
