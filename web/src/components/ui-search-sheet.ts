@@ -14,11 +14,6 @@ export class UiSearchSheet extends LitElement {
       display: contents;
     }
 
-    ui-bottom-sheet::part(sheet) {
-      min-height: 60vh;
-    }
-
-    /* We control min-height via the slot wrapper inside the sheet */
     .sheet-inner {
       display: flex;
       flex-direction: column;

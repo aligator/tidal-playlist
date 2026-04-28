@@ -2,7 +2,7 @@
 id: UX-6
 severity: LOW
 area: Frontend/UX
-status: Open
+status: Done
 ---
 
 # UX-6 · Dead `css` part selector in `ui-search-sheet.ts`
