@@ -125,7 +125,7 @@ export class SettingsView extends SignalWatcher(LitElement) {
           @click="${this._onExport}"
         >
           <div slot="end" class="trailing-btn">
-            <md-icon-button aria-label="Export config" @click="${this._onExport}">
+            <md-icon-button aria-label="Export config" tabindex="-1">
               <md-icon>upload</md-icon>
             </md-icon-button>
           </div>
@@ -137,7 +137,7 @@ export class SettingsView extends SignalWatcher(LitElement) {
           @click="${this._onImportClick}"
         >
           <div slot="end" class="trailing-btn">
-            <md-icon-button aria-label="Import config" @click="${this._onImportClick}">
+            <md-icon-button aria-label="Import config" tabindex="-1">
               <md-icon>download</md-icon>
             </md-icon-button>
           </div>
@@ -153,7 +153,7 @@ export class SettingsView extends SignalWatcher(LitElement) {
           @click="${this._onLogout}"
         >
           <div slot="end" class="trailing-btn">
-            <md-text-button @click="${this._onLogout}">Logout</md-text-button>
+            <md-text-button tabindex="-1">Logout</md-text-button>
           </div>
         </md-list-item>
 
@@ -166,7 +166,7 @@ export class SettingsView extends SignalWatcher(LitElement) {
                 @click="${this._onImpressumClick}"
               >
                 <div slot="end" class="trailing-btn">
-                  <md-icon-button aria-label="Show Impressum" @click="${this._onImpressumClick}">
+                  <md-icon-button aria-label="Show Impressum" tabindex="-1">
                     <md-icon>chevron_right</md-icon>
                   </md-icon-button>
                 </div>

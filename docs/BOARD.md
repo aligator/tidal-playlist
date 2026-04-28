@@ -35,7 +35,6 @@ Statuses: **Open** · **In Progress** · **Done** · **Closed** (won't fix / dea
 | [UX-8](tickets/ux/UX-8.md) | Mobile bottom nav tabs missing icons | `web/src/app-shell.ts` |
 | [UX-9](tickets/ux/UX-9.md) | Build Playlist button behind bottom nav on mobile | `web/src/app-shell.ts`, `playlist-view.ts` |
 | [A-15](tickets/arch/A-15.md) | Impressum missing from main page — not wired in | `web/src/components/impressum-modal.ts`, `playlist-view.ts` |
-| [A-12](tickets/arch/A-12.md) | `settings-view` double-fires handlers | `web/src/modules/settings/settings-view.ts` |
 
 ---
 
@@ -86,6 +85,7 @@ Statuses: **Open** · **In Progress** · **Done** · **Closed** (won't fix / dea
 | [UX-7](tickets/ux/UX-7.md) | `defaultCountryCodeFromBrowser()` extracts wrong subtag | `Intl.Locale.region` — `nb-NO` now returns `NO` not `NB` |
 | [UX-1](tickets/ux/UX-1.md) | Progress bar stuck — value always 0 | Removed dead `.value` binding; `?indeterminate` drives animation |
 | [UX-6](tickets/ux/UX-6.md) | Dead CSS part selector in `ui-search-sheet.ts` | Removed stale `ui-bottom-sheet::part(sheet)` rule |
+| [A-12](tickets/arch/A-12.md) | `settings-view` double-fires handlers | Removed `@click` from inner buttons; `tabindex="-1"` makes them decorative |
 | [H-1](tickets/high/H-1.md) | `OAUTH_FLOW_SECRET` entropy not validated | `assertServerConfig()` rejects secrets < 32 bytes |
 | [H-2](tickets/high/H-2.md) | `Secure` cookie flag wrong behind reverse proxy | `secure: !IS_DEV` — no longer depends on request protocol |
 | [H-3](tickets/high/H-3.md) | `authorizeUrl` not validated — 3 files | Origin asserted `=== 'https://login.tidal.com'` before redirect |
