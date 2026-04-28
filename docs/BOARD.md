@@ -23,7 +23,6 @@ Statuses: **Open** · **In Progress** · **Done** · **Closed** (won't fix / dea
 
 | ID | Title | File(s) |
 |----|-------|---------|
-| [L-7](tickets/low/L-7.md) | No dependency or container security scanning in CI | `.github/workflows/` |
 | [L-8](tickets/low/L-8.md) | Frontend tests unreachable / nonexistent | `web/src/` |
 
 ---
@@ -86,6 +85,7 @@ Statuses: **Open** · **In Progress** · **Done** · **Closed** (won't fix / dea
 | [L-4](tickets/low/L-4.md) | Dead `redirectUri` in POST body | Removed from request body + dead `CALLBACK_PATH` const deleted |
 | [L-5](tickets/low/L-5.md) | No request access logging | Structured JSON access log middleware: method, path, status, ms, anonymised IP |
 | [L-6](tickets/low/L-6.md) | No `HEALTHCHECK` in Dockerfile | `curl -sf http://localhost:8080/api/config` every 30s |
+| [L-7](tickets/low/L-7.md) | No security scanning in CI | Trivy scan after build; fails on HIGH/CRITICAL; SARIF uploaded to GitHub Security |
 | [H-1](tickets/high/H-1.md) | `OAUTH_FLOW_SECRET` entropy not validated | `assertServerConfig()` rejects secrets < 32 bytes |
 | [H-2](tickets/high/H-2.md) | `Secure` cookie flag wrong behind reverse proxy | `secure: !IS_DEV` — no longer depends on request protocol |
 | [H-3](tickets/high/H-3.md) | `authorizeUrl` not validated — 3 files | Origin asserted `=== 'https://login.tidal.com'` before redirect |
