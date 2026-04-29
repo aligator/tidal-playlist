@@ -2,8 +2,6 @@ import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { SignalWatcher } from '@lit-labs/signals';
 import '@material/web/progress/linear-progress.js';
-import '@material/web/chips/chip-set.js';
-import '@material/web/chips/filter-chip.js';
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
 import '@material/web/slider/slider.js';
@@ -28,7 +26,6 @@ import {
   buildProgress,
   buildStatus,
   hasPoolSources,
-  poolSourceCount,
   resetBuild,
   result,
   savePlaylist,
@@ -77,10 +74,6 @@ export class PlaylistView extends SignalWatcher(LitElement) {
       overflow: hidden;
     }
 
-    .pool-chips {
-      padding: 12px 12px 8px;
-    }
-
     .pool-manage-row {
       display: flex;
       align-items: center;
@@ -89,7 +82,6 @@ export class PlaylistView extends SignalWatcher(LitElement) {
       padding: 10px 16px;
       width: 100%;
       border: none;
-      border-top: 1px solid var(--md-sys-color-outline-variant);
       background: transparent;
       cursor: pointer;
       font-family: inherit;
@@ -192,9 +184,30 @@ export class PlaylistView extends SignalWatcher(LitElement) {
       --md-list-item-trailing-space: 8px;
     }
 
-    .block-buttons {
+    .block-btns {
+      display: flex;
+      gap: 2px;
+    }
+
+    .block-btn {
       display: flex;
       flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 8px;
+      color: var(--md-sys-color-on-surface-variant);
+      font-family: inherit;
+      font-size: 0.625rem;
+      letter-spacing: 0.02em;
+      min-width: 44px;
+    }
+
+    .block-btn:hover {
+      background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
     }
 
     /* ---- Action bar — always at bottom, never scrolls ---- */
@@ -267,7 +280,6 @@ export class PlaylistView extends SignalWatcher(LitElement) {
     const savePct = saveProgress.get();
     const isSaving = savePct !== null;
     const tracks = result.get();
-    const poolCounts = poolSourceCount.get();
     const hasSources = hasPoolSources.get();
     const lastError = buildError.get();
 
@@ -280,25 +292,8 @@ export class PlaylistView extends SignalWatcher(LitElement) {
       <div class="section">
         <div class="section-label">Pool</div>
         <div class="pool-card">
-          <div class="pool-chips">
-            <md-chip-set>
-              <md-filter-chip
-                label="Liked artists"
-                ?selected="${s.includeLikedArtistsPool}"
-                @click="${this._onToggleLikedArtists}"
-              ></md-filter-chip>
-              <md-filter-chip
-                label="Liked albums"
-                ?selected="${s.includeLikedAlbumsPool}"
-                @click="${this._onToggleLikedAlbums}"
-              ></md-filter-chip>
-            </md-chip-set>
-          </div>
           <button class="pool-manage-row" @click="${this._onManageLibrary}">
-            <div>
-              <div class="pool-manage-title">Manage Library</div>
-              <div class="pool-manage-sub">${hasSources ? this._poolSummary(poolCounts) : 'No custom sources added'}</div>
-            </div>
+            <div class="pool-manage-title">Manage Library</div>
             <md-icon>arrow_forward</md-icon>
           </button>
         </div>
@@ -437,39 +432,26 @@ export class PlaylistView extends SignalWatcher(LitElement) {
       <md-list-item>
         <span slot="headline">${song.trackTitle}</span>
         <span slot="supporting-text">${song.artistName}</span>
-        <div slot="end" class="block-buttons">
-          <md-icon-button
+        <div slot="end" class="block-btns">
+          <button
+            class="block-btn"
             aria-label="Block artist ${song.artistName}"
-            title="Block artist"
             @click="${() => this._onBlockArtist(song)}"
-          ><md-icon>person_off</md-icon></md-icon-button>
-          <md-icon-button
+          >
+            <md-icon>person_remove</md-icon>
+            <span>Artist</span>
+          </button>
+          <button
+            class="block-btn"
             aria-label="Block album ${song.albumTitle}"
-            title="Block album"
             @click="${() => this._onBlockAlbum(song)}"
-          ><md-icon>album</md-icon></md-icon-button>
+          >
+            <md-icon>album</md-icon>
+            <span>Album</span>
+          </button>
         </div>
       </md-list-item>
     `;
-  }
-
-  private _poolSummary(
-    p: { artistCount: number; albumCount: number; likedArtists: boolean; likedAlbums: boolean },
-  ): string {
-    const parts: string[] = [];
-    if (p.likedArtists) parts.push('Liked artists');
-    if (p.artistCount > 0) parts.push(`${p.artistCount} artist${p.artistCount === 1 ? '' : 's'}`);
-    if (p.likedAlbums) parts.push('Liked albums');
-    if (p.albumCount > 0) parts.push(`${p.albumCount} album${p.albumCount === 1 ? '' : 's'}`);
-    return parts.join(' · ');
-  }
-
-  private _onToggleLikedArtists(): void {
-    updateSettings({ includeLikedArtistsPool: !settings.get().includeLikedArtistsPool });
-  }
-
-  private _onToggleLikedAlbums(): void {
-    updateSettings({ includeLikedAlbumsPool: !settings.get().includeLikedAlbumsPool });
   }
 
   private _onManageLibrary(): void {

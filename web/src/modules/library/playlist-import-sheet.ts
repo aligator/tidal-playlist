@@ -63,23 +63,39 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
       --md-list-item-trailing-space: 8px;
     }
 
-    .track-actions {
-      display: flex;
-      align-items: center;
-    }
-
     .track-meta {
       font-size: 0.8125rem;
       color: var(--md-sys-color-on-surface-variant);
     }
 
-    .blocked-chip {
-      font-size: 0.6875rem;
-      font-weight: 500;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: var(--md-sys-color-error-container);
-      color: var(--md-sys-color-on-error-container);
+    .block-btns {
+      display: flex;
+      gap: 2px;
+    }
+
+    .block-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 8px;
+      color: var(--md-sys-color-on-surface-variant);
+      font-family: inherit;
+      font-size: 0.625rem;
+      letter-spacing: 0.02em;
+      min-width: 44px;
+    }
+
+    .block-btn:hover {
+      background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+    }
+
+    .block-btn.blocked {
+      color: var(--md-sys-color-error);
     }
   `;
 
@@ -168,6 +184,7 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
           const albumBlocked = song.albumTitle
             ? blockedAlbums.has(song.albumTitle.toLowerCase())
             : false;
+          const hasActions = song.artistName || song.albumTitle;
 
           return html`
             <md-list-item>
@@ -175,30 +192,30 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
               <span slot="supporting-text" class="track-meta">
                 ${song.artistName || ''}${song.artistName && song.albumTitle ? ' · ' : ''}${song.albumTitle || ''}
               </span>
-              <div slot="end" class="track-actions">
-                ${song.artistName
-                  ? html`
-                    <md-icon-button
-                      aria-label="${artistBlocked ? 'Unblock artist' : 'Block artist'} ${song.artistName}"
-                      title="${artistBlocked ? 'Unblock' : 'Block'} artist: ${song.artistName}"
+              ${hasActions ? html`
+                <div slot="end" class="block-btns">
+                  ${song.artistName ? html`
+                    <button
+                      class="block-btn ${artistBlocked ? 'blocked' : ''}"
+                      aria-label="${artistBlocked ? 'Unblock' : 'Block'} artist ${song.artistName}"
                       @click="${() => this._onToggleArtist(song.artistName, artistBlocked)}"
                     >
                       <md-icon>${artistBlocked ? 'person_off' : 'person_remove'}</md-icon>
-                    </md-icon-button>
-                  `
-                  : ''}
-                ${song.albumTitle
-                  ? html`
-                    <md-icon-button
-                      aria-label="${albumBlocked ? 'Unblock album' : 'Block album'} ${song.albumTitle}"
-                      title="${albumBlocked ? 'Unblock' : 'Block'} album: ${song.albumTitle}"
+                      <span>${artistBlocked ? 'Unblock' : 'Artist'}</span>
+                    </button>
+                  ` : ''}
+                  ${song.albumTitle ? html`
+                    <button
+                      class="block-btn ${albumBlocked ? 'blocked' : ''}"
+                      aria-label="${albumBlocked ? 'Unblock' : 'Block'} album ${song.albumTitle}"
                       @click="${() => this._onToggleAlbum(song.albumTitle, albumBlocked)}"
                     >
-                      <md-icon>${albumBlocked ? 'album' : 'block'}</md-icon>
-                    </md-icon-button>
-                  `
-                  : ''}
-              </div>
+                      <md-icon>${albumBlocked ? 'check_circle' : 'block'}</md-icon>
+                      <span>${albumBlocked ? 'Unblock' : 'Album'}</span>
+                    </button>
+                  ` : ''}
+                </div>
+              ` : ''}
             </md-list-item>
           `;
         })}

@@ -5,10 +5,13 @@ import '@material/web/tabs/tabs.js';
 import '@material/web/tabs/primary-tab.js';
 import '@material/web/list/list.js';
 import '@material/web/list/list-item.js';
+import '@material/web/divider/divider.js';
+import '@material/web/switch/switch.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/icon/icon.js';
 import '../../components/ui-top-bar.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
+import { settings, updateSettings } from '../settings/store.ts';
 import {
   addAlbum,
   addArtist,
@@ -76,6 +79,52 @@ export class LibraryView extends SignalWatcher(LitElement) {
       text-transform: uppercase;
       color: var(--md-sys-color-on-surface-variant);
     }
+
+    .bar-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 8px;
+      color: var(--md-sys-color-on-surface-variant);
+      font-family: inherit;
+      font-size: 0.625rem;
+      letter-spacing: 0.02em;
+      min-width: 44px;
+    }
+
+    .bar-btn:hover {
+      background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+    }
+
+    .liked-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 16px 14px 16px;
+      background: var(--md-sys-color-surface-container-low);
+    }
+
+    .liked-row-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .liked-row-title {
+      font-size: 0.9375rem;
+      color: var(--md-sys-color-on-surface);
+    }
+
+    .liked-row-sub {
+      font-size: 0.8125rem;
+      color: var(--md-sys-color-on-surface-variant);
+      margin-top: 2px;
+    }
   `;
 
   // -----------------------------------------------------------------------
@@ -96,6 +145,7 @@ export class LibraryView extends SignalWatcher(LitElement) {
   // -----------------------------------------------------------------------
 
   override render() {
+    const s = settings.get();
     const artistList = artists.get();
     const albumList = albums.get();
     const blockedSets = blocked.get();
@@ -104,23 +154,23 @@ export class LibraryView extends SignalWatcher(LitElement) {
 
     return html`
       <ui-top-bar heading="Library">
-        <md-icon-button
-          aria-label="Browse TIDAL playlists"
-          title="Block artists/albums from a playlist"
-          @click="${this._onPlaylistImportClick}"
-        >
-          <md-icon>queue_music</md-icon>
-        </md-icon-button>
-        ${showAddButton
+        ${this._tab === 'blocked'
           ? html`
-            <md-icon-button
+            <button class="bar-btn" aria-label="Block from playlist" @click="${this._onPlaylistImportClick}">
+              <md-icon>playlist_remove</md-icon>
+              <span>From playlist</span>
+            </button>
+          `
+          : html`
+            <button
+              class="bar-btn"
               aria-label="Add ${this._tab === 'artists' ? 'artist' : 'album'}"
               @click="${this._onAddClick}"
             >
               <md-icon>add</md-icon>
-            </md-icon-button>
-          `
-          : ''}
+              <span>Add</span>
+            </button>
+          `}
       </ui-top-bar>
 
       <md-tabs @change="${this._onTabChange}">
@@ -130,9 +180,9 @@ export class LibraryView extends SignalWatcher(LitElement) {
       </md-tabs>
 
       ${this._tab === 'artists'
-        ? this._renderArtistsTab(artistList)
+        ? this._renderArtistsTab(artistList, s.includeLikedArtistsPool)
         : this._tab === 'albums'
-        ? this._renderAlbumsTab(albumList)
+        ? this._renderAlbumsTab(albumList, s.includeLikedAlbumsPool)
         : this._renderBlockedTab(blockedSets)}
 
       <library-search-sheet
@@ -153,59 +203,77 @@ export class LibraryView extends SignalWatcher(LitElement) {
   // Tab renderers
   // -----------------------------------------------------------------------
 
-  private _renderArtistsTab(list: string[]) {
-    if (list.length === 0) {
-      return html`
-        <div class="empty-state">No artists added yet</div>
-      `;
-    }
-
+  private _renderArtistsTab(list: string[], likedEnabled: boolean) {
     return html`
-      <md-list>
-        ${list.map(
-          (name) =>
-            html`
-              <md-list-item>
-                <span slot="headline">${name}</span>
-                <md-icon-button
-                  slot="end"
-                  aria-label="Remove ${name}"
-                  @click="${() => this._onRemoveArtist(name)}"
-                >
-                  <md-icon>delete</md-icon>
-                </md-icon-button>
-              </md-list-item>
-            `,
-        )}
-      </md-list>
+      <div class="liked-row">
+        <div class="liked-row-info">
+          <div class="liked-row-title">Liked artists</div>
+          <div class="liked-row-sub">Include your TIDAL liked artists in pool</div>
+        </div>
+        <md-switch
+          ?selected="${likedEnabled}"
+          aria-label="Include liked artists"
+          @change="${this._onToggleLikedArtists}"
+        ></md-switch>
+      </div>
+      <md-divider></md-divider>
+      ${list.length === 0
+        ? html`<div class="empty-state">No custom artists added</div>`
+        : html`
+          <md-list>
+            ${list.map(
+              (name) => html`
+                <md-list-item>
+                  <span slot="headline">${name}</span>
+                  <md-icon-button
+                    slot="end"
+                    aria-label="Remove ${name}"
+                    @click="${() => this._onRemoveArtist(name)}"
+                  >
+                    <md-icon>delete</md-icon>
+                  </md-icon-button>
+                </md-list-item>
+              `,
+            )}
+          </md-list>
+        `}
     `;
   }
 
-  private _renderAlbumsTab(list: string[]) {
-    if (list.length === 0) {
-      return html`
-        <div class="empty-state">No albums added yet</div>
-      `;
-    }
-
+  private _renderAlbumsTab(list: string[], likedEnabled: boolean) {
     return html`
-      <md-list>
-        ${list.map(
-          (name) =>
-            html`
-              <md-list-item>
-                <span slot="headline">${name}</span>
-                <md-icon-button
-                  slot="end"
-                  aria-label="Remove ${name}"
-                  @click="${() => this._onRemoveAlbum(name)}"
-                >
-                  <md-icon>delete</md-icon>
-                </md-icon-button>
-              </md-list-item>
-            `,
-        )}
-      </md-list>
+      <div class="liked-row">
+        <div class="liked-row-info">
+          <div class="liked-row-title">Liked albums</div>
+          <div class="liked-row-sub">Include your TIDAL liked albums in pool</div>
+        </div>
+        <md-switch
+          ?selected="${likedEnabled}"
+          aria-label="Include liked albums"
+          @change="${this._onToggleLikedAlbums}"
+        ></md-switch>
+      </div>
+      <md-divider></md-divider>
+      ${list.length === 0
+        ? html`<div class="empty-state">No custom albums added</div>`
+        : html`
+          <md-list>
+            ${list.map(
+              (name) => html`
+                <md-list-item>
+                  <span slot="headline">${name}</span>
+                  <md-icon-button
+                    slot="end"
+                    aria-label="Remove ${name}"
+                    @click="${() => this._onRemoveAlbum(name)}"
+                  >
+                    <md-icon>delete</md-icon>
+                  </md-icon-button>
+                </md-list-item>
+              `,
+            )}
+          </md-list>
+        `}
     `;
   }
 
@@ -277,6 +345,16 @@ export class LibraryView extends SignalWatcher(LitElement) {
     if (next) {
       this._tab = next;
     }
+  }
+
+  private _onToggleLikedArtists(event: Event): void {
+    const sw = event.target as HTMLElement & { selected?: boolean };
+    updateSettings({ includeLikedArtistsPool: sw.selected ?? false });
+  }
+
+  private _onToggleLikedAlbums(event: Event): void {
+    const sw = event.target as HTMLElement & { selected?: boolean };
+    updateSettings({ includeLikedAlbumsPool: sw.selected ?? false });
   }
 
   private _onAddClick(): void {
