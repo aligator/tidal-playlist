@@ -5,6 +5,7 @@ import type {
   AppSettings,
   ItemMetaMap,
   PlaylistSummary,
+  SelectedSong,
   TidalAlbum,
   TidalArtist,
   TidalTrack,
@@ -427,6 +428,58 @@ export class TidalApi {
     }
   }
 
+  async getPlaylistTracks(playlistId: string): Promise<SelectedSong[]> {
+    const data = this.unwrap(
+      await this.client.GET('/playlists/{id}', {
+        params: {
+          path: { id: playlistId },
+          query: {
+            include: ['items', 'items.artists', 'items.albums'],
+            countryCode: this.settings.countryCode,
+          },
+        },
+      }),
+    ) as JsonLike;
+
+    const inc = this.included(data);
+
+    const artistsById = new Map<string, string>();
+    for (const a of this.byType(inc, 'artists')) {
+      const id = asString(a.id);
+      const name = asString(asObject(a.attributes)?.name, id);
+      if (id) artistsById.set(id, name);
+    }
+
+    const albumsById = new Map<string, string>();
+    for (const al of this.byType(inc, 'albums')) {
+      const id = asString(al.id);
+      const title = asString(asObject(al.attributes)?.title, id);
+      if (id) albumsById.set(id, title);
+    }
+
+    return this.byType(inc, 'tracks').map((track) => {
+      const trackId = asString(track.id);
+      const attributes = asObject(track.attributes);
+      const trackTitle = asString(attributes?.title, trackId);
+
+      const relationships = asObject(track.relationships);
+
+      const artistsRel = asObject(relationships?.artists);
+      const artistData = Array.isArray(artistsRel?.data) ? artistsRel.data : [];
+      const firstArtist = asObject(artistData[0]);
+      const artistId = asString(firstArtist?.id, '');
+      const artistName = artistId ? (artistsById.get(artistId) ?? '') : '';
+
+      const albumsRel = asObject(relationships?.albums);
+      const albumData = Array.isArray(albumsRel?.data) ? albumsRel.data : [];
+      const firstAlbum = asObject(albumData[0]);
+      const albumId = asString(firstAlbum?.id, '');
+      const albumTitle = albumId ? (albumsById.get(albumId) ?? '') : '';
+
+      return { trackId, trackTitle, artistId, artistName, albumId, albumTitle };
+    });
+  }
+
   async userPlaylists(): Promise<PlaylistSummary[]> {
     const userId = await this.getUserId();
     const data = this.unwrap(
@@ -499,11 +552,16 @@ export class TidalApi {
     name: string,
     description: string,
     trackIds: string[],
+    onProgress?: (pct: number) => void,
   ): Promise<string> {
+    onProgress?.(0);
+
     const existing = await this.userPlaylists();
     const matches = existing.filter((playlist) => playlist.name === name);
     if (matches.length > 1) {
-      console.warn(`replacePlaylist: ${matches.length} playlists named "${name}" found — deleting all`);
+      console.warn(
+        `replacePlaylist: ${matches.length} playlists named "${name}" found — deleting all`,
+      );
     }
     if (matches.length > 0) {
       const results = await Promise.allSettled(matches.map((p) => this.deletePlaylist(p.id)));
@@ -513,13 +571,19 @@ export class TidalApi {
       }
     }
 
+    onProgress?.(10);
     const playlistId = await this.createPlaylist(name, description);
+    onProgress?.(15);
 
     const batchSize = 20;
+    const totalBatches = Math.ceil(trackIds.length / batchSize) || 1;
     for (let i = 0; i < trackIds.length; i += batchSize) {
       await this.addPlaylistTracks(playlistId, trackIds.slice(i, i + batchSize));
+      const batchIndex = Math.floor(i / batchSize) + 1;
+      onProgress?.(15 + Math.round((batchIndex / totalBatches) * 85));
     }
 
+    onProgress?.(100);
     return playlistId;
   }
 }

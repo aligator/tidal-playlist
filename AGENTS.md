@@ -2,11 +2,12 @@
 
 ## Codebase State (Read This First)
 
-> Security and UX findings tracked in **`docs/BOARD.md`** — individual tickets under `docs/tickets/`.
+> Security and UX findings tracked in **`docs/BOARD.md`** — individual tickets under
+> `docs/tickets/`.
 
-Single frontend tree: `web/src/` — Lit 3 rewrite, **in progress**. Playlist
-functionality, settings UI, and TIDAL API integration are not yet implemented.
-`deno task build` produces a stub shell; the app is not end-user functional yet.
+Single frontend tree: `web/src/` — Lit 3 rewrite, **in progress**. Playlist functionality, settings
+UI, and TIDAL API integration are not yet implemented. `deno task build` produces a stub shell; the
+app is not end-user functional yet.
 
 ---
 
@@ -16,8 +17,8 @@ functionality, settings UI, and TIDAL API integration are not yet implemented.
 - **Backend:** Oak (`@oak/oak`) — `server/`
 - **Frontend:** Lit 3 + `@lit-labs/signals` — `web/src/` (in-progress rewrite)
 - **Build:** Vite (npm via Deno node-modules compat)
-- **Auth:** Backend-proxied PKCE OAuth 2.0 flow; signed HttpOnly cookie for
-  state/verifier transport; tokens handled client-side after exchange
+- **Auth:** Backend-proxied PKCE OAuth 2.0 flow; signed HttpOnly cookie for state/verifier
+  transport; tokens handled client-side after exchange
 
 ---
 
@@ -94,14 +95,14 @@ tidal-playlist/
 
 ## Backend Routes
 
-| Method | Path                       | Purpose                                                     |
-|--------|----------------------------|-------------------------------------------------------------|
-| GET    | `/api/config`              | Returns `{ clientId }` for frontend OAuth init             |
+| Method | Path                       | Purpose                                                             |
+| ------ | -------------------------- | ------------------------------------------------------------------- |
+| GET    | `/api/config`              | Returns `{ clientId }` for frontend OAuth init                      |
 | GET    | `/api/auth/start`          | Generates PKCE flow, sets signed cookie, returns `{ authorizeUrl }` |
-| POST   | `/api/auth/token`          | Verifies cookie state, exchanges code with TIDAL, returns token |
-| GET    | `/api/impressum/available` | Returns `{ available: boolean }` — no PII                  |
-| GET    | `/api/impressum`           | Returns `{ name, address, email }` from env vars (optional) |
-| ALL    | `/*`                       | Static file serving from `web/dist/`; `/callback` → `/`    |
+| POST   | `/api/auth/token`          | Verifies cookie state, exchanges code with TIDAL, returns token     |
+| GET    | `/api/impressum/available` | Returns `{ available: boolean }` — no PII                           |
+| GET    | `/api/impressum`           | Returns `{ name, address, email }` from env vars (optional)         |
+| ALL    | `/*`                       | Static file serving from `web/dist/`; `/callback` → `/`             |
 
 ---
 
@@ -139,28 +140,29 @@ Browser                 Backend                  TIDAL
 ```
 
 **Invariants to preserve:**
+
 - `CLIENT_SECRET` is only ever used in `server/auth/token-client.ts`. Never expose it.
 - `CLIENT_ID` is the only credential sent to the frontend (via `/api/config`).
 - State and PKCE verifier are generated and validated entirely on the backend.
-- The backend cookie is single-use: deleted on the first `/api/auth/token` call regardless
-  of outcome.
+- The backend cookie is single-use: deleted on the first `/api/auth/token` call regardless of
+  outcome.
 - Backend never persists access tokens or refresh tokens.
 
 ---
 
 ## Environment Variables
 
-| Variable              | Required           | Notes                                              |
-|-----------------------|--------------------|---------------------------------------------------|
-| `TIDAL_CLIENT_ID`     | Always             |                                                   |
-| `TIDAL_CLIENT_SECRET` | Always             | Never leaves the backend                          |
-| `OAUTH_FLOW_SECRET`   | Always             | HMAC-SHA256 key for flow cookie JWT. **Minimum 32 bytes of entropy.** A short or guessable value is a HIGH security risk (see H-1). |
-| `TIDAL_REDIRECT_URI`  | Outside dev        | Must exactly match a URI registered in your TIDAL app. Required when `DENO_ENV` / `NODE_ENV` ≠ `development`. |
-| `PORT`                | No (default 8080)  |                                                   |
-| `DENO_ENV` / `NODE_ENV` | Strongly recommended | Set to `production` in all non-local environments. Absence silently enables dev mode (see M-4). |
-| `IMPRESSUM_NAME`      | No                 | All three impressum vars must be set together     |
-| `IMPRESSUM_ADDRESS`   | No                 | Use `\n` for line breaks                          |
-| `IMPRESSUM_EMAIL`     | No                 |                                                   |
+| Variable                | Required             | Notes                                                                                                                               |
+| ----------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `TIDAL_CLIENT_ID`       | Always               |                                                                                                                                     |
+| `TIDAL_CLIENT_SECRET`   | Always               | Never leaves the backend                                                                                                            |
+| `OAUTH_FLOW_SECRET`     | Always               | HMAC-SHA256 key for flow cookie JWT. **Minimum 32 bytes of entropy.** A short or guessable value is a HIGH security risk (see H-1). |
+| `TIDAL_REDIRECT_URI`    | Outside dev          | Must exactly match a URI registered in your TIDAL app. Required when `DENO_ENV` / `NODE_ENV` ≠ `development`.                       |
+| `PORT`                  | No (default 8080)    |                                                                                                                                     |
+| `DENO_ENV` / `NODE_ENV` | Strongly recommended | Set to `production` in all non-local environments. Absence silently enables dev mode (see M-4).                                     |
+| `IMPRESSUM_NAME`        | No                   | All three impressum vars must be set together                                                                                       |
+| `IMPRESSUM_ADDRESS`     | No                   | Use `\n` for line breaks                                                                                                            |
+| `IMPRESSUM_EMAIL`       | No                   |                                                                                                                                     |
 
 ---
 
@@ -168,24 +170,24 @@ Browser                 Backend                  TIDAL
 
 ### Backend
 
-| Class / Function          | File                            | Responsibility                          |
-|---------------------------|---------------------------------|-----------------------------------------|
-| `assertServerConfig()`    | `server/config.ts`              | Fail-fast on missing/invalid env vars   |
-| `createOAuthStart()`      | `server/auth/oauth.ts`          | Build authorize URL + sign flow cookie  |
-| `verifyFlowPayload()`     | `server/auth/oauth.ts`          | Verify + decode signed flow cookie JWT  |
-| `oauthCookieOptions()`    | `server/auth/oauth.ts`          | Cookie attributes (⚠ see H-2) |
-| `exchangeCode()`          | `server/auth/token-client.ts`   | POST to TIDAL token endpoint            |
-| `validateTokenResponse()` | `server/token-validation.ts`    | Validate shape of upstream token payload|
+| Class / Function          | File                          | Responsibility                           |
+| ------------------------- | ----------------------------- | ---------------------------------------- |
+| `assertServerConfig()`    | `server/config.ts`            | Fail-fast on missing/invalid env vars    |
+| `createOAuthStart()`      | `server/auth/oauth.ts`        | Build authorize URL + sign flow cookie   |
+| `verifyFlowPayload()`     | `server/auth/oauth.ts`        | Verify + decode signed flow cookie JWT   |
+| `oauthCookieOptions()`    | `server/auth/oauth.ts`        | Cookie attributes (⚠ see H-2)            |
+| `exchangeCode()`          | `server/auth/token-client.ts` | POST to TIDAL token endpoint             |
+| `validateTokenResponse()` | `server/token-validation.ts`  | Validate shape of upstream token payload |
 
 ### Frontend (`web/src/`)
 
-| Module / Element        | File                                        | Status         |
-|-------------------------|---------------------------------------------|----------------|
-| `<auth-guard>`          | `web/src/modules/auth/auth-guard.ts`        | Functional     |
-| `startLogin/finishLogin`| `web/src/modules/tidal/auth.ts`             | Functional; token not consumed |
-| `<main-element>`        | `web/src/main-element.ts`                   | Shell only     |
-| `AppSettingsStore`      | `web/src/modules/app-settings-store.ts`     | In progress    |
-| `PlaylistBuilder`       | `web/src/modules/playlist-builder.ts`       | In progress    |
+| Module / Element         | File                                    | Status                         |
+| ------------------------ | --------------------------------------- | ------------------------------ |
+| `<auth-guard>`           | `web/src/modules/auth/auth-guard.ts`    | Functional                     |
+| `startLogin/finishLogin` | `web/src/modules/tidal/auth.ts`         | Functional; token not consumed |
+| `<main-element>`         | `web/src/main-element.ts`               | Shell only                     |
+| `AppSettingsStore`       | `web/src/modules/app-settings-store.ts` | In progress                    |
+| `PlaylistBuilder`        | `web/src/modules/playlist-builder.ts`   | In progress                    |
 
 ---
 
@@ -196,6 +198,7 @@ deno task test        # runs Vitest
 ```
 
 **Current state:**
+
 - `vitest.config.ts` includes `server/**/*_test.ts` and `web/src/**/*_test.ts`.
 - `web/src/` has no test files. The `web/src/**/*_test.ts` glob matches nothing.
 - The only reachable test is `server/token-validation_test.ts`.
@@ -204,35 +207,33 @@ deno task test        # runs Vitest
 
 ## Open Security Findings
 
-Ticket board (all severities, statuses, links): `docs/BOARD.md`.  
-Individual ticket files: `docs/tickets/{high,medium,low,ux,arch,closed}/`.  
+Ticket board (all severities, statuses, links): `docs/BOARD.md`.\
+Individual ticket files: `docs/tickets/{high,medium,low,ux,arch,closed}/`.\
 Critical and high items that affect any auth or frontend work:
 
-| ID  | Sev      | Summary                                                       |
-|-----|----------|---------------------------------------------------------------|
-| C-1 | CRITICAL | XSS in `impressum-modal.ts` — server data unescaped in innerHTML |
+| ID  | Sev      | Summary                                                           |
+| --- | -------- | ----------------------------------------------------------------- |
+| C-1 | CRITICAL | XSS in `impressum-modal.ts` — server data unescaped in innerHTML  |
 | H-1 | HIGH     | `OAUTH_FLOW_SECRET` entropy not enforced — short secrets accepted |
-| H-2 | HIGH     | Cookie `Secure` flag wrong behind TLS-terminating proxy       |
-| H-3 | HIGH     | `authorizeUrl` not validated before `location.href` assignment |
-| H-4 | HIGH     | Full token state (including refresh token) in `localStorage`  |
-| H-5 | HIGH     | No timeout on upstream TIDAL token fetch                      |
-| M-1 | MEDIUM   | HSTS header missing                                           |
-| M-3 | MEDIUM   | No rate limiting on `/api/auth/start` or `/api/auth/token`    |
-| M-4 | MEDIUM   | `IS_DEV` silently defaults to `development` when env unset    |
+| H-2 | HIGH     | Cookie `Secure` flag wrong behind TLS-terminating proxy           |
+| H-3 | HIGH     | `authorizeUrl` not validated before `location.href` assignment    |
+| H-4 | HIGH     | Full token state (including refresh token) in `localStorage`      |
+| H-5 | HIGH     | No timeout on upstream TIDAL token fetch                          |
+| M-1 | MEDIUM   | HSTS header missing                                               |
+| M-3 | MEDIUM   | No rate limiting on `/api/auth/start` or `/api/auth/token`        |
+| M-4 | MEDIUM   | `IS_DEV` silently defaults to `development` when env unset        |
 
 ---
 
 ## Working Conventions
 
 - **Frontend:** all work goes in `web/src/`. Lit 3 + `@lit-labs/signals`.
-- **Auth changes:** any modification to the OAuth flow must account for both the
-  backend cookie lifecycle and the frontend SDK credential handling in
-  `web/src/modules/tidal/auth.ts`. Re-read the flow diagram above before touching either.
-- **Secret handling:** `CLIENT_SECRET` must never appear in any frontend file or HTTP
-  response. `CLIENT_ID` is intentionally public.
-- **Error messages:** prefer generic client-facing messages; log specifics
-  server-side only.
-- **Cookie attributes:** always use `oauthCookieOptions()` for the flow cookie. Do not
-  inline cookie options. Fix H-2 before adding any new cookies.
-- **AGENTS.md:** update the "Codebase State" section summary when
-  the build configuration changes.
+- **Auth changes:** any modification to the OAuth flow must account for both the backend cookie
+  lifecycle and the frontend SDK credential handling in `web/src/modules/tidal/auth.ts`. Re-read the
+  flow diagram above before touching either.
+- **Secret handling:** `CLIENT_SECRET` must never appear in any frontend file or HTTP response.
+  `CLIENT_ID` is intentionally public.
+- **Error messages:** prefer generic client-facing messages; log specifics server-side only.
+- **Cookie attributes:** always use `oauthCookieOptions()` for the flow cookie. Do not inline cookie
+  options. Fix H-2 before adding any new cookies.
+- **AGENTS.md:** update the "Codebase State" section summary when the build configuration changes.

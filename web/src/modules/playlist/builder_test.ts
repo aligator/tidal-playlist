@@ -33,10 +33,11 @@ function makeApi(overrides: Partial<PlaylistBuilderApi> = {}): PlaylistBuilderAp
     primaryArtistFromAlbum: () => Promise.resolve(null),
     artist: (id) => Promise.resolve({ id, attributes: { name: `Artist ${id}` } }),
     artistAlbums: (id) => Promise.resolve([{ id: `album-${id}`, title: `Album of ${id}` }]),
-    albumTracks: (id) => Promise.resolve([
-      { id: `track-${id}-1`, title: 'Track 1' },
-      { id: `track-${id}-2`, title: 'Track 2' },
-    ]),
+    albumTracks: (id) =>
+      Promise.resolve([
+        { id: `track-${id}-1`, title: 'Track 1' },
+        { id: `track-${id}-2`, title: 'Track 2' },
+      ]),
     ...overrides,
   };
 }

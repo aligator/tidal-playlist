@@ -1,4 +1,4 @@
-import { signal, computed } from '@lit-labs/signals';
+import { computed, signal } from '@lit-labs/signals';
 import { logout as sdkLogout } from './sdk.ts';
 import { pushView } from '../../app-shell.ts';
 

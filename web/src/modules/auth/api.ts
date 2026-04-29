@@ -1,5 +1,5 @@
 import { setAuthenticated } from './store.ts';
-import { initSdk, setCredentials, getClientId } from './sdk.ts';
+import { getClientId, initSdk, setCredentials } from './sdk.ts';
 import { loadRuntimeConfig } from '../tidal/settings.ts';
 import { SCOPES } from '../tidal/shared.ts';
 

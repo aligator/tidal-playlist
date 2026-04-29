@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { SignalWatcher } from '@lit-labs/signals';
 import '@material/web/list/list.js';
@@ -12,12 +12,32 @@ import '@material/web/button/filled-button.js';
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
 import '../../components/ui-top-bar.ts';
-import '../impressum/impressum-modal.ts';
 import { logout } from '../auth/store.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
-import { settings, updateSettings, importSettings, exportSettings } from './store.ts';
+import { exportSettings, importSettings, settings, updateSettings } from './store.ts';
 
-const COUNTRY_CODES = ['AT', 'AU', 'BE', 'CA', 'CH', 'DE', 'DK', 'ES', 'FI', 'FR', 'GB', 'IE', 'IT', 'NL', 'NO', 'NZ', 'PL', 'PT', 'SE', 'US'];
+const COUNTRY_CODES = [
+  'AT',
+  'AU',
+  'BE',
+  'CA',
+  'CH',
+  'DE',
+  'DK',
+  'ES',
+  'FI',
+  'FR',
+  'GB',
+  'IE',
+  'IT',
+  'NL',
+  'NO',
+  'NZ',
+  'PL',
+  'PT',
+  'SE',
+  'US',
+];
 const countryNames = new Intl.DisplayNames(['en'], { type: 'region' });
 
 // ---------------------------------------------------------------------------
@@ -87,9 +107,10 @@ export class SettingsView extends SignalWatcher(LitElement) {
     }
 
     /* Hidden file input */
-    input[type='file'] {
+    input[type="file"] {
       display: none;
     }
+
   `;
 
   // -----------------------------------------------------------------------
@@ -121,14 +142,15 @@ export class SettingsView extends SignalWatcher(LitElement) {
           @change="${this._onCountryChange}"
         >
           ${COUNTRY_CODES.map(
-            (code) => html`
-              <md-select-option
-                .value="${code}"
-                ?selected="${s.countryCode === code}"
-              >
-                <div slot="headline">${code} — ${countryNames.of(code)}</div>
-              </md-select-option>
-            `,
+            (code) =>
+              html`
+                <md-select-option
+                  .value="${code}"
+                  ?selected="${s.countryCode === code}"
+                >
+                  <div slot="headline">${code} — ${countryNames.of(code)}</div>
+                </md-select-option>
+              `,
           )}
         </md-outlined-select>
       </div>
@@ -172,10 +194,7 @@ export class SettingsView extends SignalWatcher(LitElement) {
             <md-text-button tabindex="-1">Logout</md-text-button>
           </div>
         </md-list-item>
-
       </md-list>
-
-      <impressum-modal></impressum-modal>
 
       <!-- Hidden file input for import -->
       <input
@@ -196,8 +215,19 @@ export class SettingsView extends SignalWatcher(LitElement) {
           <md-filled-button @click="${this._onImportConfirm}">Replace</md-filled-button>
         </div>
       </md-dialog>
-
     `;
+  }
+
+  // -----------------------------------------------------------------------
+  // Country
+  // -----------------------------------------------------------------------
+
+  private _onCountryChange(event: Event): void {
+    const select = event.target as HTMLElement & { value?: string };
+    const value = select.value ?? '';
+    if (value) {
+      updateSettings({ countryCode: value });
+    }
   }
 
   // -----------------------------------------------------------------------

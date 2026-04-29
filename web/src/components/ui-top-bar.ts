@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '@material/web/icon/icon.js';
 import '@material/web/iconbutton/icon-button.js';
@@ -61,10 +61,10 @@ export class UiTopBar extends LitElement {
       <div class="bar">
         ${this.back
           ? html`
-              <md-icon-button aria-label="Go back" @click="${this._onBack}">
-                <md-icon>arrow_back</md-icon>
-              </md-icon-button>
-            `
+            <md-icon-button aria-label="Go back" @click="${this._onBack}">
+              <md-icon>arrow_back</md-icon>
+            </md-icon-button>
+          `
           : ''}
         <span class="heading">${this.heading}</span>
         <div class="trailing">

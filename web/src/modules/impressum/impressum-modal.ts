@@ -100,18 +100,26 @@ export class ImpressumModal extends StyledElement {
         <div slot="headline">Impressum</div>
         <div slot="content">
           ${this.loading
-            ? html`<p>Lädt...</p>`
+            ? html`
+              <p>Lädt...</p>
+            `
             : this.error
-              ? html`<p>${this.error}</p>`
-              : html`
-                  <div class="impressum-body">
-                    <p><strong>${this.name}</strong></p>
-                    ${addressLines.map((line) => html`<p>${line}</p>`)}
-                    <p>
-                      <a href="mailto:${this.email}">${this.email}</a>
-                    </p>
-                  </div>
-                `}
+            ? html`
+              <p>${this.error}</p>
+            `
+            : html`
+              <div class="impressum-body">
+                <p><strong>${this.name}</strong></p>
+                ${addressLines.map((line) =>
+                  html`
+                    <p>${line}</p>
+                  `
+                )}
+                <p>
+                  <a href="mailto:${this.email}">${this.email}</a>
+                </p>
+              </div>
+            `}
         </div>
         <div slot="actions">
           <md-text-button @click="${() => this.closeModal()}">Schließen</md-text-button>

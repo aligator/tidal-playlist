@@ -1,11 +1,11 @@
-import { LitElement, css, html } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { SignalWatcher } from '@lit-labs/signals';
 import '@material/web/button/filled-button.js';
 import '@material/web/progress/circular-progress.js';
 import { pushView } from '../../app-shell.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
-import { startLogin, finishLogin } from './api.ts';
+import { finishLogin, startLogin } from './api.ts';
 
 // ---------------------------------------------------------------------------
 // Types

@@ -1,8 +1,8 @@
 import {
-  init as sdkInit,
   credentialsProvider,
-  setCredentials as sdkSetCredentials,
+  init as sdkInit,
   logout as sdkLogout,
+  setCredentials as sdkSetCredentials,
 } from '@tidal-music/auth';
 import { SCOPES } from '../tidal/shared.ts';
 
@@ -26,4 +26,4 @@ export function getClientId(): string {
   return _clientId;
 }
 
-export { credentialsProvider, sdkSetCredentials as setCredentials, sdkLogout as logout };
+export { credentialsProvider, sdkLogout as logout, sdkSetCredentials as setCredentials };

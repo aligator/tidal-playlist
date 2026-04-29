@@ -1,7 +1,6 @@
 # TIDAL Playlist Web App (Deno)
 
-This project is a vanilla JS + Web Components frontend built with Vite, plus a Deno backend for auth
-proxying and serving built assets.
+This project is a vanilla TS + Lit webcomponents frontend built with Vite, plus a Deno backend for auth, proxying and serving built assets.
 
 ## Why backend token proxy mode
 
@@ -79,18 +78,5 @@ Optional env vars:
 - `DENO_ENV` / `NODE_ENV` (`development` enables dynamic redirect fallback)
 - `OAUTH_FLOW_SECRET`
 
-## Behavior parity with original CLI
-
-- Fetch liked artists
-- Apply artist whitelist/blacklist
-- Apply album whitelist/blacklist (album ID or exact title)
-- Random selection with replacement
-- For each selected artist: random album -> random track
-- Fetch tracks first, then save playlist explicitly
-- Replace playlist by exact name (delete existing and recreate)
-
-## Notes on state
-
-OAuth state and PKCE verifier are generated server-side and validated server-side using a short-lived
-signed HttpOnly cookie (`/api/auth/start` -> `/api/auth/token` flow). Token persistence remains on the
-frontend SDK/browser side.
+## AI Use
+This project was done as an AI coding experiment. Most code of it was generated using AI, but with much manual architectural advice.

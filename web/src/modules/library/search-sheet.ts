@@ -1,4 +1,4 @@
-import { LitElement, html } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import '@material/web/list/list.js';
 import '@material/web/list/list-item.js';
@@ -6,7 +6,7 @@ import '../../components/ui-search-sheet.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { settings } from '../settings/store.ts';
 import { TidalApi } from '../tidal/api.ts';
-import { addArtist, addAlbum } from './store.ts';
+import { addAlbum, addArtist } from './store.ts';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -57,14 +57,15 @@ export class LibrarySearchSheet extends LitElement {
       >
         <md-list>
           ${this._results.map(
-            (result) => html`
-              <md-list-item
-                type="button"
-                @click="${() => this._onItemClick(result)}"
-              >
-                <span slot="headline">${result.name}</span>
-              </md-list-item>
-            `,
+            (result) =>
+              html`
+                <md-list-item
+                  type="button"
+                  @click="${() => this._onItemClick(result)}"
+                >
+                  <span slot="headline">${result.name}</span>
+                </md-list-item>
+              `,
           )}
         </md-list>
       </ui-search-sheet>

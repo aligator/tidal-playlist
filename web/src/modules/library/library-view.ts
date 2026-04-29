@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { SignalWatcher } from '@lit-labs/signals';
 import '@material/web/tabs/tabs.js';
@@ -10,19 +10,20 @@ import '@material/web/icon/icon.js';
 import '../../components/ui-top-bar.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
 import {
-  artists,
-  albums,
-  blocked,
-  addArtist,
-  removeArtist,
   addAlbum,
-  removeAlbum,
-  blockArtist,
+  addArtist,
+  albums,
+  artists,
   blockAlbum,
-  unblockArtist,
+  blockArtist,
+  blocked,
+  removeAlbum,
+  removeArtist,
   unblockAlbum,
+  unblockArtist,
 } from './store.ts';
 import './search-sheet.ts';
+import './playlist-import-sheet.ts';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -87,6 +88,9 @@ export class LibraryView extends SignalWatcher(LitElement) {
   @state()
   private _searchOpen = false;
 
+  @state()
+  private _playlistImportOpen = false;
+
   // -----------------------------------------------------------------------
   // Render
   // -----------------------------------------------------------------------
@@ -100,15 +104,22 @@ export class LibraryView extends SignalWatcher(LitElement) {
 
     return html`
       <ui-top-bar heading="Library">
+        <md-icon-button
+          aria-label="Browse TIDAL playlists"
+          title="Block artists/albums from a playlist"
+          @click="${this._onPlaylistImportClick}"
+        >
+          <md-icon>queue_music</md-icon>
+        </md-icon-button>
         ${showAddButton
           ? html`
-              <md-icon-button
-                aria-label="Add ${this._tab === 'artists' ? 'artist' : 'album'}"
-                @click="${this._onAddClick}"
-              >
-                <md-icon>add</md-icon>
-              </md-icon-button>
-            `
+            <md-icon-button
+              aria-label="Add ${this._tab === 'artists' ? 'artist' : 'album'}"
+              @click="${this._onAddClick}"
+            >
+              <md-icon>add</md-icon>
+            </md-icon-button>
+          `
           : ''}
       </ui-top-bar>
 
@@ -121,8 +132,8 @@ export class LibraryView extends SignalWatcher(LitElement) {
       ${this._tab === 'artists'
         ? this._renderArtistsTab(artistList)
         : this._tab === 'albums'
-          ? this._renderAlbumsTab(albumList)
-          : this._renderBlockedTab(blockedSets)}
+        ? this._renderAlbumsTab(albumList)
+        : this._renderBlockedTab(blockedSets)}
 
       <library-search-sheet
         .open="${this._searchOpen}"
@@ -130,6 +141,11 @@ export class LibraryView extends SignalWatcher(LitElement) {
         @close="${this._onSearchClose}"
         @added="${this._onAdded}"
       ></library-search-sheet>
+
+      <playlist-import-sheet
+        .open="${this._playlistImportOpen}"
+        @close="${this._onPlaylistImportClose}"
+      ></playlist-import-sheet>
     `;
   }
 
@@ -147,18 +163,19 @@ export class LibraryView extends SignalWatcher(LitElement) {
     return html`
       <md-list>
         ${list.map(
-          (name) => html`
-            <md-list-item>
-              <span slot="headline">${name}</span>
-              <md-icon-button
-                slot="end"
-                aria-label="Remove ${name}"
-                @click="${() => this._onRemoveArtist(name)}"
-              >
-                <md-icon>delete</md-icon>
-              </md-icon-button>
-            </md-list-item>
-          `,
+          (name) =>
+            html`
+              <md-list-item>
+                <span slot="headline">${name}</span>
+                <md-icon-button
+                  slot="end"
+                  aria-label="Remove ${name}"
+                  @click="${() => this._onRemoveArtist(name)}"
+                >
+                  <md-icon>delete</md-icon>
+                </md-icon-button>
+              </md-list-item>
+            `,
         )}
       </md-list>
     `;
@@ -174,18 +191,19 @@ export class LibraryView extends SignalWatcher(LitElement) {
     return html`
       <md-list>
         ${list.map(
-          (name) => html`
-            <md-list-item>
-              <span slot="headline">${name}</span>
-              <md-icon-button
-                slot="end"
-                aria-label="Remove ${name}"
-                @click="${() => this._onRemoveAlbum(name)}"
-              >
-                <md-icon>delete</md-icon>
-              </md-icon-button>
-            </md-list-item>
-          `,
+          (name) =>
+            html`
+              <md-list-item>
+                <span slot="headline">${name}</span>
+                <md-icon-button
+                  slot="end"
+                  aria-label="Remove ${name}"
+                  @click="${() => this._onRemoveAlbum(name)}"
+                >
+                  <md-icon>delete</md-icon>
+                </md-icon-button>
+              </md-list-item>
+            `,
         )}
       </md-list>
     `;
@@ -203,10 +221,11 @@ export class LibraryView extends SignalWatcher(LitElement) {
     return html`
       ${blockedSets.artists.length > 0
         ? html`
-            <div class="section-header">Blocked Artists</div>
-            <md-list>
-              ${blockedSets.artists.map(
-                (name) => html`
+          <div class="section-header">Blocked Artists</div>
+          <md-list>
+            ${blockedSets.artists.map(
+              (name) =>
+                html`
                   <md-list-item>
                     ${name}
                     <md-icon-button
@@ -218,16 +237,16 @@ export class LibraryView extends SignalWatcher(LitElement) {
                     </md-icon-button>
                   </md-list-item>
                 `,
-              )}
-            </md-list>
-          `
-        : ''}
-      ${blockedSets.albums.length > 0
+            )}
+          </md-list>
+        `
+        : ''} ${blockedSets.albums.length > 0
         ? html`
-            <div class="section-header">Blocked Albums</div>
-            <md-list>
-              ${blockedSets.albums.map(
-                (name) => html`
+          <div class="section-header">Blocked Albums</div>
+          <md-list>
+            ${blockedSets.albums.map(
+              (name) =>
+                html`
                   <md-list-item>
                     ${name}
                     <md-icon-button
@@ -239,9 +258,9 @@ export class LibraryView extends SignalWatcher(LitElement) {
                     </md-icon-button>
                   </md-list-item>
                 `,
-              )}
-            </md-list>
-          `
+            )}
+          </md-list>
+        `
         : ''}
     `;
   }
@@ -266,6 +285,14 @@ export class LibraryView extends SignalWatcher(LitElement) {
 
   private _onSearchClose(): void {
     this._searchOpen = false;
+  }
+
+  private _onPlaylistImportClick(): void {
+    this._playlistImportOpen = true;
+  }
+
+  private _onPlaylistImportClose(): void {
+    this._playlistImportOpen = false;
   }
 
   private _onAdded(event: Event): void {

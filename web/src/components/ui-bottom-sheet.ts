@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { css, html, LitElement } from 'lit';
 import type { PropertyValues } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
@@ -57,7 +57,7 @@ export class UiBottomSheet extends LitElement {
     }
 
     .drag-handle::after {
-      content: '';
+      content: "";
       display: block;
       width: 32px;
       height: 4px;
@@ -94,7 +94,8 @@ export class UiBottomSheet extends LitElement {
       <div
         class="backdrop ${this.open ? 'open' : ''}"
         @click="${this._onBackdropClick}"
-      ></div>
+      >
+      </div>
       <div
         class="sheet ${this.open ? 'open' : ''}"
         @touchstart="${this._onTouchStart}"

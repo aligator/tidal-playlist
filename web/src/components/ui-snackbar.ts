@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { css, html, LitElement } from 'lit';
 import type { PropertyValues } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
@@ -50,7 +50,10 @@ export class UiSnackbar extends LitElement {
       border-radius: 4px;
       background: var(--md-sys-color-inverse-surface);
       color: var(--md-sys-color-inverse-on-surface);
-      box-shadow: 0 3px 5px -1px rgba(0,0,0,.2), 0 6px 10px 0 rgba(0,0,0,.14), 0 1px 18px 0 rgba(0,0,0,.12);
+      box-shadow:
+        0 3px 5px -1px rgba(0, 0, 0, 0.2),
+        0 6px 10px 0 rgba(0, 0, 0, 0.14),
+        0 1px 18px 0 rgba(0, 0, 0, 0.12);
       pointer-events: auto;
       transform: translateY(100%);
       opacity: 0;
@@ -139,12 +142,7 @@ export class UiSnackbar extends LitElement {
     const item: SnackbarItem = {
       message,
       type,
-      duration:
-        options?.duration !== undefined
-          ? options.duration
-          : type === 'error'
-            ? 0
-            : 3000,
+      duration: options?.duration !== undefined ? options.duration : type === 'error' ? 0 : 3000,
       action: options?.action,
     };
 
@@ -211,17 +209,21 @@ export class UiSnackbar extends LitElement {
   // -----------------------------------------------------------------------
 
   override render() {
-    if (!this._current) return html``;
+    if (!this._current) {
+      return html`
+
+      `;
+    }
 
     return html`
       <div class="snackbar ${this._visible ? 'visible' : ''}" role="status" aria-live="polite">
         <span class="message">${this._current.message}</span>
         ${this._current.action
           ? html`
-              <button class="action-btn" @click="${this._onAction}">
-                ${this._current.action.label}
-              </button>
-            `
+            <button class="action-btn" @click="${this._onAction}">
+              ${this._current.action.label}
+            </button>
+          `
           : ''}
         <button class="dismiss-btn" aria-label="Dismiss" @click="${this._dismiss}">
           ×

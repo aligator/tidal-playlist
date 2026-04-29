@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defaultCountryCodeFromBrowser, normalizeTrackCount, parseJwtExpiry, unixNow } from './shared.ts';
+import {
+  defaultCountryCodeFromBrowser,
+  normalizeTrackCount,
+  parseJwtExpiry,
+  unixNow,
+} from './shared.ts';
 
 function makeJwt(payload: Record<string, unknown>): string {
   const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));

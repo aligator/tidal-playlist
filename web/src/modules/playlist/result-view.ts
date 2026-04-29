@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { SignalWatcher } from '@lit-labs/signals';
 import '@material/web/list/list.js';
@@ -8,13 +8,13 @@ import '@material/web/icon/icon.js';
 import '@material/web/button/filled-button.js';
 import '@material/web/button/text-button.js';
 import '@material/web/dialog/dialog.js';
-import '@material/web/progress/circular-progress.js';
+import '@material/web/progress/linear-progress.js';
 import '../../components/ui-top-bar.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { popView } from '../../app-shell.ts';
-import { blockArtist, unblockArtist, blockAlbum, unblockAlbum } from '../library/store.ts';
+import { blockAlbum, blockArtist, unblockAlbum, unblockArtist } from '../library/store.ts';
 import { settings } from '../settings/store.ts';
-import { result, savePlaylist } from './store.ts';
+import { result, savePlaylist, saveProgress } from './store.ts';
 import type { SelectedSong } from '../../types.ts';
 
 // ---------------------------------------------------------------------------
@@ -47,11 +47,28 @@ export class ResultView extends SignalWatcher(LitElement) {
     }
 
     .action-row {
+      position: sticky;
+      bottom: 0;
       display: flex;
       flex-direction: column;
       align-items: stretch;
       padding: 16px;
       gap: 8px;
+      background: var(--md-sys-color-background);
+      border-top: 1px solid var(--md-sys-color-outline-variant);
+      z-index: 1;
+    }
+
+    .save-progress {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      color: var(--md-sys-color-on-surface-variant);
+    }
+
+    .save-progress md-linear-progress {
+      flex: 1;
     }
 
     .save-error {
@@ -94,7 +111,7 @@ export class ResultView extends SignalWatcher(LitElement) {
   // -----------------------------------------------------------------------
 
   @state()
-  private _saveState: 'idle' | 'saving' | 'error' = 'idle';
+  private _saveState: 'idle' | 'error' = 'idle';
 
   @state()
   private _saveError = '';
@@ -109,6 +126,8 @@ export class ResultView extends SignalWatcher(LitElement) {
   override render() {
     const tracks = result.get();
     const s = settings.get();
+    const pct = saveProgress.get();
+    const isSaving = pct !== null;
 
     return html`
       <ui-top-bar heading="Result" back @back="${this._onBack}"></ui-top-bar>
@@ -116,46 +135,47 @@ export class ResultView extends SignalWatcher(LitElement) {
       ${tracks.length === 0
         ? this._renderEmptyState()
         : html`
-            <div class="track-count">${tracks.length} track${tracks.length === 1 ? '' : 's'}</div>
+          <div class="track-count">${tracks.length} track${tracks.length === 1 ? '' : 's'}</div>
+          <md-list>
+            ${tracks.map((song) => this._renderTrack(song))}
+          </md-list>
 
-            <md-list>
-              ${tracks.map((song) => this._renderTrack(song))}
-            </md-list>
-
-            <div class="action-row">
+          <div class="action-row">
+            ${isSaving
+              ? html`
+                <div class="save-progress">
+                  <md-linear-progress .value="${(pct ?? 0) / 100}"></md-linear-progress>
+                  <span>${pct}%</span>
+                </div>
+              `
+              : ''}
+            ${this._saveState === 'error'
+              ? html`<div class="save-error">${this._saveError}</div>`
+              : ''}
+            <div class="save-btn-row">
+              <md-filled-button
+                ?disabled="${isSaving}"
+                @click="${this._onSaveClick}"
+              >
+                ${isSaving ? 'Saving…' : 'Save to TIDAL'}
+              </md-filled-button>
               ${this._saveState === 'error'
-                ? html`<div class="save-error">${this._saveError}</div>`
+                ? html`<md-text-button @click="${this._onSaveClick}">Retry</md-text-button>`
                 : ''}
-              <div class="save-btn-row">
-                <md-filled-button
-                  ?disabled="${this._saveState === 'saving'}"
-                  @click="${this._onSaveClick}"
-                >
-                  ${this._saveState === 'saving'
-                    ? html`<md-circular-progress indeterminate slot="icon"></md-circular-progress>
-                        Saving…`
-                    : 'Save to TIDAL'}
-                </md-filled-button>
-                ${this._saveState === 'error'
-                  ? html`
-                      <md-text-button @click="${this._onSaveClick}">Retry</md-text-button>
-                    `
-                  : ''}
-              </div>
-
-              <md-dialog ?open="${this._confirmOpen}" @closed="${() => { this._confirmOpen = false; }}">
-                <div slot="headline">Save playlist?</div>
-                <div slot="content">
-                  This will replace any existing TIDAL playlist named
-                  "<strong>${s.playlistName}</strong>".
-                </div>
-                <div slot="actions">
-                  <md-text-button @click="${() => { this._confirmOpen = false; }}">Cancel</md-text-button>
-                  <md-filled-button @click="${this._onSaveConfirmed}">Save</md-filled-button>
-                </div>
-              </md-dialog>
             </div>
-          `}
+
+            <md-dialog ?open="${this._confirmOpen}" @closed="${() => { this._confirmOpen = false; }}">
+              <div slot="headline">Save playlist?</div>
+              <div slot="content">
+                This will replace any existing TIDAL playlist named "<strong>${s.playlistName}</strong>".
+              </div>
+              <div slot="actions">
+                <md-text-button @click="${() => { this._confirmOpen = false; }}">Cancel</md-text-button>
+                <md-filled-button @click="${this._onSaveConfirmed}">Save</md-filled-button>
+              </div>
+            </md-dialog>
+          </div>
+        `}
     `;
   }
 
@@ -242,12 +262,11 @@ export class ResultView extends SignalWatcher(LitElement) {
   private _onSaveConfirmed(): void {
     this._confirmOpen = false;
     const s = settings.get();
-    this._saveState = 'saving';
+    this._saveState = 'idle';
     this._saveError = '';
 
     savePlaylist(s.playlistName, s.playlistDescription)
       .then(() => {
-        this._saveState = 'idle';
         showSnackbar('Playlist saved to TIDAL!', 'success');
       })
       .catch((err: unknown) => {

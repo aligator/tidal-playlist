@@ -1,9 +1,10 @@
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { SignalWatcher, computed, signal } from '@lit-labs/signals';
+import { computed, signal, SignalWatcher } from '@lit-labs/signals';
 import { isAuthenticated } from './modules/auth/store.ts';
 import '@material/web/labs/navigationbar/navigation-bar.js';
 import '@material/web/labs/navigationtab/navigation-tab.js';
+import './modules/impressum/impressum-modal.ts';
 
 // ---------------------------------------------------------------------------
 // Signal-based view router (module-level, exported for other modules to use)
@@ -58,7 +59,7 @@ export class AppShell extends SignalWatcher(LitElement) {
     :host {
       display: flex;
       flex-direction: column;
-      min-height: 100dvh;
+      height: 100dvh;
       background: var(--md-sys-color-background);
       color: var(--md-sys-color-on-background);
     }
@@ -77,6 +78,7 @@ export class AppShell extends SignalWatcher(LitElement) {
     .content {
       flex: 1;
       overflow-y: auto;
+      min-height: 0;
       padding: 16px;
       /* Reserve space for fixed bottom nav on mobile */
       padding-bottom: calc(16px + 80px);
@@ -145,13 +147,13 @@ export class AppShell extends SignalWatcher(LitElement) {
         );
       }
 
-      .side-nav-tab[aria-selected='true'] {
+      .side-nav-tab[aria-selected="true"] {
         background: var(--md-sys-color-secondary-container);
         color: var(--md-sys-color-on-secondary-container);
       }
 
       .side-nav-tab .nav-icon {
-        font-family: 'Material Symbols Outlined', sans-serif;
+        font-family: "Material Symbols Outlined", sans-serif;
         font-size: 24px;
         line-height: 1;
         font-style: normal;
@@ -166,6 +168,21 @@ export class AppShell extends SignalWatcher(LitElement) {
       md-navigation-bar {
         display: none;
       }
+
+      .desktop-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 4px 16px;
+        border-top: 1px solid var(--md-sys-color-outline-variant);
+        font-size: 0.75rem;
+        color: var(--md-sys-color-on-surface-variant);
+        flex-shrink: 0;
+      }
+    }
+
+    .desktop-footer {
+      display: none;
     }
 
     /* ------------------------------------------------------------------ */
@@ -197,9 +214,10 @@ export class AppShell extends SignalWatcher(LitElement) {
         <!-- Side nav rail — visible at ≥ 768 px via CSS @media -->
         ${showNav
           ? html`
-              <nav class="side-nav" role="navigation" aria-label="Main navigation">
-                ${NAV_TABS.map(
-                  (tab) => html`
+            <nav class="side-nav" role="navigation" aria-label="Main navigation">
+              ${NAV_TABS.map(
+                (tab) =>
+                  html`
                     <button
                       class="side-nav-tab"
                       role="tab"
@@ -211,9 +229,9 @@ export class AppShell extends SignalWatcher(LitElement) {
                       <span>${tab.label}</span>
                     </button>
                   `,
-                )}
-              </nav>
-            `
+              )}
+            </nav>
+          `
           : ''}
 
         <!-- Main content -->
@@ -222,15 +240,20 @@ export class AppShell extends SignalWatcher(LitElement) {
         </main>
       </div>
 
+      <footer class="desktop-footer">
+        <impressum-modal></impressum-modal>
+      </footer>
+
       <!-- Bottom navigation bar — visible on mobile via CSS, hidden on login -->
       ${showNav
         ? html`
-            <md-navigation-bar
-              .activeIndex="${activeIndex >= 0 ? activeIndex : 0}"
-              @navigation-bar-activated="${this._onNavBarActivated}"
-            >
-              ${NAV_TABS.map(
-                (tab) => html`
+          <md-navigation-bar
+            .activeIndex="${activeIndex >= 0 ? activeIndex : 0}"
+            @navigation-bar-activated="${this._onNavBarActivated}"
+          >
+            ${NAV_TABS.map(
+              (tab) =>
+                html`
                   <md-navigation-tab
                     .label="${tab.label}"
                     .active="${view === tab.view}"
@@ -239,40 +262,53 @@ export class AppShell extends SignalWatcher(LitElement) {
                     <md-icon slot="inactive-icon">${tab.icon}</md-icon>
                   </md-navigation-tab>
                 `,
-              )}
-            </md-navigation-bar>
-          `
+            )}
+          </md-navigation-bar>
+        `
         : ''}
     `;
   }
 
   private _renderView(view: string) {
     if (view === 'login') {
-      return html`<login-page></login-page>`;
+      return html`
+        <login-page></login-page>
+      `;
     }
 
     if (!isAuthenticated.get()) {
-      return html``;
+      return html`
+
+      `;
     }
 
-
     if (view === 'settings') {
-      return html`<settings-view></settings-view>`;
+      return html`
+        <settings-view></settings-view>
+      `;
     }
 
     if (view === 'library') {
-      return html`<library-view></library-view>`;
+      return html`
+        <library-view></library-view>
+      `;
     }
 
     if (view === 'playlist') {
-      return html`<playlist-view></playlist-view>`;
+      return html`
+        <playlist-view></playlist-view>
+      `;
     }
 
     if (view === 'result') {
-      return html`<result-view></result-view>`;
+      return html`
+        <result-view></result-view>
+      `;
     }
 
-    return html`<div class="view-placeholder">Unknown View: ${view}</div>`;
+    return html`
+      <div class="view-placeholder">Unknown View: ${view}</div>
+    `;
   }
 
   private _onTabClick(view: MainView): void {

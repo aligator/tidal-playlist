@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { css, html, LitElement } from 'lit';
 import type { PropertyValues } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
 import './ui-bottom-sheet.ts';
@@ -107,7 +107,9 @@ export class UiSearchSheet extends LitElement {
               @input="${this._onInput}"
             ></md-filled-text-field>
             ${this.loading
-              ? html`<md-circular-progress indeterminate></md-circular-progress>`
+              ? html`
+                <md-circular-progress indeterminate></md-circular-progress>
+              `
               : ''}
           </div>
           <div class="results">

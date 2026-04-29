@@ -65,7 +65,7 @@ export class PlaylistBuilder {
     this.requestGapMs = deps.requestGapMs ?? 250;
   }
 
-  async build(settings: AppSettings): Promise<PlaylistBuildResult> {
+  async build(settings: AppSettings, onProgress?: (pct: number) => void): Promise<PlaylistBuildResult> {
     if (!Number.isInteger(settings.count) || settings.count < 1) {
       throw new Error('Track count must be at least 1.');
     }
@@ -221,6 +221,7 @@ export class PlaylistBuilder {
           albumTitle: chosenAlbumTitle,
         });
         this.logger(`${chosenAlbumLabel} -> ${track.title}`);
+        onProgress?.(Math.round((selectedSongs.length / settings.count) * 100));
         picked = true;
       }
       if (!picked) {

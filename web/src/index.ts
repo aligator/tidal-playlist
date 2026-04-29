@@ -17,9 +17,7 @@ import { loadRuntimeConfig } from './modules/tidal/settings.ts';
 
 globalThis.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
   event.preventDefault();
-  const msg = event.reason instanceof Error
-    ? event.reason.message
-    : String(event.reason);
+  const msg = event.reason instanceof Error ? event.reason.message : String(event.reason);
   showSnackbar(msg || 'An unexpected error occurred.', 'error');
 });
 
