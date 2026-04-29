@@ -59,11 +59,6 @@ app.use(async (ctx, next) => {
   ctx.response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   ctx.response.headers.set('X-Frame-Options', 'DENY');
   ctx.response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-
-  // TODO: maybe remove it since that should be done by a proxy...
-  if (!IS_DEV) {
-    ctx.response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  }
 });
 app.use(router.routes());
 app.use(router.allowedMethods());
