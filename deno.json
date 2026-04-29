@@ -15,7 +15,8 @@
     "serve": "deno run --env-file=.env --allow-net --allow-read --allow-env server/main.ts",
     "test": "deno run -A --node-modules-dir=auto npm:vitest run",
     "test:watch": "deno run -A --node-modules-dir=auto npm:vitest",
-    "check": "deno check server/main.ts web/src/index.ts"
+    "check": "deno check server/main.ts web/src/index.ts",
+    "lint": "deno lint server/ web/src/"
   },
   "fmt": {
     "lineWidth": 100,

@@ -2,7 +2,7 @@ import type { AppSettings, ItemMetaMap } from '../../types.ts';
 
 export const SETTINGS_KEY = 'tidal_web_settings';
 export const TOKEN_KEY = 'tidal_web_token';
-export const DEFAULT_TRACK_COUNT = 25;
+export const DEFAULT_TRACK_COUNT = 20;
 export const DEFAULT_ALBUM_POOL_WEIGHT = 0.2;
 export const DEFAULT_SHUFFLE_PLAYLIST = false;
 

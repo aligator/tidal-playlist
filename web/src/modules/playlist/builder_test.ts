@@ -27,16 +27,16 @@ function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings {
 
 function makeApi(overrides: Partial<PlaylistBuilderApi> = {}): PlaylistBuilderApi {
   return {
-    favoriteArtistIds: async () => [],
-    favoriteAlbumIds: async () => [],
-    resolveAlbumPoolEntries: async () => [],
-    primaryArtistFromAlbum: async () => null,
-    artist: async (id) => ({ id, attributes: { name: `Artist ${id}` } }),
-    artistAlbums: async (id) => [{ id: `album-${id}`, title: `Album of ${id}` }],
-    albumTracks: async (id) => [
+    favoriteArtistIds: () => Promise.resolve([]),
+    favoriteAlbumIds: () => Promise.resolve([]),
+    resolveAlbumPoolEntries: () => Promise.resolve([]),
+    primaryArtistFromAlbum: () => Promise.resolve(null),
+    artist: (id) => Promise.resolve({ id, attributes: { name: `Artist ${id}` } }),
+    artistAlbums: (id) => Promise.resolve([{ id: `album-${id}`, title: `Album of ${id}` }]),
+    albumTracks: (id) => Promise.resolve([
       { id: `track-${id}-1`, title: 'Track 1' },
       { id: `track-${id}-2`, title: 'Track 2' },
-    ],
+    ]),
     ...overrides,
   };
 }
@@ -74,7 +74,7 @@ describe('PlaylistBuilder', () => {
   });
 
   it('throws when no tracks collected', async () => {
-    const api = makeApi({ albumTracks: async () => [] });
+    const api = makeApi({ albumTracks: () => Promise.resolve([]) });
     const builder = makeBuilder(api);
     await expect(builder.build(makeSettings({ count: 1 }))).rejects.toThrow('No tracks collected');
   });
@@ -88,9 +88,9 @@ describe('PlaylistBuilder', () => {
 
   it('respects artist blacklist', async () => {
     const api = makeApi({
-      artist: async (id) => ({ id, attributes: { name: id } }),
-      artistAlbums: async (id) => [{ id: `album-${id}`, title: `Album ${id}` }],
-      albumTracks: async (id) => [{ id: `track-${id}`, title: 'T' }],
+      artist: (id) => Promise.resolve({ id, attributes: { name: id } }),
+      artistAlbums: (id) => Promise.resolve([{ id: `album-${id}`, title: `Album ${id}` }]),
+      albumTracks: (id) => Promise.resolve([{ id: `track-${id}`, title: 'T' }]),
     });
     const builder = makeBuilder(api);
     const result = await builder.build(

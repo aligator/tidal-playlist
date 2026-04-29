@@ -43,6 +43,7 @@ export function applyAlbumFilters(
   return albums;
 }
 
+// Math.random() is intentional here — playlist shuffling is not a security-sensitive operation.
 export function randomPickWithReplacement<T>(items: T[], count: number): T[] {
   if (items.length === 0) {
     return [];

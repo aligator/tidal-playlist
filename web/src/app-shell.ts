@@ -1,6 +1,7 @@
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { SignalWatcher, computed, signal } from '@lit-labs/signals';
+import { isAuthenticated } from './modules/auth/store.ts';
 import '@material/web/labs/navigationbar/navigation-bar.js';
 import '@material/web/labs/navigationtab/navigation-tab.js';
 
@@ -8,7 +9,7 @@ import '@material/web/labs/navigationtab/navigation-tab.js';
 // Signal-based view router (module-level, exported for other modules to use)
 // ---------------------------------------------------------------------------
 
-export const viewStack = signal<string[]>(['playlist']);
+export const viewStack = signal<string[]>(['login']);
 
 export const currentView = computed(() => {
   const stack = viewStack.get();
@@ -249,6 +250,11 @@ export class AppShell extends SignalWatcher(LitElement) {
     if (view === 'login') {
       return html`<login-page></login-page>`;
     }
+
+    if (!isAuthenticated.get()) {
+      return html``;
+    }
+
 
     if (view === 'settings') {
       return html`<settings-view></settings-view>`;

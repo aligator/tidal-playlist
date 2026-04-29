@@ -7,6 +7,7 @@ import '@material/web/iconbutton/icon-button.js';
 import '@material/web/icon/icon.js';
 import '@material/web/button/filled-button.js';
 import '@material/web/button/text-button.js';
+import '@material/web/dialog/dialog.js';
 import '@material/web/progress/circular-progress.js';
 import '../../components/ui-top-bar.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
@@ -98,6 +99,9 @@ export class ResultView extends SignalWatcher(LitElement) {
   @state()
   private _saveError = '';
 
+  @state()
+  private _confirmOpen = false;
+
   // -----------------------------------------------------------------------
   // Render
   // -----------------------------------------------------------------------
@@ -125,21 +129,31 @@ export class ResultView extends SignalWatcher(LitElement) {
               <div class="save-btn-row">
                 <md-filled-button
                   ?disabled="${this._saveState === 'saving'}"
-                  @click="${this._onSave}"
+                  @click="${this._onSaveClick}"
                 >
                   ${this._saveState === 'saving'
                     ? html`<md-circular-progress indeterminate slot="icon"></md-circular-progress>
                         Saving…`
-                    : this._saveState === 'error'
-                      ? 'Save to TIDAL'
-                      : 'Save to TIDAL'}
+                    : 'Save to TIDAL'}
                 </md-filled-button>
                 ${this._saveState === 'error'
                   ? html`
-                      <md-text-button @click="${this._onSave}">Retry</md-text-button>
+                      <md-text-button @click="${this._onSaveClick}">Retry</md-text-button>
                     `
                   : ''}
               </div>
+
+              <md-dialog ?open="${this._confirmOpen}" @closed="${() => { this._confirmOpen = false; }}">
+                <div slot="headline">Save playlist?</div>
+                <div slot="content">
+                  This will replace any existing TIDAL playlist named
+                  "<strong>${s.playlistName}</strong>".
+                </div>
+                <div slot="actions">
+                  <md-text-button @click="${() => { this._confirmOpen = false; }}">Cancel</md-text-button>
+                  <md-filled-button @click="${this._onSaveConfirmed}">Save</md-filled-button>
+                </div>
+              </md-dialog>
             </div>
           `}
     `;
@@ -154,7 +168,9 @@ export class ResultView extends SignalWatcher(LitElement) {
     const supporting = song.artistName;
 
     return html`
-      <md-list-item .headline="${headline}" .supportingText="${supporting}">
+      <md-list-item>
+        <span slot="headline">${headline}</span>
+        <span slot="supporting-text">${supporting}</span>
         <div slot="end" class="block-buttons">
           <md-icon-button
             aria-label="Block artist ${song.artistName}"
@@ -219,7 +235,12 @@ export class ResultView extends SignalWatcher(LitElement) {
     });
   }
 
-  private _onSave(): void {
+  private _onSaveClick(): void {
+    this._confirmOpen = true;
+  }
+
+  private _onSaveConfirmed(): void {
+    this._confirmOpen = false;
     const s = settings.get();
     this._saveState = 'saving';
     this._saveError = '';

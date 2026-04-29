@@ -60,9 +60,10 @@ export class LibrarySearchSheet extends LitElement {
             (result) => html`
               <md-list-item
                 type="button"
-                .headline="${result.name}"
                 @click="${() => this._onItemClick(result)}"
-              ></md-list-item>
+              >
+                <span slot="headline">${result.name}</span>
+              </md-list-item>
             `,
           )}
         </md-list>

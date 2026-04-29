@@ -91,8 +91,8 @@ export class LoginPage extends SignalWatcher(LitElement) {
 
     this._loginState = 'callback';
     try {
-      const token = await finishLogin();
-      if (token !== null) {
+      const loggedIn = await finishLogin();
+      if (loggedIn) {
         pushView('playlist');
       } else {
         this._loginState = 'idle';

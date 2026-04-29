@@ -14,6 +14,7 @@ import '@material/web/textfield/filled-text-field.js';
 import '@material/web/progress/circular-progress.js';
 import '@material/web/icon/icon.js';
 import '../../components/ui-top-bar.ts';
+import '../impressum/impressum-modal.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { viewStack, pushView } from '../../app-shell.ts';
 import { settings, updateSettings } from '../settings/store.ts';
@@ -25,6 +26,7 @@ import { buildPlaylist, buildStatus, buildError, poolSourceCount, hasPoolSources
 
 const COUNTRY_CODES = ['AT', 'AU', 'BE', 'CA', 'CH', 'DE', 'DK', 'ES', 'FI', 'FR', 'GB', 'IE', 'IT', 'NL', 'NO', 'NZ', 'PL', 'PT', 'SE', 'US'];
 const TRACK_COUNT_OPTIONS = [10, 20, 30, 50, 100];
+const countryNames = new Intl.DisplayNames(['en'], { type: 'region' });
 
 // ---------------------------------------------------------------------------
 // Element
@@ -121,7 +123,17 @@ export class PlaylistView extends SignalWatcher(LitElement) {
     }
 
     .action-section {
+      position: sticky;
+      bottom: calc(80px + env(safe-area-inset-bottom));
+      background: var(--md-sys-color-background);
       padding: 16px;
+      z-index: 1;
+    }
+
+    @media (min-width: 768px) {
+      .action-section {
+        position: static;
+      }
     }
 
     .build-btn-row {
@@ -194,9 +206,7 @@ export class PlaylistView extends SignalWatcher(LitElement) {
         ${hasSources
           ? html`
               <div class="pool-count">
-                ${poolCounts.artistCount} artist${poolCounts.artistCount === 1 ? '' : 's'}
-                &middot;
-                ${poolCounts.albumCount} album${poolCounts.albumCount === 1 ? '' : 's'}
+                ${this._poolSummary(poolCounts)}
               </div>
             `
           : html`
@@ -227,7 +237,7 @@ export class PlaylistView extends SignalWatcher(LitElement) {
                   .value="${code}"
                   ?selected="${s.countryCode === code}"
                 >
-                  <div slot="headline">${code}</div>
+                  <div slot="headline">${code} — ${countryNames.of(code)}</div>
                 </md-select-option>
               `,
             )}
@@ -325,7 +335,22 @@ export class PlaylistView extends SignalWatcher(LitElement) {
           ? html`<div class="build-error">${lastError}</div>`
           : ''}
       </div>
+
+      <impressum-modal></impressum-modal>
     `;
+  }
+
+  // -----------------------------------------------------------------------
+  // Pool summary
+  // -----------------------------------------------------------------------
+
+  private _poolSummary(p: { artistCount: number; albumCount: number; likedArtists: boolean; likedAlbums: boolean }): string {
+    const parts: string[] = [];
+    if (p.likedArtists) parts.push('Liked artists');
+    if (p.artistCount > 0) parts.push(`${p.artistCount} artist${p.artistCount === 1 ? '' : 's'}`);
+    if (p.likedAlbums) parts.push('Liked albums');
+    if (p.albumCount > 0) parts.push(`${p.albumCount} album${p.albumCount === 1 ? '' : 's'}`);
+    return parts.join(' · ');
   }
 
   // -----------------------------------------------------------------------

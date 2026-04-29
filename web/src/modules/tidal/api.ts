@@ -503,10 +503,14 @@ export class TidalApi {
     const existing = await this.userPlaylists();
     const matches = existing.filter((playlist) => playlist.name === name);
     if (matches.length > 1) {
-      console.warn(`replacePlaylist: ${matches.length} playlists named "${name}" found — deleting only the first`);
+      console.warn(`replacePlaylist: ${matches.length} playlists named "${name}" found — deleting all`);
     }
     if (matches.length > 0) {
-      await this.deletePlaylist(matches[0].id);
+      const results = await Promise.allSettled(matches.map((p) => this.deletePlaylist(p.id)));
+      const failed = results.filter((r) => r.status === 'rejected');
+      if (failed.length > 0) {
+        throw new Error(`Failed to delete ${failed.length} existing playlist(s) named "${name}"`);
+      }
     }
 
     const playlistId = await this.createPlaylist(name, description);

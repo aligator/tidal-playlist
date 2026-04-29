@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import type { PropertyValues } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
 import './ui-bottom-sheet.ts';
+import '@material/web/textfield/filled-text-field.js';
 import '@material/web/progress/circular-progress.js';
 
 const name = 'ui-search-sheet';
@@ -17,7 +18,7 @@ export class UiSearchSheet extends LitElement {
     .sheet-inner {
       display: flex;
       flex-direction: column;
-      min-height: 60vh;
+      height: 100%;
       padding: 0 16px 24px;
       box-sizing: border-box;
     }
@@ -31,20 +32,8 @@ export class UiSearchSheet extends LitElement {
       margin-bottom: 8px;
     }
 
-    .search-input {
+    md-filled-text-field {
       flex: 1;
-      height: 44px;
-      border: none;
-      outline: none;
-      background: transparent;
-      color: var(--md-sys-color-on-surface);
-      font-size: 1rem;
-      font-family: inherit;
-      caret-color: var(--md-sys-color-primary);
-    }
-
-    .search-input::placeholder {
-      color: var(--md-sys-color-on-surface-variant);
     }
 
     md-circular-progress {
@@ -70,8 +59,8 @@ export class UiSearchSheet extends LitElement {
   @property({ type: Boolean })
   loading = false;
 
-  @query('.search-input')
-  private _inputEl?: HTMLInputElement;
+  @query('md-filled-text-field')
+  private _fieldEl?: HTMLElement & { value: string; focus(): void };
 
   private _debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -84,14 +73,12 @@ export class UiSearchSheet extends LitElement {
 
     if (changed.has('open')) {
       if (this.open) {
-        // Auto-focus input when sheet opens
         requestAnimationFrame(() => {
-          this._inputEl?.focus();
+          this._fieldEl?.focus();
         });
       } else {
-        // Clear input when sheet closes
-        if (this._inputEl) {
-          this._inputEl.value = '';
+        if (this._fieldEl) {
+          this._fieldEl.value = '';
         }
         this._clearDebounce();
       }
@@ -110,16 +97,15 @@ export class UiSearchSheet extends LitElement {
       >
         <div class="sheet-inner">
           <div class="search-row">
-            <input
-              class="search-input"
+            <md-filled-text-field
               type="search"
-              .placeholder="${this.placeholder}"
+              .label="${this.placeholder}"
               autocomplete="off"
               autocorrect="off"
               autocapitalize="off"
               spellcheck="false"
               @input="${this._onInput}"
-            />
+            ></md-filled-text-field>
             ${this.loading
               ? html`<md-circular-progress indeterminate></md-circular-progress>`
               : ''}
@@ -137,7 +123,7 @@ export class UiSearchSheet extends LitElement {
   // -----------------------------------------------------------------------
 
   private _onInput(e: Event): void {
-    const query = (e.target as HTMLInputElement).value;
+    const query = (e.target as HTMLElement & { value: string }).value;
     this._clearDebounce();
     this._debounceTimer = setTimeout(() => {
       this.dispatchEvent(

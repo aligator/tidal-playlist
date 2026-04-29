@@ -1,9 +1,8 @@
 import { css, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { StyledElement } from '../styled-element.ts';
-
-// TODO: why is this not a domain-level module? impressum is also a domain...
-// maybe better a basic modal component thats used by it...
+import { StyledElement } from '../../styled-element.ts';
+import '@material/web/dialog/dialog.js';
+import '@material/web/button/text-button.js';
 
 @customElement('impressum-modal')
 export class ImpressumModal extends StyledElement {
@@ -30,51 +29,17 @@ export class ImpressumModal extends StyledElement {
     .impressum-button:hover {
       background: #f3f4f6;
     }
-    dialog {
-      border-radius: 8px;
-      border: 1px solid var(--line, #d9dde3);
-      padding: 0;
-      max-width: 480px;
-      width: 90%;
-    }
-    dialog::backdrop {
-      background: rgb(0 0 0 / 40%);
-    }
-    .impressum-content {
-      padding: 1.5rem;
-    }
-    .impressum-content h2 {
-      margin: 0 0 1rem 0;
-    }
     .impressum-body p {
       margin: 0.4rem 0;
     }
-    .impressum-close {
-      margin-top: 1rem;
-      padding: 0.5rem 0.85rem;
-      cursor: pointer;
-    }
-    .impressum-close:hover {
-      background: #f3f4f6;
-    }
     a {
-      color: var(--link, #2563eb);
+      color: var(--md-sys-color-primary);
     }
   `;
 
   override connectedCallback(): void {
     super.connectedCallback();
     void this.checkAvailability();
-  }
-
-  override updated(): void {
-    const dialog = this.shadowRoot?.querySelector('dialog') as HTMLDialogElement | null;
-    if (!dialog) return;
-    if (this.open && !dialog.open) {
-      dialog.showModal();
-    } else if (!this.open && dialog.open) {
-      dialog.close();
-    }
   }
 
   private async checkAvailability(): Promise<void> {
@@ -116,12 +81,6 @@ export class ImpressumModal extends StyledElement {
     this.open = false;
   }
 
-  private onDialogClick(e: MouseEvent): void {
-    if (e.target === e.currentTarget) {
-      this.closeModal();
-    }
-  }
-
   override render() {
     if (!this.available) {
       return nothing;
@@ -137,40 +96,27 @@ export class ImpressumModal extends StyledElement {
         Impressum
       </button>
 
-      <dialog @click="${(e: MouseEvent) => this.onDialogClick(e)}">
-        <div class="impressum-content">
-          <h2>Impressum</h2>
-
+      <md-dialog ?open="${this.open}" @closed="${() => this.closeModal()}">
+        <div slot="headline">Impressum</div>
+        <div slot="content">
           ${this.loading
-            ? html`
-              <p>Lädt...</p>
-            `
+            ? html`<p>Lädt...</p>`
             : this.error
-            ? html`
-              <p>${this.error}</p>
-            `
-            : html`
-              <div class="impressum-body">
-                <p><strong>${this.name}</strong></p>
-                ${addressLines.map((line) =>
-                  html`
-                    <p>${line}</p>
-                  `
-                )}
-                <p>
-                  <a href="mailto:${this.email}">${this.email}</a>
-                </p>
-              </div>
-            `}
-
-          <button
-            class="impressum-close"
-            @click="${() => this.closeModal()}"
-          >
-            Schließen
-          </button>
+              ? html`<p>${this.error}</p>`
+              : html`
+                  <div class="impressum-body">
+                    <p><strong>${this.name}</strong></p>
+                    ${addressLines.map((line) => html`<p>${line}</p>`)}
+                    <p>
+                      <a href="mailto:${this.email}">${this.email}</a>
+                    </p>
+                  </div>
+                `}
         </div>
-      </dialog>
+        <div slot="actions">
+          <md-text-button @click="${() => this.closeModal()}">Schließen</md-text-button>
+        </div>
+      </md-dialog>
     `;
   }
 }

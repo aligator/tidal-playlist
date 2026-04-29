@@ -1,25 +1,24 @@
 import { signal, computed } from '@lit-labs/signals';
+import { logout as sdkLogout } from './sdk.ts';
 import { pushView } from '../../app-shell.ts';
 
-export type ApiTokenResponse = {
-  access_token: string;
-  refresh_token?: string;
-  expires_in: number;
-  token_type: string;
-  scope?: string;
-};
+/** True once SDK credentials confirmed valid; false until checked or after logout. */
+export const authentication = signal<boolean>(false);
 
-/** Module-level auth state: the current token and derived authenticated flag. */
-export const authentication = signal<ApiTokenResponse | null>(null);
+export const isAuthenticated = computed(() => authentication.get());
 
-export const isAuthenticated = computed(() => authentication.get() !== null);
-
-export async function logout(): Promise<void> {
-  authentication.set(null);
+export function setAuthenticated(value: boolean): void {
+  authentication.set(value);
 }
 
-/** Nullifies the auth signal and navigates to login; call on token expiry or 401 responses. */
+export function logout(): void {
+  sdkLogout();
+  authentication.set(false);
+  pushView('login');
+}
+
+/** Nullifies auth state and navigates to login; call on token expiry or 401 responses. */
 export function handleAuthFailure(): void {
-  authentication.set(null);
+  authentication.set(false);
   pushView('login');
 }

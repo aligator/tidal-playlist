@@ -39,8 +39,10 @@ export class UiBottomSheet extends LitElement {
       border-radius: 28px 28px 0 0;
       transform: translateY(100%);
       transition: transform 300ms cubic-bezier(0.2, 0, 0, 1);
-      /* Prevent content from overflowing the rounded corners */
       overflow: hidden;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
     }
 
     .sheet.open {
@@ -65,7 +67,9 @@ export class UiBottomSheet extends LitElement {
     }
 
     .content {
+      flex: 1;
       overflow-y: auto;
+      min-height: 0;
     }
   `;
 

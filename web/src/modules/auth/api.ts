@@ -1,8 +1,15 @@
-import { authentication } from './store.ts';
-import type { ApiTokenResponse } from './store.ts';
+import { setAuthenticated } from './store.ts';
+import { initSdk, setCredentials, getClientId } from './sdk.ts';
+import { loadRuntimeConfig } from '../tidal/settings.ts';
+import { SCOPES } from '../tidal/shared.ts';
 
-export type { ApiTokenResponse };
-
+type ApiTokenResponse = {
+  access_token: string;
+  refresh_token?: string;
+  expires_in: number;
+  token_type: string;
+  scope?: string;
+};
 
 function getCallbackParams() {
   const url = new URL(globalThis.location.href);
@@ -24,12 +31,12 @@ export async function startLogin(): Promise<void> {
   globalThis.location.href = authorizeUrl;
 }
 
-export async function finishLogin(): Promise<ApiTokenResponse | null> {
+export async function finishLogin(): Promise<boolean> {
   const { code, state, error, errorDescription } = getCallbackParams();
 
   if (error) throw new Error(errorDescription ?? error);
   if (!code || !state) {
-    return null;
+    return false;
   }
 
   const res = await fetch('/api/auth/token', {
@@ -45,6 +52,26 @@ export async function finishLogin(): Promise<ApiTokenResponse | null> {
   // clean callback query from URL
   globalThis.history.replaceState({}, '', '/');
 
-  authentication.set(token);
-  return token;
+  // Ensure SDK is initialised (idempotent if startup already ran).
+  let clientId = getClientId();
+  if (!clientId) {
+    const config = await loadRuntimeConfig();
+    clientId = config.clientId;
+    await initSdk(clientId);
+  }
+
+  const grantedScopes = token.scope ? token.scope.split(' ') : [...SCOPES];
+  await setCredentials({
+    accessToken: {
+      clientId,
+      token: token.access_token,
+      expires: Date.now() + token.expires_in * 1000,
+      requestedScopes: [...SCOPES],
+      grantedScopes,
+    },
+    refreshToken: token.refresh_token,
+  });
+
+  setAuthenticated(true);
+  return true;
 }

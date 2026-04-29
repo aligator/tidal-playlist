@@ -148,7 +148,8 @@ export class LibraryView extends SignalWatcher(LitElement) {
       <md-list>
         ${list.map(
           (name) => html`
-            <md-list-item .headline="${name}">
+            <md-list-item>
+              <span slot="headline">${name}</span>
               <md-icon-button
                 slot="end"
                 aria-label="Remove ${name}"
@@ -174,7 +175,8 @@ export class LibraryView extends SignalWatcher(LitElement) {
       <md-list>
         ${list.map(
           (name) => html`
-            <md-list-item .headline="${name}">
+            <md-list-item>
+              <span slot="headline">${name}</span>
               <md-icon-button
                 slot="end"
                 aria-label="Remove ${name}"
@@ -205,7 +207,8 @@ export class LibraryView extends SignalWatcher(LitElement) {
             <md-list>
               ${blockedSets.artists.map(
                 (name) => html`
-                  <md-list-item .headline="${name}">
+                  <md-list-item>
+                    ${name}
                     <md-icon-button
                       slot="end"
                       aria-label="Unblock ${name}"
@@ -225,7 +228,8 @@ export class LibraryView extends SignalWatcher(LitElement) {
             <md-list>
               ${blockedSets.albums.map(
                 (name) => html`
-                  <md-list-item .headline="${name}">
+                  <md-list-item>
+                    ${name}
                     <md-icon-button
                       slot="end"
                       aria-label="Unblock ${name}"

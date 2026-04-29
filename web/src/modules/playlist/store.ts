@@ -31,13 +31,19 @@ export const buildError = signal<string | null>(null);
  */
 export const poolSourceCount = computed(() => {
   const s = settings.get();
-  const artistCount = artists.get().length + (s.includeLikedArtistsPool ? 1 : 0);
-  const albumCount = albums.get().length + (s.includeLikedAlbumsPool ? 1 : 0);
-  return { artistCount, albumCount, total: artistCount + albumCount };
+  return {
+    artistCount: artists.get().length,
+    albumCount: albums.get().length,
+    likedArtists: s.includeLikedArtistsPool,
+    likedAlbums: s.includeLikedAlbumsPool,
+  };
 });
 
 /** True when the pool has at least one source. */
-export const hasPoolSources = computed(() => poolSourceCount.get().total > 0);
+export const hasPoolSources = computed(() => {
+  const p = poolSourceCount.get();
+  return p.artistCount > 0 || p.albumCount > 0 || p.likedArtists || p.likedAlbums;
+});
 
 // ---------------------------------------------------------------------------
 // Actions

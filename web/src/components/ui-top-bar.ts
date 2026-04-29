@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '@material/web/icon/icon.js';
+import '@material/web/iconbutton/icon-button.js';
 
 const name = 'ui-top-bar';
 
@@ -26,30 +27,6 @@ export class UiTopBar extends LitElement {
       height: 56px;
       padding: 0 8px;
       gap: 4px;
-    }
-
-    .back-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 44px;
-      height: 44px;
-      border: none;
-      background: transparent;
-      color: var(--md-sys-color-on-surface);
-      cursor: pointer;
-      border-radius: 50%;
-      font-size: 20px;
-      flex-shrink: 0;
-      transition: background 150ms ease;
-    }
-
-    .back-btn:hover {
-      background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
-    }
-
-    .back-btn:active {
-      background: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
     }
 
     .heading {
@@ -84,13 +61,9 @@ export class UiTopBar extends LitElement {
       <div class="bar">
         ${this.back
           ? html`
-              <button
-                class="back-btn"
-                aria-label="Go back"
-                @click="${this._onBack}"
-              >
+              <md-icon-button aria-label="Go back" @click="${this._onBack}">
                 <md-icon>arrow_back</md-icon>
-              </button>
+              </md-icon-button>
             `
           : ''}
         <span class="heading">${this.heading}</span>

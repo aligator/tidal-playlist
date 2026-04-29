@@ -43,13 +43,13 @@ describe('normalizeTrackCount', () => {
   });
 
   it('returns fallback for non-integer', () => {
-    expect(normalizeTrackCount(3.5)).toBe(25);
-    expect(normalizeTrackCount('abc')).toBe(25);
+    expect(normalizeTrackCount(3.5)).toBe(20);
+    expect(normalizeTrackCount('abc')).toBe(20);
   });
 
   it('returns fallback for values < 1', () => {
-    expect(normalizeTrackCount(0)).toBe(25);
-    expect(normalizeTrackCount(-1)).toBe(25);
+    expect(normalizeTrackCount(0)).toBe(20);
+    expect(normalizeTrackCount(-1)).toBe(20);
   });
 
   it('uses custom fallback', () => {

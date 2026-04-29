@@ -10,8 +10,8 @@ import '@material/web/icon/icon.js';
 import '@material/web/button/text-button.js';
 import '@material/web/button/filled-button.js';
 import '../../components/ui-top-bar.ts';
+import '../impressum/impressum-modal.ts';
 import { logout } from '../auth/store.ts';
-import { pushView } from '../../app-shell.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { importSettings, exportSettings } from './store.ts';
 
@@ -19,7 +19,7 @@ import { importSettings, exportSettings } from './store.ts';
 // Types
 // ---------------------------------------------------------------------------
 
-type DialogMode = 'none' | 'import-confirm' | 'impressum';
+type DialogMode = 'none' | 'import-confirm';
 
 // ---------------------------------------------------------------------------
 // Element
@@ -63,21 +63,6 @@ export class SettingsView extends SignalWatcher(LitElement) {
       margin: 4px 0;
     }
 
-    .impressum-body {
-      white-space: pre-wrap;
-      font-size: 0.875rem;
-      line-height: 1.6;
-      color: var(--md-sys-color-on-surface);
-      padding: 8px 0;
-    }
-
-    .dialog-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-      padding: 8px 16px 16px;
-    }
-
     /* Hidden file input */
     input[type='file'] {
       display: none;
@@ -94,21 +79,6 @@ export class SettingsView extends SignalWatcher(LitElement) {
   @state()
   private _pendingImportJson: unknown = null;
 
-  @state()
-  private _impressumText = '';
-
-  @state()
-  private _impressumAvailable: boolean | null = null;
-
-  // -----------------------------------------------------------------------
-  // Lifecycle
-  // -----------------------------------------------------------------------
-
-  override connectedCallback(): void {
-    super.connectedCallback();
-    void this._checkImpressum();
-  }
-
   // -----------------------------------------------------------------------
   // Render
   // -----------------------------------------------------------------------
@@ -121,9 +91,9 @@ export class SettingsView extends SignalWatcher(LitElement) {
         <!-- Export / Import -->
         <md-list-item
           type="button"
-          headline="Export config"
           @click="${this._onExport}"
         >
+          <span slot="headline">Export config</span>
           <div slot="end" class="trailing-btn">
             <md-icon-button aria-label="Export config" tabindex="-1">
               <md-icon>upload</md-icon>
@@ -133,9 +103,9 @@ export class SettingsView extends SignalWatcher(LitElement) {
 
         <md-list-item
           type="button"
-          headline="Import config"
           @click="${this._onImportClick}"
         >
+          <span slot="headline">Import config</span>
           <div slot="end" class="trailing-btn">
             <md-icon-button aria-label="Import config" tabindex="-1">
               <md-icon>download</md-icon>
@@ -149,31 +119,17 @@ export class SettingsView extends SignalWatcher(LitElement) {
         <div class="section-header">Account</div>
         <md-list-item
           type="button"
-          headline="Logged in"
           @click="${this._onLogout}"
         >
+          <span slot="headline">Logged in</span>
           <div slot="end" class="trailing-btn">
             <md-text-button tabindex="-1">Logout</md-text-button>
           </div>
         </md-list-item>
 
-        ${this._impressumAvailable
-          ? html`
-              <md-divider></md-divider>
-              <md-list-item
-                type="button"
-                headline="Impressum"
-                @click="${this._onImpressumClick}"
-              >
-                <div slot="end" class="trailing-btn">
-                  <md-icon-button aria-label="Show Impressum" tabindex="-1">
-                    <md-icon>chevron_right</md-icon>
-                  </md-icon-button>
-                </div>
-              </md-list-item>
-            `
-          : ''}
       </md-list>
+
+      <impressum-modal></impressum-modal>
 
       <!-- Hidden file input for import -->
       <input
@@ -195,16 +151,6 @@ export class SettingsView extends SignalWatcher(LitElement) {
         </div>
       </md-dialog>
 
-      <!-- Impressum dialog -->
-      <md-dialog ?open="${this._dialogMode === 'impressum'}">
-        <div slot="headline">Impressum</div>
-        <div slot="content">
-          <div class="impressum-body">${this._impressumText}</div>
-        </div>
-        <div slot="actions">
-          <md-text-button @click="${this._closeDialog}">Close</md-text-button>
-        </div>
-      </md-dialog>
     `;
   }
 
@@ -275,41 +221,7 @@ export class SettingsView extends SignalWatcher(LitElement) {
   // -----------------------------------------------------------------------
 
   private _onLogout(): void {
-    void logout().then(() => {
-      pushView('login');
-    });
-  }
-
-  // -----------------------------------------------------------------------
-  // Impressum
-  // -----------------------------------------------------------------------
-
-  private async _checkImpressum(): Promise<void> {
-    try {
-      const res = await fetch('/api/impressum/available');
-      this._impressumAvailable = res.ok;
-    } catch {
-      this._impressumAvailable = false;
-    }
-  }
-
-  private async _onImpressumClick(): Promise<void> {
-    if (this._impressumText) {
-      this._dialogMode = 'impressum';
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/impressum');
-      if (!res.ok) {
-        showSnackbar('Could not load Impressum.', 'error');
-        return;
-      }
-      this._impressumText = await res.text();
-      this._dialogMode = 'impressum';
-    } catch {
-      showSnackbar('Could not load Impressum.', 'error');
-    }
+    logout();
   }
 
   private _closeDialog(): void {
