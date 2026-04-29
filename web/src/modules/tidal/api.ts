@@ -1,5 +1,7 @@
 import { createAPIClient } from '@tidal-music/api';
 import { credentialsProvider as sdkCredentialsProvider } from '@tidal-music/auth';
+import { refreshAccessToken } from '../auth/api.ts';
+import { handleAuthFailure } from '../auth/store.ts';
 import type {
   AlbumPoolEntryResolved,
   AppSettings,
@@ -49,6 +51,20 @@ export class TidalApi {
       throw new Error('TIDAL API returned no data.');
     }
     return result.data;
+  }
+
+  private async call<T>(fn: () => Promise<ApiResult<T>>): Promise<T> {
+    const first = await fn();
+    if (first.response.status !== 401) {
+      return this.unwrap(first);
+    }
+    try {
+      await refreshAccessToken();
+    } catch {
+      handleAuthFailure();
+      throw new Error('Session expired. Please log in again.');
+    }
+    return this.unwrap(await fn());
   }
 
   private ensureWriteSucceeded(result: ApiResult<unknown>): void {
@@ -104,9 +120,7 @@ export class TidalApi {
   }
 
   private async getUserId(): Promise<string> {
-    const data = this.unwrap(
-      await this.client.GET('/users/me', { parseAs: 'json' }),
-    );
+    const data = await this.call(() => this.client.GET('/users/me', { parseAs: 'json' }));
     const user = asObject((data as JsonObject).data);
     const userId = user?.id;
     if (typeof userId !== 'string' || !userId) {
@@ -123,8 +137,8 @@ export class TidalApi {
     let cursor = '';
 
     for (;;) {
-      const request = type === 'artists'
-        ? this.client.GET('/userCollections/{id}/relationships/artists', {
+      const makeRequest = type === 'artists'
+        ? () => this.client.GET('/userCollections/{id}/relationships/artists', {
           params: {
             path: { id: userId },
             query: {
@@ -133,7 +147,7 @@ export class TidalApi {
             },
           },
         })
-        : this.client.GET('/userCollections/{id}/relationships/albums', {
+        : () => this.client.GET('/userCollections/{id}/relationships/albums', {
           params: {
             path: { id: userId },
             query: {
@@ -142,9 +156,7 @@ export class TidalApi {
             },
           },
         });
-      const page = this.unwrap(
-        await request,
-      ) as JsonLike;
+      const page = await this.call(makeRequest) as JsonLike;
 
       const items = Array.isArray(page.data) ? page.data : [];
       for (const item of items) {
@@ -173,14 +185,12 @@ export class TidalApi {
   }
 
   async artist(artistId: string): Promise<TidalArtist> {
-    const data = this.unwrap(
-      await this.client.GET('/artists/{id}', {
-        params: {
-          path: { id: artistId },
-          query: { countryCode: this.settings.countryCode },
-        },
-      }),
-    ) as JsonLike;
+    const data = await this.call(() => this.client.GET('/artists/{id}', {
+      params: {
+        path: { id: artistId },
+        query: { countryCode: this.settings.countryCode },
+      },
+    })) as JsonLike;
 
     const artist = asObject(data.data);
     const attributes = asObject(artist?.attributes);
@@ -194,14 +204,12 @@ export class TidalApi {
   }
 
   async artistAlbums(artistId: string, limit = 100): Promise<TidalAlbum[]> {
-    const data = this.unwrap(
-      await this.client.GET('/artists/{id}', {
-        params: {
-          path: { id: artistId },
-          query: { include: ['albums'], countryCode: this.settings.countryCode },
-        },
-      }),
-    ) as JsonLike;
+    const data = await this.call(() => this.client.GET('/artists/{id}', {
+      params: {
+        path: { id: artistId },
+        query: { include: ['albums'], countryCode: this.settings.countryCode },
+      },
+    })) as JsonLike;
 
     return this.byType(this.included(data), 'albums')
       .map((entry) => {
@@ -215,14 +223,12 @@ export class TidalApi {
   }
 
   async albumTracks(albumId: string): Promise<TidalTrack[]> {
-    const data = this.unwrap(
-      await this.client.GET('/albums/{id}', {
-        params: {
-          path: { id: albumId },
-          query: { include: ['items'], countryCode: this.settings.countryCode },
-        },
-      }),
-    ) as JsonLike;
+    const data = await this.call(() => this.client.GET('/albums/{id}', {
+      params: {
+        path: { id: albumId },
+        query: { include: ['items'], countryCode: this.settings.countryCode },
+      },
+    })) as JsonLike;
 
     return this.byType(this.included(data), 'tracks').map((entry) => {
       const attributes = asObject(entry.attributes);
@@ -237,17 +243,15 @@ export class TidalApi {
     albumId: string,
   ): Promise<{ id: string; name: string } | null> {
     try {
-      const data = this.unwrap(
-        await this.client.GET('/albums/{id}', {
-          params: {
-            path: { id: albumId },
-            query: {
-              include: ['artists'],
-              countryCode: this.settings.countryCode,
-            },
+      const data = await this.call(() => this.client.GET('/albums/{id}', {
+        params: {
+          path: { id: albumId },
+          query: {
+            include: ['artists'],
+            countryCode: this.settings.countryCode,
           },
-        }),
-      ) as JsonLike;
+        },
+      })) as JsonLike;
 
       const artist = this.byType(this.included(data), 'artists')[0];
       const attributes = asObject(artist?.attributes);
@@ -268,17 +272,15 @@ export class TidalApi {
     query: string,
     limit = 30,
   ): Promise<Array<{ id: string; name: string }>> {
-    const data = this.unwrap(
-      await this.client.GET('/searchResults/{id}/relationships/artists', {
-        params: {
-          path: { id: query },
-          query: {
-            countryCode: this.settings.countryCode,
-            include: ['artists'],
-          },
+    const data = await this.call(() => this.client.GET('/searchResults/{id}/relationships/artists', {
+      params: {
+        path: { id: query },
+        query: {
+          countryCode: this.settings.countryCode,
+          include: ['artists'],
         },
-      }),
-    ) as JsonLike;
+      },
+    })) as JsonLike;
 
     return this.byType(this.included(data), 'artists')
       .map((entry) => {
@@ -295,17 +297,15 @@ export class TidalApi {
     query: string,
     limit = 30,
   ): Promise<Array<{ id: string; title: string; artistName: string }>> {
-    const searchData = this.unwrap(
-      await this.client.GET('/searchResults/{id}', {
-        params: {
-          path: { id: query },
-          query: {
-            countryCode: this.settings.countryCode,
-            include: ['albums'],
-          },
+    const searchData = await this.call(() => this.client.GET('/searchResults/{id}', {
+      params: {
+        path: { id: query },
+        query: {
+          countryCode: this.settings.countryCode,
+          include: ['albums'],
         },
-      }),
-    ) as JsonLike;
+      },
+    })) as JsonLike;
 
     const searchAlbumEntries = this.byType(this.included(searchData), 'albums').slice(0, limit);
     const albumIds = searchAlbumEntries.map((a) => asString(a.id)).filter(Boolean);
@@ -400,17 +400,15 @@ export class TidalApi {
       };
     }
 
-    const data = this.unwrap(
-      await this.client.GET('/searchResults/{id}', {
-        params: {
-          path: { id: raw },
-          query: {
-            countryCode: this.settings.countryCode,
-            include: ['albums', 'albums.artists'],
-          },
+    const data = await this.call(() => this.client.GET('/searchResults/{id}', {
+      params: {
+        path: { id: raw },
+        query: {
+          countryCode: this.settings.countryCode,
+          include: ['albums', 'albums.artists'],
         },
-      }),
-    ) as JsonLike;
+      },
+    })) as JsonLike;
 
     const rows = this.albumRowsFromIncluded(this.included(data));
     const targetTitle = normalizeTextMatch(raw);
@@ -441,17 +439,15 @@ export class TidalApi {
     albumId: string,
   ): Promise<{ id: string; title: string; artistId: string; artistName: string } | null> {
     try {
-      const data = this.unwrap(
-        await this.client.GET('/albums/{id}', {
-          params: {
-            path: { id: albumId },
-            query: {
-              include: ['artists'],
-              countryCode: this.settings.countryCode,
-            },
+      const data = await this.call(() => this.client.GET('/albums/{id}', {
+        params: {
+          path: { id: albumId },
+          query: {
+            include: ['artists'],
+            countryCode: this.settings.countryCode,
           },
-        }),
-      ) as JsonLike;
+        },
+      })) as JsonLike;
 
       const albumData = asObject(data.data);
       const albumAttributes = asObject(albumData?.attributes);
@@ -469,17 +465,15 @@ export class TidalApi {
   }
 
   async getPlaylistTracks(playlistId: string): Promise<SelectedSong[]> {
-    const data = this.unwrap(
-      await this.client.GET('/playlists/{id}', {
-        params: {
-          path: { id: playlistId },
-          query: {
-            include: ['items', 'items.artists', 'items.albums'],
-            countryCode: this.settings.countryCode,
-          },
+    const data = await this.call(() => this.client.GET('/playlists/{id}', {
+      params: {
+        path: { id: playlistId },
+        query: {
+          include: ['items', 'items.artists', 'items.albums'],
+          countryCode: this.settings.countryCode,
         },
-      }),
-    ) as JsonLike;
+      },
+    })) as JsonLike;
 
     const inc = this.included(data);
 
@@ -522,13 +516,11 @@ export class TidalApi {
 
   async userPlaylists(): Promise<PlaylistSummary[]> {
     const userId = await this.getUserId();
-    const data = this.unwrap(
-      await this.client.GET('/playlists', {
-        params: {
-          query: { 'filter[owners.id]': [userId] },
-        },
-      }),
-    ) as JsonLike;
+    const data = await this.call(() => this.client.GET('/playlists', {
+      params: {
+        query: { 'filter[owners.id]': [userId] },
+      },
+    })) as JsonLike;
 
     const entries = Array.isArray(data.data) ? data.data : [];
 
@@ -553,19 +545,17 @@ export class TidalApi {
   }
 
   async createPlaylist(name: string, description: string): Promise<string> {
-    const data = this.unwrap(
-      await this.client.POST('/playlists', {
-        body: {
-          data: {
-            type: 'playlists' as const,
-            attributes: {
-              name,
-              description,
-            },
+    const data = await this.call(() => this.client.POST('/playlists', {
+      body: {
+        data: {
+          type: 'playlists' as const,
+          attributes: {
+            name,
+            description,
           },
         },
-      }),
-    ) as JsonLike;
+      },
+    })) as JsonLike;
 
     const id = asObject(data.data)?.id;
     if (typeof id !== 'string' || !id) {

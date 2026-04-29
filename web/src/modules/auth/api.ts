@@ -1,5 +1,5 @@
 import { setAuthenticated } from './store.ts';
-import { getClientId, initSdk, setCredentials } from './sdk.ts';
+import { getClientId, getStoredRefreshToken, initSdk, setCredentials } from './sdk.ts';
 import { loadRuntimeConfig } from '../tidal/settings.ts';
 import { SCOPES } from '../tidal/shared.ts';
 
@@ -74,4 +74,40 @@ export async function finishLogin(): Promise<boolean> {
 
   setAuthenticated(true);
   return true;
+}
+
+export async function refreshAccessToken(): Promise<void> {
+  const token = getStoredRefreshToken();
+  if (!token) throw new Error('No refresh token stored');
+
+  const res = await fetch('/api/auth/refresh', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ refreshToken: token }),
+  });
+
+  if (!res.ok) throw new Error(`refresh failed: ${res.status}`);
+  const newToken = (await res.json()) as ApiTokenResponse;
+
+  let clientId = getClientId();
+  if (!clientId) {
+    const config = await loadRuntimeConfig();
+    clientId = config.clientId;
+    await initSdk(clientId);
+  }
+
+  const grantedScopes = newToken.scope ? newToken.scope.split(' ') : [...SCOPES];
+  await setCredentials({
+    accessToken: {
+      clientId,
+      token: newToken.access_token,
+      expires: Date.now() + newToken.expires_in * 1000,
+      requestedScopes: [...SCOPES],
+      grantedScopes,
+    },
+    refreshToken: newToken.refresh_token ?? token,
+  });
+
+  setAuthenticated(true);
 }

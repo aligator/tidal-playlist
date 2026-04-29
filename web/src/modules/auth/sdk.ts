@@ -27,3 +27,14 @@ export function getClientId(): string {
 }
 
 export { credentialsProvider, sdkLogout as logout, sdkSetCredentials as setCredentials };
+
+export function getStoredRefreshToken(): string | null {
+  try {
+    const raw = localStorage.getItem('tidal_sdk_credentials');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    return typeof parsed.refreshToken === 'string' ? parsed.refreshToken : null;
+  } catch {
+    return null;
+  }
+}

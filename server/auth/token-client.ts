@@ -46,3 +46,12 @@ export function exchangeCode(
     }),
   );
 }
+
+export function refreshToken(refreshToken: string): Promise<ValidatedTokenResponse> {
+  return postToken(
+    new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    }),
+  );
+}

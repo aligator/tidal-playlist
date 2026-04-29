@@ -6,6 +6,7 @@ import '@material/web/progress/circular-progress.js';
 import { pushView } from '../../app-shell.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { finishLogin, startLogin } from './api.ts';
+import '../impressum/impressum-modal.ts';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -69,6 +70,16 @@ export class LoginPage extends SignalWatcher(LitElement) {
       justify-content: center;
       min-height: 100dvh;
       width: 100%;
+    }
+
+    .login-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      padding: 8px;
     }
   `;
 
@@ -138,6 +149,9 @@ export class LoginPage extends SignalWatcher(LitElement) {
           ${connecting ? 'Connecting…' : 'Connect TIDAL'}
         </md-filled-button>
       </div>
+      <footer class="login-footer">
+        <impressum-modal></impressum-modal>
+      </footer>
     `;
   }
 }

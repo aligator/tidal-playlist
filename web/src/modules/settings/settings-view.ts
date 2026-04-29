@@ -5,13 +5,12 @@ import '@material/web/list/list.js';
 import '@material/web/list/list-item.js';
 import '@material/web/divider/divider.js';
 import '@material/web/dialog/dialog.js';
-import '@material/web/iconbutton/icon-button.js';
 import '@material/web/icon/icon.js';
-import '@material/web/button/text-button.js';
 import '@material/web/button/filled-button.js';
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
 import '../../components/ui-top-bar.ts';
+import '../impressum/impressum-modal.ts';
 import { logout } from '../auth/store.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { exportSettings, importSettings, settings, updateSettings } from './store.ts';
@@ -69,11 +68,6 @@ export class SettingsView extends SignalWatcher(LitElement) {
       --md-list-item-trailing-space: 8px;
     }
 
-    .trailing-btn {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
 
     .section-header {
       padding: 12px 16px 4px;
@@ -111,6 +105,15 @@ export class SettingsView extends SignalWatcher(LitElement) {
       display: none;
     }
 
+    .impressum-row {
+      display: block;
+    }
+
+    @media (min-width: 768px) {
+      .impressum-row {
+        display: none;
+      }
+    }
   `;
 
   // -----------------------------------------------------------------------
@@ -162,11 +165,7 @@ export class SettingsView extends SignalWatcher(LitElement) {
           @click="${this._onExport}"
         >
           <span slot="headline">Export config</span>
-          <div slot="end" class="trailing-btn">
-            <md-icon-button aria-label="Export config" tabindex="-1">
-              <md-icon>upload</md-icon>
-            </md-icon-button>
-          </div>
+          <md-icon slot="end">upload</md-icon>
         </md-list-item>
 
         <md-list-item
@@ -174,11 +173,7 @@ export class SettingsView extends SignalWatcher(LitElement) {
           @click="${this._onImportClick}"
         >
           <span slot="headline">Import config</span>
-          <div slot="end" class="trailing-btn">
-            <md-icon-button aria-label="Import config" tabindex="-1">
-              <md-icon>download</md-icon>
-            </md-icon-button>
-          </div>
+          <md-icon slot="end">download</md-icon>
         </md-list-item>
 
         <md-divider></md-divider>
@@ -189,11 +184,14 @@ export class SettingsView extends SignalWatcher(LitElement) {
           type="button"
           @click="${this._onLogout}"
         >
-          <span slot="headline">Logged in</span>
-          <div slot="end" class="trailing-btn">
-            <md-text-button tabindex="-1">Logout</md-text-button>
-          </div>
+          <md-icon slot="start">logout</md-icon>
+          <span slot="headline">Logout</span>
         </md-list-item>
+
+        <div class="impressum-row">
+          <md-divider></md-divider>
+          <impressum-modal list-item></impressum-modal>
+        </div>
       </md-list>
 
       <!-- Hidden file input for import -->

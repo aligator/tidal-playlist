@@ -8,7 +8,7 @@ import {
   redirectUri,
   verifyFlowPayload,
 } from '../auth/oauth.ts';
-import { exchangeCode } from '../auth/token-client.ts';
+import { exchangeCode, refreshToken } from '../auth/token-client.ts';
 
 const authRateLimit = rateLimitMiddleware(10, 60_000);
 
@@ -92,6 +92,25 @@ export function createAuthRouter(): Router {
         message,
       });
       return errorResponse(ctx, 'Could not get a token.', 500);
+    }
+  });
+
+  router.post('/api/auth/refresh', authRateLimit, async (ctx) => {
+    try {
+      const contentLength = Number(ctx.request.headers.get('content-length') ?? '0');
+      if (contentLength > 4096) {
+        return errorResponse(ctx, 'Request too large', 413);
+      }
+      const body = await ctx.request.body.json();
+      const token = typeof body.refreshToken === 'string' ? body.refreshToken : '';
+      if (!token) {
+        return errorResponse(ctx, 'Missing refreshToken', 400);
+      }
+      ctx.response.body = await refreshToken(token);
+    } catch (error: unknown) {
+      const message = asMessage(error);
+      console.error('Token refresh failed', { route: '/api/auth/refresh', message });
+      return errorResponse(ctx, 'Token refresh failed', 401);
     }
   });
 

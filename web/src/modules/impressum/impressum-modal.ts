@@ -1,11 +1,17 @@
 import { css, html, nothing } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { StyledElement } from '../../styled-element.ts';
 import '@material/web/dialog/dialog.js';
 import '@material/web/button/text-button.js';
+import '@material/web/list/list-item.js';
+import '@material/web/icon/icon.js';
 
 @customElement('impressum-modal')
 export class ImpressumModal extends StyledElement {
+  /** When true, renders as an md-list-item instead of a nav-tab button. */
+  @property({ type: Boolean, attribute: 'list-item' })
+  listItem = false;
+
   @state()
   private available = false;
   @state()
@@ -22,12 +28,42 @@ export class ImpressumModal extends StyledElement {
   private error = '';
 
   static override localStyles = css`
+    /* nav-tab style (desktop side nav) */
     .impressum-button {
-      padding: 0.5rem 0.85rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 8px;
       cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 12px;
+      font-family: inherit;
+      border-radius: 16px;
+      margin: 4px 8px;
+      min-height: 56px;
+      width: fit-content;
+      transition: background 150ms ease, color 150ms ease;
     }
     .impressum-button:hover {
-      background: #f3f4f6;
+      background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-surface-variant) 8%,
+        transparent
+      );
+    }
+    .impressum-icon {
+      font-family: "Material Symbols Outlined", sans-serif;
+      font-size: 24px;
+      line-height: 1;
+      font-style: normal;
+    }
+    /* list-item style (mobile settings) */
+    md-list-item {
+      --md-list-item-leading-space: 16px;
+      --md-list-item-trailing-space: 8px;
     }
     .impressum-body p {
       margin: 0.4rem 0;
@@ -89,12 +125,20 @@ export class ImpressumModal extends StyledElement {
     const addressLines = this.address.split('\n');
 
     return html`
-      <button
-        class="impressum-button"
-        @click="${() => void this.openModal()}"
-      >
-        Impressum
-      </button>
+      ${this.listItem ? html`
+        <md-list-item type="button" @click="${() => void this.openModal()}">
+          <md-icon slot="start">info</md-icon>
+          <span slot="headline">Impressum</span>
+        </md-list-item>
+      ` : html`
+        <button
+          class="impressum-button"
+          @click="${() => void this.openModal()}"
+        >
+          <span class="impressum-icon" aria-hidden="true">info</span>
+          <span>Impressum</span>
+        </button>
+      `}
 
       <md-dialog ?open="${this.open}" @closed="${() => this.closeModal()}">
         <div slot="headline">Impressum</div>

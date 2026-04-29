@@ -169,20 +169,6 @@ export class AppShell extends SignalWatcher(LitElement) {
         display: none;
       }
 
-      .desktop-footer {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        padding: 4px 16px;
-        border-top: 1px solid var(--md-sys-color-outline-variant);
-        font-size: 0.75rem;
-        color: var(--md-sys-color-on-surface-variant);
-        flex-shrink: 0;
-      }
-    }
-
-    .desktop-footer {
-      display: none;
     }
 
     /* ------------------------------------------------------------------ */
@@ -230,6 +216,8 @@ export class AppShell extends SignalWatcher(LitElement) {
                     </button>
                   `,
               )}
+              <div style="flex:1"></div>
+              <impressum-modal></impressum-modal>
             </nav>
           `
           : ''}
@@ -239,10 +227,6 @@ export class AppShell extends SignalWatcher(LitElement) {
           ${this._renderView(view)}
         </main>
       </div>
-
-      <footer class="desktop-footer">
-        <impressum-modal></impressum-modal>
-      </footer>
 
       <!-- Bottom navigation bar — visible on mobile via CSS, hidden on login -->
       ${showNav

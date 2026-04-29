@@ -1,5 +1,6 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import type { PropertyValues } from 'lit';
 import { SignalWatcher } from '@lit-labs/signals';
 import '@material/web/progress/linear-progress.js';
 import '@material/web/select/outlined-select.js';
@@ -264,12 +265,77 @@ export class PlaylistView extends SignalWatcher(LitElement) {
       font-size: 0.875rem;
       color: var(--md-sys-color-error);
     }
+
+    .result-toggle-row {
+      display: flex;
+      align-items: center;
+      border-top: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    .config-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px 8px 16px;
+      border: none;
+      background: none;
+      width: 100%;
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .config-toggle:hover {
+      background: color-mix(in srgb, var(--md-sys-color-on-surface) 6%, transparent);
+    }
+
+    .config-toggle md-icon {
+      font-size: 18px;
+      transition: transform 200ms ease;
+    }
+
+    .config-toggle md-icon.rotated {
+      transform: rotate(180deg);
+    }
+
+    .config-body {
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: 1fr;
+      transition: grid-template-rows 220ms ease;
+    }
+
+    .config-body.collapsed {
+      grid-template-rows: 0fr;
+    }
+
+    .config-body > .config-inner {
+      overflow: hidden;
+    }
   `;
 
   @state() private _descriptionVisible = false;
   @state() private _confirmOpen = false;
   @state() private _saveError = '';
   @state() private _saveState: 'idle' | 'error' = 'idle';
+  @state() private _configOpen = true;
+  @state() private _tracksOpen = true;
+
+  private _prevBuildStatus: string | null = null;
+
+  protected override updated(changed: PropertyValues): void {
+    void changed;
+    const status = buildStatus.get();
+    if (this._prevBuildStatus === 'building' && status === 'done') {
+      this._configOpen = false;
+      this._tracksOpen = true;
+    }
+    this._prevBuildStatus = status;
+  }
 
   override render() {
     const s = settings.get();
@@ -287,6 +353,15 @@ export class PlaylistView extends SignalWatcher(LitElement) {
       <ui-top-bar heading="Tidal Playlist"></ui-top-bar>
 
       <div class="scrollable">
+
+      <!-- Collapsible config -->
+      <button class="config-toggle" @click="${this._onToggleConfig}">
+        <span>Settings</span>
+        <md-icon class="${this._configOpen ? '' : 'rotated'}">expand_less</md-icon>
+      </button>
+
+      <div class="config-body ${this._configOpen ? '' : 'collapsed'}">
+        <div class="config-inner">
 
       <!-- Pool -->
       <div class="section">
@@ -357,18 +432,28 @@ export class PlaylistView extends SignalWatcher(LitElement) {
           `}
       </div>
 
-      <!-- Result list (inline, above action bar) -->
+        </div><!-- end .config-inner -->
+      </div><!-- end .config-body -->
+
+      <!-- Result list (collapsible) -->
       ${isDone && tracks.length > 0 ? html`
-        <div class="result-header">
-          <span class="result-count">${tracks.length} track${tracks.length === 1 ? '' : 's'}</span>
+        <div class="result-toggle-row">
+          <button class="config-toggle" style="flex:1" @click="${this._onToggleTracks}">
+            <span>${tracks.length} track${tracks.length === 1 ? '' : 's'}</span>
+            <md-icon class="${this._tracksOpen ? '' : 'rotated'}">expand_less</md-icon>
+          </button>
           <md-text-button @click="${this._onRebuild}">
             <md-icon slot="icon">refresh</md-icon>
-            New playlist
+            New
           </md-text-button>
         </div>
-        <md-list>
-          ${tracks.map((song) => this._renderTrack(song))}
-        </md-list>
+        <div class="config-body ${this._tracksOpen ? '' : 'collapsed'}">
+          <div class="config-inner">
+            <md-list>
+              ${tracks.map((song) => this._renderTrack(song))}
+            </md-list>
+          </div>
+        </div>
       ` : ''}
 
       </div><!-- end .scrollable -->
@@ -405,8 +490,12 @@ export class PlaylistView extends SignalWatcher(LitElement) {
           </div>
           ${!hasSources
             ? html`<div class="hint">Add artists or albums to Library first.</div>` : ''}
-          ${status === 'error' && lastError
-            ? html`<div class="error-text">${lastError}</div>` : ''}
+          ${status === 'error' && lastError ? html`
+            <div class="error-text">${lastError}</div>
+            ${lastError.toLowerCase().includes('no tracks') ? html`
+              <div class="hint">TIDAL may be rate limiting requests — wait a moment, then try again.</div>
+            ` : ''}
+          ` : ''}
         `}
       </div>
 
@@ -452,6 +541,14 @@ export class PlaylistView extends SignalWatcher(LitElement) {
         </div>
       </md-list-item>
     `;
+  }
+
+  private _onToggleConfig(): void {
+    this._configOpen = !this._configOpen;
+  }
+
+  private _onToggleTracks(): void {
+    this._tracksOpen = !this._tracksOpen;
   }
 
   private _onManageLibrary(): void {
