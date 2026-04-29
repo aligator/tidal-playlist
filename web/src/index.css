@@ -42,6 +42,14 @@
   --md-sys-color-inverse-surface:        light-dark(#2e3133, #e1e2e5);
   --md-sys-color-inverse-on-surface:     light-dark(#f0f1f3, #2e3133);
   --md-sys-color-inverse-primary:        light-dark(#7ad0ff, #006689);
+
+  --md-sys-color-surface-dim:                 light-dark(#d9dadd, #111416);
+  --md-sys-color-surface-bright:              light-dark(#f8f9fc, #36393b);
+  --md-sys-color-surface-container-lowest:    light-dark(#ffffff,  #0e1113);
+  --md-sys-color-surface-container-low:       light-dark(#f2f5f9,  #191c1e);
+  --md-sys-color-surface-container:           light-dark(#eceff3,  #1d2022);
+  --md-sys-color-surface-container-high:      light-dark(#e7e8ec,  #272a2c);
+  --md-sys-color-surface-container-highest:   light-dark(#e1e2e6,  #323538);
 }
 
 @layer base, components, overrides;

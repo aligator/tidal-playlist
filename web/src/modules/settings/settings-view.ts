@@ -9,11 +9,16 @@ import '@material/web/iconbutton/icon-button.js';
 import '@material/web/icon/icon.js';
 import '@material/web/button/text-button.js';
 import '@material/web/button/filled-button.js';
+import '@material/web/select/outlined-select.js';
+import '@material/web/select/select-option.js';
 import '../../components/ui-top-bar.ts';
 import '../impressum/impressum-modal.ts';
 import { logout } from '../auth/store.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
-import { importSettings, exportSettings } from './store.ts';
+import { settings, updateSettings, importSettings, exportSettings } from './store.ts';
+
+const COUNTRY_CODES = ['AT', 'AU', 'BE', 'CA', 'CH', 'DE', 'DK', 'ES', 'FI', 'FR', 'GB', 'IE', 'IT', 'NL', 'NO', 'NZ', 'PL', 'PT', 'SE', 'US'];
+const countryNames = new Intl.DisplayNames(['en'], { type: 'region' });
 
 // ---------------------------------------------------------------------------
 // Types
@@ -63,6 +68,24 @@ export class SettingsView extends SignalWatcher(LitElement) {
       margin: 4px 0;
     }
 
+    .field-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px;
+    }
+
+    .field-label {
+      font-size: 0.9375rem;
+      color: var(--md-sys-color-on-surface);
+      min-width: 80px;
+      flex-shrink: 0;
+    }
+
+    md-outlined-select {
+      flex: 1;
+    }
+
     /* Hidden file input */
     input[type='file'] {
       display: none;
@@ -84,8 +107,31 @@ export class SettingsView extends SignalWatcher(LitElement) {
   // -----------------------------------------------------------------------
 
   override render() {
+    const s = settings.get();
+
     return html`
       <ui-top-bar heading="Settings"></ui-top-bar>
+
+      <!-- Playlist settings -->
+      <div class="section-header">Playlist</div>
+      <div class="field-row">
+        <span class="field-label">Country</span>
+        <md-outlined-select
+          .value="${s.countryCode}"
+          @change="${this._onCountryChange}"
+        >
+          ${COUNTRY_CODES.map(
+            (code) => html`
+              <md-select-option
+                .value="${code}"
+                ?selected="${s.countryCode === code}"
+              >
+                <div slot="headline">${code} — ${countryNames.of(code)}</div>
+              </md-select-option>
+            `,
+          )}
+        </md-outlined-select>
+      </div>
 
       <md-list>
         <!-- Export / Import -->
