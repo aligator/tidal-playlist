@@ -150,13 +150,12 @@ export class LibraryView extends SignalWatcher(LitElement) {
     const albumList = albums.get();
     const blockedSets = blocked.get();
 
-    const showAddButton = this._tab !== 'blocked';
-
     return html`
       <ui-top-bar heading="Library">
         ${this._tab === 'blocked'
           ? html`
-            <button class="bar-btn" aria-label="Block from playlist" @click="${this._onPlaylistImportClick}">
+            <button class="bar-btn" aria-label="Block from playlist" @click="${this
+              ._onPlaylistImportClick}">
               <md-icon>playlist_remove</md-icon>
               <span>From playlist</span>
             </button>
@@ -218,22 +217,25 @@ export class LibraryView extends SignalWatcher(LitElement) {
       </div>
       <md-divider></md-divider>
       ${list.length === 0
-        ? html`<div class="empty-state">No custom artists added</div>`
+        ? html`
+          <div class="empty-state">No custom artists added</div>
+        `
         : html`
           <md-list>
             ${list.map(
-              (name) => html`
-                <md-list-item>
-                  <span slot="headline">${name}</span>
-                  <md-icon-button
-                    slot="end"
-                    aria-label="Remove ${name}"
-                    @click="${() => this._onRemoveArtist(name)}"
-                  >
-                    <md-icon>delete</md-icon>
-                  </md-icon-button>
-                </md-list-item>
-              `,
+              (name) =>
+                html`
+                  <md-list-item>
+                    <span slot="headline">${name}</span>
+                    <md-icon-button
+                      slot="end"
+                      aria-label="Remove ${name}"
+                      @click="${() => this._onRemoveArtist(name)}"
+                    >
+                      <md-icon>delete</md-icon>
+                    </md-icon-button>
+                  </md-list-item>
+                `,
             )}
           </md-list>
         `}
@@ -255,22 +257,25 @@ export class LibraryView extends SignalWatcher(LitElement) {
       </div>
       <md-divider></md-divider>
       ${list.length === 0
-        ? html`<div class="empty-state">No custom albums added</div>`
+        ? html`
+          <div class="empty-state">No custom albums added</div>
+        `
         : html`
           <md-list>
             ${list.map(
-              (name) => html`
-                <md-list-item>
-                  <span slot="headline">${name}</span>
-                  <md-icon-button
-                    slot="end"
-                    aria-label="Remove ${name}"
-                    @click="${() => this._onRemoveAlbum(name)}"
-                  >
-                    <md-icon>delete</md-icon>
-                  </md-icon-button>
-                </md-list-item>
-              `,
+              (name) =>
+                html`
+                  <md-list-item>
+                    <span slot="headline">${name}</span>
+                    <md-icon-button
+                      slot="end"
+                      aria-label="Remove ${name}"
+                      @click="${() => this._onRemoveAlbum(name)}"
+                    >
+                      <md-icon>delete</md-icon>
+                    </md-icon-button>
+                  </md-list-item>
+                `,
             )}
           </md-list>
         `}

@@ -15,6 +15,7 @@ import { addAlbum, addArtist } from './store.ts';
 type SearchResult = {
   id: string;
   name: string;
+  subName?: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -64,6 +65,7 @@ export class LibrarySearchSheet extends LitElement {
                   @click="${() => this._onItemClick(result)}"
                 >
                   <span slot="headline">${result.name}</span>
+                  ${result.subName ? html`<span slot="supporting-text">${result.subName}</span>` : ''}
                 </md-list-item>
               `,
           )}
@@ -128,7 +130,7 @@ export class LibrarySearchSheet extends LitElement {
         this._results = rows.map((r) => ({ id: r.id, name: r.name }));
       } else {
         const rows = await api.searchAlbums(query);
-        this._results = rows.map((r) => ({ id: r.id, name: r.title }));
+        this._results = rows.map((r) => ({ id: r.id, name: r.title, subName: r.artistName || undefined }));
       }
     } catch {
       showSnackbar('Search failed', 'error');

@@ -295,25 +295,65 @@ export class TidalApi {
     query: string,
     limit = 30,
   ): Promise<Array<{ id: string; title: string; artistName: string }>> {
-    const data = this.unwrap(
+    const searchData = this.unwrap(
       await this.client.GET('/searchResults/{id}', {
         params: {
           path: { id: query },
           query: {
             countryCode: this.settings.countryCode,
-            include: ['albums', 'artists'],
+            include: ['albums'],
           },
         },
       }),
     ) as JsonLike;
 
-    return this.albumRowsFromIncluded(this.included(data))
-      .map((album) => ({
-        id: album.id,
-        title: album.title,
-        artistName: album.artistName,
-      }))
-      .slice(0, limit);
+    const searchAlbumEntries = this.byType(this.included(searchData), 'albums').slice(0, limit);
+    const albumIds = searchAlbumEntries.map((a) => asString(a.id)).filter(Boolean);
+    if (albumIds.length === 0) return [];
+
+    const artistNameById = new Map<string, string>();
+    const albumArtistIdMap = new Map<string, string>();
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const batchResult = await (this.client as any).GET('/albums', {
+        params: {
+          query: {
+            'filter[id]': albumIds,
+            include: ['artists'],
+            countryCode: this.settings.countryCode,
+          },
+        },
+      });
+      const batchData = batchResult.data as JsonLike | undefined;
+      if (batchData) {
+        for (const artist of this.byType(this.included(batchData), 'artists')) {
+          const id = asString(artist.id);
+          const name = asString(asObject(artist.attributes)?.name);
+          if (id) artistNameById.set(id, name);
+        }
+        const batchAlbums = Array.isArray(batchData.data) ? batchData.data as JsonObject[] : [];
+        for (const album of batchAlbums) {
+          const albumId = asString(album.id);
+          const rels = asObject(album.relationships);
+          const artistsRel = asObject(rels?.artists);
+          const relData = Array.isArray(artistsRel?.data) ? artistsRel.data : [];
+          const artistId = asString(asObject(relData[0])?.id);
+          if (albumId && artistId) albumArtistIdMap.set(albumId, artistId);
+        }
+      }
+    } catch {
+      // artist names best-effort — proceed without
+    }
+
+    return searchAlbumEntries.map((album) => {
+      const albumId = asString(album.id);
+      const attributes = asObject(album.attributes);
+      const title = asString(attributes?.title, albumId);
+      const artistId = albumArtistIdMap.get(albumId) ?? '';
+      const artistName = artistId ? (artistNameById.get(artistId) ?? '') : '';
+      return { id: albumId, title, artistName };
+    });
   }
 
   async resolveAlbumPoolEntries(
@@ -366,7 +406,7 @@ export class TidalApi {
           path: { id: raw },
           query: {
             countryCode: this.settings.countryCode,
-            include: ['albums', 'artists'],
+            include: ['albums', 'albums.artists'],
           },
         },
       }),

@@ -1,4 +1,4 @@
-import { CSSResultGroup, LitElement, unsafeCSS } from 'lit';
+import { type CSSResultGroup, LitElement, unsafeCSS } from 'lit';
 // @ts-expect-error Deno LSP doesn't know ?inline vite does...
 import globalStyles from './index.css?inline';
 
