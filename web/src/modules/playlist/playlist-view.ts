@@ -1,6 +1,5 @@
 import { css, html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import type { PropertyValues } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { SignalWatcher } from '@lit-labs/signals';
 import '@material/web/list/list.js';
 import '@material/web/list/list-item.js';
@@ -36,125 +35,81 @@ export class PlaylistView extends SignalWatcher(LitElement) {
         min-height: 0;
       }
 
+      .building-page {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 64px 24px;
+        gap: 16px;
+        color: var(--md-sys-color-on-surface-variant);
+        font-size: 0.9375rem;
+      }
+
+      .result-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 4px 16px 4px 16px;
+        border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      }
+
+      .result-count {
+        font-size: 0.875rem;
+        color: var(--md-sys-color-on-surface-variant);
+      }
+
       .block-btns {
         display: flex;
         gap: 2px;
       }
-
-      .result-toggle-row {
-        display: flex;
-        align-items: center;
-        border-top: 1px solid var(--md-sys-color-outline-variant);
-      }
-
-      .config-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 8px 16px;
-        border: none;
-        background: none;
-        width: 100%;
-        cursor: pointer;
-        font-family: inherit;
-        color: var(--md-sys-color-on-surface-variant);
-        font-size: 0.75rem;
-        font-weight: 500;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      .config-toggle:hover {
-        background: color-mix(in srgb, var(--md-sys-color-on-surface) 6%, transparent);
-      }
-
-      .config-toggle md-icon {
-        font-size: 18px;
-        transition: transform 200ms ease;
-      }
-
-      .config-toggle md-icon.rotated {
-        transform: rotate(180deg);
-      }
-
-      .config-body {
-        overflow: hidden;
-        display: grid;
-        grid-template-rows: 1fr;
-        transition: grid-template-rows 220ms ease;
-      }
-
-      .config-body.collapsed {
-        grid-template-rows: 0fr;
-      }
-
-      .config-body > .config-inner {
-        overflow: hidden;
-      }
     `,
   ];
 
-  @state()
-  private _configOpen = true;
-  @state()
-  private _tracksOpen = true;
-
-  private _prevBuildStatus: string | null = null;
-
-  protected override updated(changed: PropertyValues): void {
-    void changed;
-    const status = buildStatus.get();
-    if (this._prevBuildStatus === 'building' && status === 'done') {
-      this._configOpen = false;
-      this._tracksOpen = true;
-    }
-    this._prevBuildStatus = status;
-  }
-
   override render() {
     const status = buildStatus.get();
-    const isDone = status === 'done';
-    const tracks = result.get();
 
     return html`
       <ui-top-bar heading="Tidal Playlist" logo></ui-top-bar>
 
       <div class="scrollable">
-        <button class="config-toggle" @click="${this._onToggleConfig}">
-          <span>Settings</span>
-          <md-icon class="${this._configOpen ? '' : 'rotated'}">expand_less</md-icon>
-        </button>
-
-        <div class="config-body ${this._configOpen ? '' : 'collapsed'}">
-          <div class="config-inner">
-            <playlist-config-panel></playlist-config-panel>
-          </div>
-        </div>
-
-        ${isDone && tracks.length > 0
-          ? html`
-            <div class="result-toggle-row">
-              <button class="config-toggle" style="flex:1" @click="${this._onToggleTracks}">
-                <span>${tracks.length} track${tracks.length === 1 ? '' : 's'}</span>
-                <md-icon class="${this._tracksOpen ? '' : 'rotated'}">expand_less</md-icon>
-              </button>
-              <md-text-button @click="${this._onNew}">
-                <md-icon slot="icon">refresh</md-icon>
-                New
-              </md-text-button>
-            </div>
-            <div class="config-body ${this._tracksOpen ? '' : 'collapsed'}">
-              <div class="config-inner">
-                <md-list>
-                  ${tracks.map((song) => this._renderTrack(song))}
-                </md-list>
-              </div>
-            </div>
-          `
-          : ''}
+        ${status === 'building'
+          ? this._renderBuilding()
+          : status === 'done'
+          ? this._renderResult()
+          : this._renderConfig()}
       </div>
 
       <playlist-action-bar></playlist-action-bar>
+    `;
+  }
+
+  private _renderConfig() {
+    return html`<playlist-config-panel></playlist-config-panel>`;
+  }
+
+  private _renderBuilding() {
+    return html`
+      <div class="building-page">
+        <md-icon style="font-size:48px;color:var(--md-sys-color-primary)">hourglass_top</md-icon>
+        <span>Building playlist…</span>
+      </div>
+    `;
+  }
+
+  private _renderResult() {
+    const tracks = result.get();
+    return html`
+      <div class="result-header">
+        <span class="result-count">${tracks.length} track${tracks.length === 1 ? '' : 's'}</span>
+        <md-text-button @click="${this._onNew}">
+          <md-icon slot="icon">refresh</md-icon>
+          New
+        </md-text-button>
+      </div>
+      <md-list>
+        ${tracks.map((song) => this._renderTrack(song))}
+      </md-list>
     `;
   }
 
@@ -183,17 +138,6 @@ export class PlaylistView extends SignalWatcher(LitElement) {
 
   private _onNew(): void {
     resetBuild();
-    this._configOpen = true;
-  }
-
-  private _onToggleConfig(): void {
-    this._configOpen = true;
-    this._tracksOpen = false;
-  }
-
-  private _onToggleTracks(): void {
-    this._tracksOpen = true;
-    this._configOpen = false;
   }
 
   private _onBlockArtist(song: SelectedSong): void {
