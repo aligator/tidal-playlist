@@ -1,5 +1,5 @@
 import { Application, Router, send } from '@oak/oak';
-import { assertServerConfig, PORT, WEB_DIST_DIR } from './config.ts';
+import { assertServerConfig, HOST, PORT, WEB_DIST_DIR } from './config.ts';
 import { createAuthRouter } from './routes/auth.ts';
 
 assertServerConfig();
@@ -63,5 +63,5 @@ app.use(async (ctx, next) => {
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-app.listen({ port: PORT });
-console.log(`Server running on http://0.0.0.0:${PORT}`);
+app.listen({ hostname: HOST, port: PORT });
+console.log(`Server running on http://${HOST}:${PORT}`);

@@ -1,4 +1,5 @@
 export const PORT = Number(Deno.env.get('PORT') ?? '8080');
+export const HOST = Deno.env.get('HOST') ?? '0.0.0.0';
 export const CLIENT_ID = Deno.env.get('TIDAL_CLIENT_ID') ?? '';
 export const CLIENT_SECRET = Deno.env.get('TIDAL_CLIENT_SECRET') ?? '';
 export const REDIRECT_URI_OVERRIDE = Deno.env.get('TIDAL_REDIRECT_URI')?.trim() ?? '';
