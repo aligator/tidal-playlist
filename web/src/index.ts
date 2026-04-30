@@ -14,12 +14,6 @@ import { credentialsProvider, initSdk } from './modules/auth/sdk.ts';
 import { setAuthenticated } from './modules/auth/store.ts';
 import { viewStack } from './app-shell.ts';
 import { loadRuntimeConfig } from './modules/tidal/settings.ts';
-import { storageCleared } from './modules/settings/persistence.ts';
-
-if (storageCleared) {
-  showSnackbar('Saved data was from an older version and has been cleared. Please log in again.', 'error');
-}
-
 globalThis.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
   event.preventDefault();
   const msg = event.reason instanceof Error ? event.reason.message : String(event.reason);
