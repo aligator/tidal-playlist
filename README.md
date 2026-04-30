@@ -3,20 +3,6 @@
 This project is a vanilla TS + Lit webcomponents frontend built with Vite, plus a Deno backend for
 auth, proxying and serving built assets.
 
-## Why backend token proxy mode
-
-- `client_secret` stays on the server.
-- `client_id` is served to frontend from backend runtime config (`/api/config`).
-- In development, `redirect_uri` can default to `${origin}/callback`.
-- Outside development, `TIDAL_REDIRECT_URI` is required.
-- Frontend starts OAuth through backend (`/api/auth/start`).
-- Backend generates PKCE verifier/challenge + OAuth state, stores state/verifier in a short-lived
-  signed HttpOnly cookie, and returns authorize URL.
-- Frontend submits callback `code` + `state` to backend token endpoint.
-- Backend exchanges initial tokens with TIDAL.
-- Backend does not persist access/refresh tokens.
-- Backend serves static files from Vite build output (`web/dist`).
-
 ## Run
 
 1. Create env file:
@@ -31,7 +17,7 @@ cp .env.example .env
 - `TIDAL_CLIENT_SECRET`
 - `TIDAL_REDIRECT_URI` (required outside development; must exactly match one URI registered in your
   TIDAL app)
-- Optional: `OAUTH_FLOW_SECRET` (recommended dedicated signing secret for OAuth flow cookie JWT)
+- `OAUTH_FLOW_SECRET` (random min 32bit string)
 
 3. Build frontend with Deno + Vite:
 
@@ -50,11 +36,11 @@ Vite dev server, use `deno task dev:web`.
 
 5. Open:
 
-`http://localhost:8080`
+`http://127.0.0.1:8080`
 
 6. In your TIDAL app settings, set redirect URI to:
 
-`http://localhost:8080/callback`
+`http://127.0.0.1:8080/callback`
 
 ## Docker
 
