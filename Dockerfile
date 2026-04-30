@@ -2,7 +2,7 @@ FROM denoland/deno:2.7.1 AS build
 
 WORKDIR /app
 
-COPY deno.json deno.lock vite.config.mjs ./
+COPY deno.json deno.lock vite.config.ts ./
 COPY web ./web
 RUN deno task build
 
