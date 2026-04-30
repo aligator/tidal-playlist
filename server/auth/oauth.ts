@@ -6,6 +6,7 @@ import {
   OAUTH_FLOW_TTL_SECONDS,
   OAUTH_SCOPES,
   REDIRECT_URI_OVERRIDE,
+  TRUST_PROXY,
 } from '../config.ts';
 import {
   calculatePKCECodeChallenge,
@@ -29,11 +30,16 @@ export function redirectUri(request: Request): string {
   return `${new URL(request.url).origin}/callback`;
 }
 
-export function oauthCookieOptions(_request: Request) {
+export function oauthCookieOptions(request: Request) {
+  // request.url uses X-Forwarded-Proto (when proxy:true), but request.secure reflects
+  // the raw TCP connection (HTTP from nginx). ignoreInsecure suppresses Oak's throw when
+  // TLS is terminated upstream. See https://github.com/oakserver/oak/issues/643
+  const isHttps = request.url.protocol === 'https:';
   return {
     httpOnly: true,
     sameSite: 'lax' as const,
-    secure: !IS_DEV,
+    secure: isHttps,
+    ignoreInsecure: TRUST_PROXY && isHttps,
     path: '/',
   };
 }
