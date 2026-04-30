@@ -125,20 +125,22 @@ export class ImpressumModal extends StyledElement {
     const addressLines = this.address.split('\n');
 
     return html`
-      ${this.listItem ? html`
-        <md-list-item type="button" @click="${() => void this.openModal()}">
-          <md-icon slot="start">info</md-icon>
-          <span slot="headline">Impressum</span>
-        </md-list-item>
-      ` : html`
-        <button
-          class="impressum-button"
-          @click="${() => void this.openModal()}"
-        >
-          <span class="impressum-icon" aria-hidden="true">info</span>
-          <span>Impressum</span>
-        </button>
-      `}
+      ${this.listItem
+        ? html`
+          <md-list-item type="button" @click="${() => void this.openModal()}">
+            <md-icon slot="start">info</md-icon>
+            <span slot="headline">Impressum</span>
+          </md-list-item>
+        `
+        : html`
+          <button
+            class="impressum-button"
+            @click="${() => void this.openModal()}"
+          >
+            <span class="impressum-icon" aria-hidden="true">info</span>
+            <span>Impressum</span>
+          </button>
+        `}
 
       <md-dialog ?open="${this.open}" @closed="${() => this.closeModal()}">
         <div slot="headline">Impressum</div>

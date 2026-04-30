@@ -1,5 +1,5 @@
 import { Application, Router, send } from '@oak/oak';
-import { assertServerConfig, IS_DEV, PORT, WEB_DIST_DIR } from './config.ts';
+import { assertServerConfig, PORT, WEB_DIST_DIR } from './config.ts';
 import { createAuthRouter } from './routes/auth.ts';
 
 assertServerConfig();

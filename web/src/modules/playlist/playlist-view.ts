@@ -318,12 +318,18 @@ export class PlaylistView extends SignalWatcher(LitElement) {
     }
   `;
 
-  @state() private _descriptionVisible = false;
-  @state() private _confirmOpen = false;
-  @state() private _saveError = '';
-  @state() private _saveState: 'idle' | 'error' = 'idle';
-  @state() private _configOpen = true;
-  @state() private _tracksOpen = true;
+  @state()
+  private _descriptionVisible = false;
+  @state()
+  private _confirmOpen = false;
+  @state()
+  private _saveError = '';
+  @state()
+  private _saveState: 'idle' | 'error' = 'idle';
+  @state()
+  private _configOpen = true;
+  @state()
+  private _tracksOpen = true;
 
   private _prevBuildStatus: string | null = null;
 
@@ -353,166 +359,192 @@ export class PlaylistView extends SignalWatcher(LitElement) {
       <ui-top-bar heading="Tidal Playlist"></ui-top-bar>
 
       <div class="scrollable">
+        <!-- Collapsible config -->
+        <button class="config-toggle" @click="${this._onToggleConfig}">
+          <span>Settings</span>
+          <md-icon class="${this._configOpen ? '' : 'rotated'}">expand_less</md-icon>
+        </button>
 
-      <!-- Collapsible config -->
-      <button class="config-toggle" @click="${this._onToggleConfig}">
-        <span>Settings</span>
-        <md-icon class="${this._configOpen ? '' : 'rotated'}">expand_less</md-icon>
-      </button>
-
-      <div class="config-body ${this._configOpen ? '' : 'collapsed'}">
-        <div class="config-inner">
-
-      <!-- Pool -->
-      <div class="section">
-        <div class="section-label">Pool</div>
-        <div class="pool-card">
-          <button class="pool-manage-row" @click="${this._onManageLibrary}">
-            <div class="pool-manage-title">Manage Library</div>
-            <md-icon>arrow_forward</md-icon>
-          </button>
-        </div>
-      </div>
-
-      <!-- Settings -->
-      <div class="section">
-        <div class="section-label">Settings</div>
-        <div class="field-row">
-          <span class="field-label">Tracks</span>
-          <md-outlined-select .value="${String(s.count)}" @change="${this._onCountChange}">
-            ${TRACK_COUNT_OPTIONS.map(
-              (n) => html`
-                <md-select-option .value="${String(n)}" ?selected="${s.count === n}">
-                  <div slot="headline">${n}</div>
-                </md-select-option>
-              `,
-            )}
-          </md-outlined-select>
-        </div>
-        <div class="slider-section">
-          <div class="slider-labels">
-            <span>More artists</span>
-            <span>More albums</span>
-          </div>
-          <md-slider
-            min="0" max="100"
-            .value="${Math.round(s.albumPoolWeight * 100)}"
-            @change="${this._onSliderChange}"
-          ></md-slider>
-        </div>
-        <div class="switch-row">
-          <span class="switch-label">Shuffle</span>
-          <md-switch ?selected="${s.shufflePlaylist}" @change="${this._onShuffleChange}"></md-switch>
-        </div>
-      </div>
-
-      <!-- Playlist name -->
-      <div class="section">
-        <div class="section-label">Playlist</div>
-        <md-filled-text-field
-          label="Playlist name"
-          .value="${s.playlistName}"
-          @input="${this._onNameInput}"
-        ></md-filled-text-field>
-        ${this._descriptionVisible
-          ? html`
-            <md-filled-text-field
-              label="Description"
-              type="textarea"
-              rows="3"
-              .value="${s.playlistDescription}"
-              @input="${this._onDescriptionInput}"
-            ></md-filled-text-field>
-          `
-          : html`
-            <md-text-button @click="${this._onToggleDescription}">
-              <md-icon slot="icon">add</md-icon>
-              Add description
-            </md-text-button>
-          `}
-      </div>
-
-        </div><!-- end .config-inner -->
-      </div><!-- end .config-body -->
-
-      <!-- Result list (collapsible) -->
-      ${isDone && tracks.length > 0 ? html`
-        <div class="result-toggle-row">
-          <button class="config-toggle" style="flex:1" @click="${this._onToggleTracks}">
-            <span>${tracks.length} track${tracks.length === 1 ? '' : 's'}</span>
-            <md-icon class="${this._tracksOpen ? '' : 'rotated'}">expand_less</md-icon>
-          </button>
-          <md-text-button @click="${this._onRebuild}">
-            <md-icon slot="icon">refresh</md-icon>
-            New
-          </md-text-button>
-        </div>
-        <div class="config-body ${this._tracksOpen ? '' : 'collapsed'}">
+        <div class="config-body ${this._configOpen ? '' : 'collapsed'}">
           <div class="config-inner">
-            <md-list>
-              ${tracks.map((song) => this._renderTrack(song))}
-            </md-list>
-          </div>
-        </div>
-      ` : ''}
+            <!-- Pool -->
+            <div class="section">
+              <div class="section-label">Pool</div>
+              <div class="pool-card">
+                <button class="pool-manage-row" @click="${this._onManageLibrary}">
+                  <div class="pool-manage-title">Manage Library</div>
+                  <md-icon>arrow_forward</md-icon>
+                </button>
+              </div>
+            </div>
 
+            <!-- Settings -->
+            <div class="section">
+              <div class="section-label">Settings</div>
+              <div class="field-row">
+                <span class="field-label">Tracks</span>
+                <md-outlined-select .value="${String(s.count)}" @change="${this._onCountChange}">
+                  ${TRACK_COUNT_OPTIONS.map(
+                    (n) =>
+                      html`
+                        <md-select-option .value="${String(n)}" ?selected="${s.count === n}">
+                          <div slot="headline">${n}</div>
+                        </md-select-option>
+                      `,
+                  )}
+                </md-outlined-select>
+              </div>
+              <div class="slider-section">
+                <div class="slider-labels">
+                  <span>More artists</span>
+                  <span>More albums</span>
+                </div>
+                <md-slider
+                  min="0"
+                  max="100"
+                  .value="${Math.round(s.albumPoolWeight * 100)}"
+                  @change="${this._onSliderChange}"
+                ></md-slider>
+              </div>
+              <div class="switch-row">
+                <span class="switch-label">Shuffle</span>
+                <md-switch ?selected="${s.shufflePlaylist}" @change="${this
+                  ._onShuffleChange}"></md-switch>
+              </div>
+            </div>
+
+            <!-- Playlist name -->
+            <div class="section">
+              <div class="section-label">Playlist</div>
+              <md-filled-text-field
+                label="Playlist name"
+                .value="${s.playlistName}"
+                @input="${this._onNameInput}"
+              ></md-filled-text-field>
+              ${this._descriptionVisible
+                ? html`
+                  <md-filled-text-field
+                    label="Description"
+                    type="textarea"
+                    rows="3"
+                    .value="${s.playlistDescription}"
+                    @input="${this._onDescriptionInput}"
+                  ></md-filled-text-field>
+                `
+                : html`
+                  <md-text-button @click="${this._onToggleDescription}">
+                    <md-icon slot="icon">add</md-icon>
+                    Add description
+                  </md-text-button>
+                `}
+            </div>
+          </div>
+          <!-- end .config-inner -->
+        </div>
+        <!-- end .config-body -->
+
+        <!-- Result list (collapsible) -->
+        ${isDone && tracks.length > 0
+          ? html`
+            <div class="result-toggle-row">
+              <button class="config-toggle" style="flex:1" @click="${this._onToggleTracks}">
+                <span>${tracks.length} track${tracks.length === 1 ? '' : 's'}</span>
+                <md-icon class="${this._tracksOpen ? '' : 'rotated'}">expand_less</md-icon>
+              </button>
+              <md-text-button @click="${this._onRebuild}">
+                <md-icon slot="icon">refresh</md-icon>
+                New
+              </md-text-button>
+            </div>
+            <div class="config-body ${this._tracksOpen ? '' : 'collapsed'}">
+              <div class="config-inner">
+                <md-list>
+                  ${tracks.map((song) => this._renderTrack(song))}
+                </md-list>
+              </div>
+            </div>
+          `
+          : ''}
       </div><!-- end .scrollable -->
 
       <!-- Action bar — flex-shrink: 0, never scrolls -->
       <div class="action-bar">
-        ${isBuilding ? html`
-          <div class="progress-row">
-            <md-linear-progress .value="${pct / 100}"></md-linear-progress>
-            <span class="progress-pct">${pct}%</span>
-          </div>
-          <div class="building-label">Building "${s.playlistName}"…</div>
-        ` : isDone ? html`
-          ${isSaving ? html`
+        ${isBuilding
+          ? html`
             <div class="progress-row">
-              <md-linear-progress .value="${(savePct ?? 0) / 100}"></md-linear-progress>
-              <span class="progress-pct">${savePct}%</span>
+              <md-linear-progress .value="${pct / 100}"></md-linear-progress>
+              <span class="progress-pct">${pct}%</span>
             </div>
-          ` : ''}
-          ${this._saveState === 'error'
-            ? html`<div class="error-text">${this._saveError}</div>` : ''}
-          <div class="btn-row">
-            <md-filled-button ?disabled="${isSaving}" @click="${this._onSaveClick}">
-              ${isSaving ? 'Saving…' : 'Save to TIDAL'}
-            </md-filled-button>
-            ${this._saveState === 'error'
-              ? html`<md-text-button @click="${this._onSaveClick}">Retry</md-text-button>` : ''}
-          </div>
-        ` : html`
-          <div class="btn-row">
-            <md-filled-button ?disabled="${!hasSources}" @click="${this._onBuild}">
-              Build Playlist
-            </md-filled-button>
-          </div>
-          ${!hasSources
-            ? html`<div class="hint">Add artists or albums to Library first.</div>` : ''}
-          ${status === 'error' && lastError ? html`
-            <div class="error-text">${lastError}</div>
-            ${lastError.toLowerCase().includes('no tracks') ? html`
-              <div class="hint">TIDAL may be rate limiting requests — wait a moment, then try again.</div>
-            ` : ''}
-          ` : ''}
-        `}
+            <div class="building-label">Building "${s.playlistName}"…</div>
+          `
+          : isDone
+          ? html`
+            ${isSaving
+              ? html`
+                <div class="progress-row">
+                  <md-linear-progress .value="${(savePct ?? 0) / 100}"></md-linear-progress>
+                  <span class="progress-pct">${savePct}%</span>
+                </div>
+              `
+              : ''} ${this._saveState === 'error'
+              ? html`
+                <div class="error-text">${this._saveError}</div>
+              `
+              : ''}
+            <div class="btn-row">
+              <md-filled-button ?disabled="${isSaving}" @click="${this._onSaveClick}">
+                ${isSaving ? 'Saving…' : 'Save to TIDAL'}
+              </md-filled-button>
+              ${this._saveState === 'error'
+                ? html`
+                  <md-text-button @click="${this._onSaveClick}">Retry</md-text-button>
+                `
+                : ''}
+            </div>
+          `
+          : html`
+            <div class="btn-row">
+              <md-filled-button ?disabled="${!hasSources}" @click="${this._onBuild}">
+                Build Playlist
+              </md-filled-button>
+            </div>
+            ${!hasSources
+              ? html`
+                <div class="hint">Add artists or albums to Library first.</div>
+              `
+              : ''} ${status === 'error' && lastError
+              ? html`
+                <div class="error-text">${lastError}</div>
+                ${lastError.toLowerCase().includes('no tracks')
+                  ? html`
+                    <div class="hint">TIDAL may be rate limiting requests — wait a moment, then try again.</div>
+                  `
+                  : ''}
+              `
+              : ''}
+          `}
       </div>
 
       <!-- Save confirm dialog -->
-      ${isDone ? html`
-        <md-dialog ?open="${this._confirmOpen}" @closed="${() => { this._confirmOpen = false; }}">
-          <div slot="headline">Save playlist?</div>
-          <div slot="content">
-            This will replace any existing TIDAL playlist named
-            "<strong>${s.playlistName}</strong>".
-          </div>
-          <div slot="actions">
-            <md-text-button @click="${() => { this._confirmOpen = false; }}">Cancel</md-text-button>
-            <md-filled-button @click="${this._onSaveConfirmed}">Save</md-filled-button>
-          </div>
-        </md-dialog>
-      ` : ''}
+      ${isDone
+        ? html`
+          <md-dialog ?open="${this._confirmOpen}" @closed="${() => {
+            this._confirmOpen = false;
+          }}">
+            <div slot="headline">Save playlist?</div>
+            <div slot="content">
+              This will replace any existing TIDAL playlist named "<strong>${s
+                .playlistName}</strong>".
+            </div>
+            <div slot="actions">
+              <md-text-button @click="${() => {
+                this._confirmOpen = false;
+              }}">Cancel</md-text-button>
+              <md-filled-button @click="${this._onSaveConfirmed}">Save</md-filled-button>
+            </div>
+          </md-dialog>
+        `
+        : ''}
     `;
   }
 

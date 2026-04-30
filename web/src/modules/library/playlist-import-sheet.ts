@@ -102,12 +102,18 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
   @property({ type: Boolean })
   open = false;
 
-  @state() private _phase: Phase = 'playlists';
-  @state() private _loading = false;
-  @state() private _error: string | null = null;
-  @state() private _playlists: PlaylistSummary[] = [];
-  @state() private _selectedPlaylist: PlaylistSummary | null = null;
-  @state() private _tracks: SelectedSong[] = [];
+  @state()
+  private _phase: Phase = 'playlists';
+  @state()
+  private _loading = false;
+  @state()
+  private _error: string | null = null;
+  @state()
+  private _playlists: PlaylistSummary[] = [];
+  @state()
+  private _selectedPlaylist: PlaylistSummary | null = null;
+  @state()
+  private _tracks: SelectedSong[] = [];
 
   protected override updated(changed: PropertyValues): void {
     if (changed.has('open') && this.open) {
@@ -139,9 +145,13 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
         </div>
 
         ${this._loading
-          ? html`<div class="center"><md-circular-progress indeterminate></md-circular-progress></div>`
+          ? html`
+            <div class="center"><md-circular-progress indeterminate></md-circular-progress></div>
+          `
           : this._error
-          ? html`<div class="center">${this._error}</div>`
+          ? html`
+            <div class="center">${this._error}</div>
+          `
           : this._phase === 'playlists'
           ? this._renderPlaylists()
           : this._renderTracks(blockedState)}
@@ -151,17 +161,20 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
 
   private _renderPlaylists() {
     if (this._playlists.length === 0) {
-      return html`<div class="center">No playlists found.</div>`;
+      return html`
+        <div class="center">No playlists found.</div>
+      `;
     }
     return html`
       <md-list>
         ${this._playlists.map(
-          (p) => html`
-            <md-list-item type="button" @click="${() => this._onPlaylistClick(p)}">
-              <span slot="headline">${p.name}</span>
-              <md-icon slot="end">chevron_right</md-icon>
-            </md-list-item>
-          `,
+          (p) =>
+            html`
+              <md-list-item type="button" @click="${() => this._onPlaylistClick(p)}">
+                <span slot="headline">${p.name}</span>
+                <md-icon slot="end">chevron_right</md-icon>
+              </md-list-item>
+            `,
         )}
       </md-list>
     `;
@@ -169,7 +182,9 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
 
   private _renderTracks(blockedState: { artists: string[]; albums: string[] }) {
     if (this._tracks.length === 0) {
-      return html`<div class="center">No tracks in this playlist.</div>`;
+      return html`
+        <div class="center">No tracks in this playlist.</div>
+      `;
     }
 
     const blockedArtists = new Set(blockedState.artists.map((a) => a.toLowerCase()));
@@ -190,32 +205,41 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
             <md-list-item>
               <span slot="headline">${song.trackTitle}</span>
               <span slot="supporting-text" class="track-meta">
-                ${song.artistName || ''}${song.artistName && song.albumTitle ? ' · ' : ''}${song.albumTitle || ''}
+                ${song.artistName || ''}${song.artistName && song.albumTitle
+                  ? ' · '
+                  : ''}${song.albumTitle || ''}
               </span>
-              ${hasActions ? html`
-                <div slot="end" class="block-btns">
-                  ${song.artistName ? html`
-                    <button
-                      class="block-btn ${artistBlocked ? 'blocked' : ''}"
-                      aria-label="${artistBlocked ? 'Unblock' : 'Block'} artist ${song.artistName}"
-                      @click="${() => this._onToggleArtist(song.artistName, artistBlocked)}"
-                    >
-                      <md-icon>${artistBlocked ? 'person_off' : 'person_remove'}</md-icon>
-                      <span>${artistBlocked ? 'Unblock' : 'Artist'}</span>
-                    </button>
-                  ` : ''}
-                  ${song.albumTitle ? html`
-                    <button
-                      class="block-btn ${albumBlocked ? 'blocked' : ''}"
-                      aria-label="${albumBlocked ? 'Unblock' : 'Block'} album ${song.albumTitle}"
-                      @click="${() => this._onToggleAlbum(song.albumTitle, albumBlocked)}"
-                    >
-                      <md-icon>${albumBlocked ? 'check_circle' : 'block'}</md-icon>
-                      <span>${albumBlocked ? 'Unblock' : 'Album'}</span>
-                    </button>
-                  ` : ''}
-                </div>
-              ` : ''}
+              ${hasActions
+                ? html`
+                  <div slot="end" class="block-btns">
+                    ${song.artistName
+                      ? html`
+                        <button
+                          class="block-btn ${artistBlocked ? 'blocked' : ''}"
+                          aria-label="${artistBlocked ? 'Unblock' : 'Block'} artist ${song
+                            .artistName}"
+                          @click="${() => this._onToggleArtist(song.artistName, artistBlocked)}"
+                        >
+                          <md-icon>${artistBlocked ? 'person_off' : 'person_remove'}</md-icon>
+                          <span>${artistBlocked ? 'Unblock' : 'Artist'}</span>
+                        </button>
+                      `
+                      : ''} ${song.albumTitle
+                      ? html`
+                        <button
+                          class="block-btn ${albumBlocked ? 'blocked' : ''}"
+                          aria-label="${albumBlocked ? 'Unblock' : 'Block'} album ${song
+                            .albumTitle}"
+                          @click="${() => this._onToggleAlbum(song.albumTitle, albumBlocked)}"
+                        >
+                          <md-icon>${albumBlocked ? 'check_circle' : 'block'}</md-icon>
+                          <span>${albumBlocked ? 'Unblock' : 'Album'}</span>
+                        </button>
+                      `
+                      : ''}
+                  </div>
+                `
+                : ''}
             </md-list-item>
           `;
         })}

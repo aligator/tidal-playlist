@@ -68,7 +68,6 @@ export class SettingsView extends SignalWatcher(LitElement) {
       --md-list-item-trailing-space: 8px;
     }
 
-
     .section-header {
       padding: 12px 16px 4px;
       font-size: 0.75rem;

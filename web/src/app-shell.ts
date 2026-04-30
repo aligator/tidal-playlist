@@ -168,7 +168,6 @@ export class AppShell extends SignalWatcher(LitElement) {
       md-navigation-bar {
         display: none;
       }
-
     }
 
     /* ------------------------------------------------------------------ */

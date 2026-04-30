@@ -1,6 +1,7 @@
 # TIDAL Playlist Web App (Deno)
 
-This project is a vanilla TS + Lit webcomponents frontend built with Vite, plus a Deno backend for auth, proxying and serving built assets.
+This project is a vanilla TS + Lit webcomponents frontend built with Vite, plus a Deno backend for
+auth, proxying and serving built assets.
 
 ## Why backend token proxy mode
 
@@ -79,4 +80,6 @@ Optional env vars:
 - `OAUTH_FLOW_SECRET`
 
 ## AI Use
-This project was done as an AI coding experiment. Most code of it was generated using AI, but with much manual architectural advice.
+
+This project was done as an AI coding experiment. Most code of it was generated using AI, but with
+much manual architectural advice.

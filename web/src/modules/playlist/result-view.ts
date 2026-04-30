@@ -132,50 +132,56 @@ export class ResultView extends SignalWatcher(LitElement) {
     return html`
       <ui-top-bar heading="Result" back @back="${this._onBack}"></ui-top-bar>
 
-      ${tracks.length === 0
-        ? this._renderEmptyState()
-        : html`
-          <div class="track-count">${tracks.length} track${tracks.length === 1 ? '' : 's'}</div>
-          <md-list>
-            ${tracks.map((song) => this._renderTrack(song))}
-          </md-list>
+      ${tracks.length === 0 ? this._renderEmptyState() : html`
+        <div class="track-count">${tracks.length} track${tracks.length === 1 ? '' : 's'}</div>
+        <md-list>
+          ${tracks.map((song) => this._renderTrack(song))}
+        </md-list>
 
-          <div class="action-row">
-            ${isSaving
+        <div class="action-row">
+          ${isSaving
+            ? html`
+              <div class="save-progress">
+                <md-linear-progress .value="${(pct ?? 0) / 100}"></md-linear-progress>
+                <span>${pct}%</span>
+              </div>
+            `
+            : ''} ${this._saveState === 'error'
+            ? html`
+              <div class="save-error">${this._saveError}</div>
+            `
+            : ''}
+          <div class="save-btn-row">
+            <md-filled-button
+              ?disabled="${isSaving}"
+              @click="${this._onSaveClick}"
+            >
+              ${isSaving ? 'Saving…' : 'Save to TIDAL'}
+            </md-filled-button>
+            ${this._saveState === 'error'
               ? html`
-                <div class="save-progress">
-                  <md-linear-progress .value="${(pct ?? 0) / 100}"></md-linear-progress>
-                  <span>${pct}%</span>
-                </div>
+                <md-text-button @click="${this._onSaveClick}">Retry</md-text-button>
               `
               : ''}
-            ${this._saveState === 'error'
-              ? html`<div class="save-error">${this._saveError}</div>`
-              : ''}
-            <div class="save-btn-row">
-              <md-filled-button
-                ?disabled="${isSaving}"
-                @click="${this._onSaveClick}"
-              >
-                ${isSaving ? 'Saving…' : 'Save to TIDAL'}
-              </md-filled-button>
-              ${this._saveState === 'error'
-                ? html`<md-text-button @click="${this._onSaveClick}">Retry</md-text-button>`
-                : ''}
-            </div>
-
-            <md-dialog ?open="${this._confirmOpen}" @closed="${() => { this._confirmOpen = false; }}">
-              <div slot="headline">Save playlist?</div>
-              <div slot="content">
-                This will replace any existing TIDAL playlist named "<strong>${s.playlistName}</strong>".
-              </div>
-              <div slot="actions">
-                <md-text-button @click="${() => { this._confirmOpen = false; }}">Cancel</md-text-button>
-                <md-filled-button @click="${this._onSaveConfirmed}">Save</md-filled-button>
-              </div>
-            </md-dialog>
           </div>
-        `}
+
+          <md-dialog ?open="${this._confirmOpen}" @closed="${() => {
+            this._confirmOpen = false;
+          }}">
+            <div slot="headline">Save playlist?</div>
+            <div slot="content">
+              This will replace any existing TIDAL playlist named "<strong>${s
+                .playlistName}</strong>".
+            </div>
+            <div slot="actions">
+              <md-text-button @click="${() => {
+                this._confirmOpen = false;
+              }}">Cancel</md-text-button>
+              <md-filled-button @click="${this._onSaveConfirmed}">Save</md-filled-button>
+            </div>
+          </md-dialog>
+        </div>
+      `}
     `;
   }
 
