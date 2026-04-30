@@ -5,7 +5,7 @@ import {
   normalizeTrackCount,
 } from '../tidal/shared.ts';
 import type { TidalApi } from '../tidal/api.ts';
-import { loadSettings, saveSettings } from './persistence.ts';
+import { loadSettings, migrateRaw, saveSettings } from './persistence.ts';
 
 /** Signal holding the current application settings; persisted on every update. */
 export const settings = signal<AppSettings>(loadSettings());
@@ -36,7 +36,12 @@ export async function importSettings(raw: unknown, api: TidalApi): Promise<boole
     return false;
   }
 
-  const source = raw as Record<string, unknown>;
+  let obj = raw as Record<string, unknown>;
+  // Unwrap old export format: { version, exportedAt, settings: { ... } }
+  if (obj.settings && typeof obj.settings === 'object' && !Array.isArray(obj.settings)) {
+    obj = obj.settings as Record<string, unknown>;
+  }
+  const source = migrateRaw(obj);
   const count = normalizeTrackCount(source.count ?? DEFAULT_TRACK_COUNT, NaN);
 
   if (!Number.isFinite(count)) {

@@ -11,21 +11,20 @@ import {
 
 const CURRENT_VERSION = 1;
 
-function toIdArray(value: unknown): string[] {
-  if (!Array.isArray(value)) {
-    return [];
+function coerceIdList(value: unknown, fallback?: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((v): v is string => typeof v === 'string' && v.trim() !== '').map((v) => v.trim());
   }
-  return value.filter((v): v is string => typeof v === 'string' && v.trim() !== '').map((v) => v.trim());
+  if (typeof value === 'string') {
+    return value.split(/[\n,]/).map((v) => v.trim()).filter(Boolean);
+  }
+  if (fallback !== undefined) {
+    return coerceIdList(fallback);
+  }
+  return [];
 }
 
-function parseIdString(value: unknown): string[] | undefined {
-  if (typeof value !== 'string') {
-    return undefined;
-  }
-  return value.split(/[\n,]/).map((v) => v.trim()).filter(Boolean);
-}
-
-function migrateRaw(raw: Record<string, unknown>): Record<string, unknown> {
+export function migrateRaw(raw: Record<string, unknown>): Record<string, unknown> {
   const version = typeof raw.version === 'number' ? raw.version : 0;
   if (version >= CURRENT_VERSION) {
     return raw;
@@ -33,10 +32,10 @@ function migrateRaw(raw: Record<string, unknown>): Record<string, unknown> {
   // v0 → v1: field renames + string→array conversion for id lists
   return {
     ...raw,
-    poolArtists: raw.poolArtists ?? parseIdString(raw.whitelist) ?? raw.whitelist,
-    poolAlbums: raw.poolAlbums ?? parseIdString(raw.albumWhitelist) ?? raw.albumWhitelist,
-    blacklistedArtists: raw.blacklistedArtists ?? parseIdString(raw.blacklist) ?? raw.blacklist,
-    blacklistedAlbums: raw.blacklistedAlbums ?? parseIdString(raw.albumBlacklist) ?? raw.albumBlacklist,
+    poolArtists: coerceIdList(raw.poolArtists, raw.whitelist),
+    poolAlbums: coerceIdList(raw.poolAlbums, raw.albumWhitelist),
+    blacklistedArtists: coerceIdList(raw.blacklistedArtists, raw.blacklist),
+    blacklistedAlbums: coerceIdList(raw.blacklistedAlbums, raw.albumBlacklist),
     artistPoolMeta: raw.artistPoolMeta ?? raw.artistWhitelistMeta,
     albumPoolMeta: raw.albumPoolMeta ?? raw.albumWhitelistMeta,
     includeLikedArtistsPool: raw.includeLikedArtistsPool ?? raw.includeLikedArtists,
@@ -58,10 +57,10 @@ export function loadSettings(): AppSettings {
     shufflePlaylist: Boolean(raw.shufflePlaylist ?? defaults.shufflePlaylist),
     includeLikedArtistsPool: Boolean(raw.includeLikedArtistsPool ?? defaults.includeLikedArtistsPool),
     includeLikedAlbumsPool: Boolean(raw.includeLikedAlbumsPool ?? defaults.includeLikedAlbumsPool),
-    poolArtists: toIdArray(raw.poolArtists),
-    poolAlbums: toIdArray(raw.poolAlbums),
-    blacklistedArtists: toIdArray(raw.blacklistedArtists),
-    blacklistedAlbums: toIdArray(raw.blacklistedAlbums),
+    poolArtists: raw.poolArtists as string[],
+    poolAlbums: raw.poolAlbums as string[],
+    blacklistedArtists: raw.blacklistedArtists as string[],
+    blacklistedAlbums: raw.blacklistedAlbums as string[],
     artistPoolMeta: normalizeMeta(raw.artistPoolMeta) as ItemMetaMap,
     artistBlacklistMeta: normalizeMeta(raw.artistBlacklistMeta) as ItemMetaMap,
     albumPoolMeta: normalizeMeta(raw.albumPoolMeta) as ItemMetaMap,
