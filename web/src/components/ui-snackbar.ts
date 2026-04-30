@@ -1,6 +1,9 @@
 import { css, html, LitElement } from 'lit';
 import type { PropertyValues } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import '@material/web/button/text-button.js';
+import '@material/web/iconbutton/icon-button.js';
+import '@material/web/icon/icon.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -72,44 +75,26 @@ export class UiSnackbar extends LitElement {
       line-height: 1.4;
     }
 
-    .action-btn {
-      border: none;
-      background: transparent;
-      color: var(--md-sys-color-inverse-primary);
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 4px;
-      white-space: nowrap;
+    md-text-button {
+      --md-text-button-label-text-color: var(--md-sys-color-inverse-primary);
+      --md-text-button-hover-label-text-color: var(--md-sys-color-inverse-primary);
+      --md-text-button-focus-label-text-color: var(--md-sys-color-inverse-primary);
+      --md-text-button-pressed-label-text-color: var(--md-sys-color-inverse-primary);
+      --md-text-button-hover-state-layer-color: var(--md-sys-color-inverse-primary);
+      --md-text-button-focus-state-layer-color: var(--md-sys-color-inverse-primary);
+      --md-text-button-pressed-state-layer-color: var(--md-sys-color-inverse-primary);
       flex-shrink: 0;
-      transition: background 150ms ease;
     }
 
-    .action-btn:hover {
-      background: color-mix(in srgb, var(--md-sys-color-inverse-primary) 8%, transparent);
-    }
-
-    .dismiss-btn {
-      border: none;
-      background: transparent;
-      color: var(--md-sys-color-inverse-on-surface);
-      font-size: 1.125rem;
-      line-height: 1;
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 50%;
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    md-icon-button {
+      --md-icon-button-icon-color: var(--md-sys-color-inverse-on-surface);
+      --md-icon-button-hover-icon-color: var(--md-sys-color-inverse-on-surface);
+      --md-icon-button-focus-icon-color: var(--md-sys-color-inverse-on-surface);
+      --md-icon-button-pressed-icon-color: var(--md-sys-color-inverse-on-surface);
+      --md-icon-button-hover-state-layer-color: var(--md-sys-color-inverse-on-surface);
+      --md-icon-button-focus-state-layer-color: var(--md-sys-color-inverse-on-surface);
+      --md-icon-button-pressed-state-layer-color: var(--md-sys-color-inverse-on-surface);
       flex-shrink: 0;
-      transition: background 150ms ease;
-    }
-
-    .dismiss-btn:hover {
-      background: color-mix(in srgb, var(--md-sys-color-inverse-on-surface) 8%, transparent);
     }
   `;
 
@@ -220,14 +205,14 @@ export class UiSnackbar extends LitElement {
         <span class="message">${this._current.message}</span>
         ${this._current.action
           ? html`
-            <button class="action-btn" @click="${this._onAction}">
+            <md-text-button @click="${this._onAction}">
               ${this._current.action.label}
-            </button>
+            </md-text-button>
           `
           : ''}
-        <button class="dismiss-btn" aria-label="Dismiss" @click="${this._dismiss}">
-          ×
-        </button>
+        <md-icon-button aria-label="Dismiss" @click="${this._dismiss}">
+          <md-icon>close</md-icon>
+        </md-icon-button>
       </div>
     `;
   }

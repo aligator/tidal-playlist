@@ -16,6 +16,7 @@ import '@material/web/iconbutton/icon-button.js';
 import '@material/web/icon/icon.js';
 import '@material/web/dialog/dialog.js';
 import '../../components/ui-top-bar.ts';
+import '../../components/ui-icon-label-button.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { viewStack } from '../../app-shell.ts';
 import { settings, updateSettings } from '../settings/store.ts';
@@ -75,39 +76,8 @@ export class PlaylistView extends SignalWatcher(LitElement) {
       overflow: hidden;
     }
 
-    .pool-manage-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 10px 16px;
-      width: 100%;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      font-family: inherit;
-      text-align: left;
-      color: var(--md-sys-color-on-surface);
-      border-radius: 0;
-    }
-
-    .pool-manage-row:hover {
-      background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
-    }
-
-    .pool-manage-title {
-      font-size: 0.9375rem;
-      margin-bottom: 1px;
-    }
-
-    .pool-manage-sub {
-      font-size: 0.8125rem;
-      color: var(--md-sys-color-on-surface-variant);
-    }
-
-    .pool-manage-row md-icon {
-      color: var(--md-sys-color-on-surface-variant);
-      flex-shrink: 0;
+    .pool-card md-list-item {
+      --md-list-item-container-color: transparent;
     }
 
     .field-row {
@@ -188,27 +158,6 @@ export class PlaylistView extends SignalWatcher(LitElement) {
     .block-btns {
       display: flex;
       gap: 2px;
-    }
-
-    .block-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 4px 6px;
-      border-radius: 8px;
-      color: var(--md-sys-color-on-surface-variant);
-      font-family: inherit;
-      font-size: 0.625rem;
-      letter-spacing: 0.02em;
-      min-width: 44px;
-    }
-
-    .block-btn:hover {
-      background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
     }
 
     /* ---- Action bar — always at bottom, never scrolls ---- */
@@ -371,10 +320,10 @@ export class PlaylistView extends SignalWatcher(LitElement) {
             <div class="section">
               <div class="section-label">Pool</div>
               <div class="pool-card">
-                <button class="pool-manage-row" @click="${this._onManageLibrary}">
-                  <div class="pool-manage-title">Manage Library</div>
-                  <md-icon>arrow_forward</md-icon>
-                </button>
+                <md-list-item type="button" @click="${this._onManageLibrary}">
+                  <span slot="headline">Manage Library</span>
+                  <md-icon slot="end">arrow_forward</md-icon>
+                </md-list-item>
               </div>
             </div>
 
@@ -554,22 +503,18 @@ export class PlaylistView extends SignalWatcher(LitElement) {
         <span slot="headline">${song.trackTitle}</span>
         <span slot="supporting-text">${song.artistName}</span>
         <div slot="end" class="block-btns">
-          <button
-            class="block-btn"
+          <ui-icon-label-button
+            icon="person_remove"
+            label="Artist"
             aria-label="Block artist ${song.artistName}"
             @click="${() => this._onBlockArtist(song)}"
-          >
-            <md-icon>person_remove</md-icon>
-            <span>Artist</span>
-          </button>
-          <button
-            class="block-btn"
+          ></ui-icon-label-button>
+          <ui-icon-label-button
+            icon="album"
+            label="Album"
             aria-label="Block album ${song.albumTitle}"
             @click="${() => this._onBlockAlbum(song)}"
-          >
-            <md-icon>album</md-icon>
-            <span>Album</span>
-          </button>
+          ></ui-icon-label-button>
         </div>
       </md-list-item>
     `;

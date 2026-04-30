@@ -1,66 +1,29 @@
-import { css, html, nothing } from 'lit';
+import { css, html, LitElement, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { StyledElement } from '../../styled-element.ts';
+import '../../components/ui-icon-label-button.ts';
 import '@material/web/dialog/dialog.js';
 import '@material/web/button/text-button.js';
 import '@material/web/list/list-item.js';
 import '@material/web/icon/icon.js';
 
 @customElement('impressum-modal')
-export class ImpressumModal extends StyledElement {
+export class ImpressumModal extends LitElement {
   /** When true, renders as an md-list-item instead of a nav-tab button. */
   @property({ type: Boolean, attribute: 'list-item' })
   listItem = false;
 
-  @state()
-  private available = false;
-  @state()
-  private open = false;
-  @state()
-  private name = '';
-  @state()
-  private address = '';
-  @state()
-  private email = '';
-  @state()
-  private loading = false;
-  @state()
-  private error = '';
+  @state() private available = false;
+  @state() private open = false;
+  @state() private name = '';
+  @state() private address = '';
+  @state() private email = '';
+  @state() private loading = false;
+  @state() private error = '';
 
-  static override localStyles = css`
-    /* nav-tab style (desktop side nav) */
-    .impressum-button {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      padding: 12px 8px;
-      cursor: pointer;
-      border: none;
-      background: transparent;
-      color: var(--md-sys-color-on-surface-variant);
-      font-size: 12px;
-      font-family: inherit;
-      border-radius: 16px;
+  static override styles = css`
+    ui-icon-label-button {
       margin: 4px 8px;
-      min-height: 56px;
-      width: fit-content;
-      transition: background 150ms ease, color 150ms ease;
     }
-    .impressum-button:hover {
-      background: color-mix(
-        in srgb,
-        var(--md-sys-color-on-surface-variant) 8%,
-        transparent
-      );
-    }
-    .impressum-icon {
-      font-family: "Material Symbols Outlined", sans-serif;
-      font-size: 24px;
-      line-height: 1;
-      font-style: normal;
-    }
-    /* list-item style (mobile settings) */
     md-list-item {
       --md-list-item-leading-space: 16px;
       --md-list-item-trailing-space: 8px;
@@ -133,37 +96,26 @@ export class ImpressumModal extends StyledElement {
           </md-list-item>
         `
         : html`
-          <button
-            class="impressum-button"
+          <ui-icon-label-button
+            nav
+            icon="info"
+            label="Impressum"
             @click="${() => void this.openModal()}"
-          >
-            <span class="impressum-icon" aria-hidden="true">info</span>
-            <span>Impressum</span>
-          </button>
+          ></ui-icon-label-button>
         `}
 
       <md-dialog ?open="${this.open}" @closed="${() => this.closeModal()}">
         <div slot="headline">Impressum</div>
         <div slot="content">
           ${this.loading
-            ? html`
-              <p>Lädt...</p>
-            `
+            ? html`<p>Lädt...</p>`
             : this.error
-            ? html`
-              <p>${this.error}</p>
-            `
+            ? html`<p>${this.error}</p>`
             : html`
               <div class="impressum-body">
                 <p><strong>${this.name}</strong></p>
-                ${addressLines.map((line) =>
-                  html`
-                    <p>${line}</p>
-                  `
-                )}
-                <p>
-                  <a href="mailto:${this.email}">${this.email}</a>
-                </p>
+                ${addressLines.map((line) => html`<p>${line}</p>`)}
+                <p><a href="mailto:${this.email}">${this.email}</a></p>
               </div>
             `}
         </div>

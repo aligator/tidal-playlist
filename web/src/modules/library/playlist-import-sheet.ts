@@ -8,6 +8,7 @@ import '@material/web/iconbutton/icon-button.js';
 import '@material/web/icon/icon.js';
 import '@material/web/progress/circular-progress.js';
 import '../../components/ui-bottom-sheet.ts';
+import '../../components/ui-icon-label-button.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { settings } from '../settings/store.ts';
 import { TidalApi } from '../tidal/api.ts';
@@ -73,30 +74,6 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
       gap: 2px;
     }
 
-    .block-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 4px 6px;
-      border-radius: 8px;
-      color: var(--md-sys-color-on-surface-variant);
-      font-family: inherit;
-      font-size: 0.625rem;
-      letter-spacing: 0.02em;
-      min-width: 44px;
-    }
-
-    .block-btn:hover {
-      background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
-    }
-
-    .block-btn.blocked {
-      color: var(--md-sys-color-error);
-    }
   `;
 
   @property({ type: Boolean })
@@ -214,27 +191,23 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
                   <div slot="end" class="block-btns">
                     ${song.artistName
                       ? html`
-                        <button
-                          class="block-btn ${artistBlocked ? 'blocked' : ''}"
-                          aria-label="${artistBlocked ? 'Unblock' : 'Block'} artist ${song
-                            .artistName}"
+                        <ui-icon-label-button
+                          icon="${artistBlocked ? 'person_off' : 'person_remove'}"
+                          label="${artistBlocked ? 'Unblock' : 'Artist'}"
+                          ?error="${artistBlocked}"
+                          aria-label="${artistBlocked ? 'Unblock' : 'Block'} artist ${song.artistName}"
                           @click="${() => this._onToggleArtist(song.artistName, artistBlocked)}"
-                        >
-                          <md-icon>${artistBlocked ? 'person_off' : 'person_remove'}</md-icon>
-                          <span>${artistBlocked ? 'Unblock' : 'Artist'}</span>
-                        </button>
+                        ></ui-icon-label-button>
                       `
                       : ''} ${song.albumTitle
                       ? html`
-                        <button
-                          class="block-btn ${albumBlocked ? 'blocked' : ''}"
-                          aria-label="${albumBlocked ? 'Unblock' : 'Block'} album ${song
-                            .albumTitle}"
+                        <ui-icon-label-button
+                          icon="${albumBlocked ? 'check_circle' : 'block'}"
+                          label="${albumBlocked ? 'Unblock' : 'Album'}"
+                          ?error="${albumBlocked}"
+                          aria-label="${albumBlocked ? 'Unblock' : 'Block'} album ${song.albumTitle}"
                           @click="${() => this._onToggleAlbum(song.albumTitle, albumBlocked)}"
-                        >
-                          <md-icon>${albumBlocked ? 'check_circle' : 'block'}</md-icon>
-                          <span>${albumBlocked ? 'Unblock' : 'Album'}</span>
-                        </button>
+                        ></ui-icon-label-button>
                       `
                       : ''}
                   </div>

@@ -10,6 +10,7 @@ import '@material/web/switch/switch.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/icon/icon.js';
 import '../../components/ui-top-bar.ts';
+import '../../components/ui-icon-label-button.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { settings, updateSettings } from '../settings/store.ts';
 import {
@@ -80,27 +81,6 @@ export class LibraryView extends SignalWatcher(LitElement) {
       color: var(--md-sys-color-on-surface-variant);
     }
 
-    .bar-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 4px 6px;
-      border-radius: 8px;
-      color: var(--md-sys-color-on-surface-variant);
-      font-family: inherit;
-      font-size: 0.625rem;
-      letter-spacing: 0.02em;
-      min-width: 44px;
-    }
-
-    .bar-btn:hover {
-      background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
-    }
-
     .liked-row {
       display: flex;
       align-items: center;
@@ -154,21 +134,20 @@ export class LibraryView extends SignalWatcher(LitElement) {
       <ui-top-bar heading="Library">
         ${this._tab === 'blocked'
           ? html`
-            <button class="bar-btn" aria-label="Block from playlist" @click="${this
-              ._onPlaylistImportClick}">
-              <md-icon>playlist_remove</md-icon>
-              <span>From playlist</span>
-            </button>
+            <ui-icon-label-button
+              icon="playlist_remove"
+              label="From playlist"
+              aria-label="Block from playlist"
+              @click="${this._onPlaylistImportClick}"
+            ></ui-icon-label-button>
           `
           : html`
-            <button
-              class="bar-btn"
+            <ui-icon-label-button
+              icon="add"
+              label="Add"
               aria-label="Add ${this._tab === 'artists' ? 'artist' : 'album'}"
               @click="${this._onAddClick}"
-            >
-              <md-icon>add</md-icon>
-              <span>Add</span>
-            </button>
+            ></ui-icon-label-button>
           `}
       </ui-top-bar>
 
