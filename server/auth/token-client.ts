@@ -14,6 +14,7 @@ async function postToken(body: URLSearchParams): Promise<ValidatedTokenResponse>
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body,
+    signal: AbortSignal.timeout(10_000),
   });
 
   const payload = await response.json().catch(() => ({}));
@@ -42,6 +43,15 @@ export function exchangeCode(
       code,
       redirect_uri: redirectUri,
       code_verifier: verifier,
+    }),
+  );
+}
+
+export function refreshToken(refreshToken: string): Promise<ValidatedTokenResponse> {
+  return postToken(
+    new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
     }),
   );
 }

@@ -1,6 +1,7 @@
 import type { Request } from '@oak/oak';
 import {
   AUTH_URL,
+  IS_DEV,
   OAUTH_FLOW_SIGNING_SECRET,
   OAUTH_FLOW_TTL_SECONDS,
   OAUTH_SCOPES,
@@ -22,22 +23,26 @@ export function redirectUri(request: Request): string {
   if (REDIRECT_URI_OVERRIDE) {
     return REDIRECT_URI_OVERRIDE;
   }
+  if (!IS_DEV) {
+    throw new Error('TIDAL_REDIRECT_URI is required outside development.');
+  }
   return `${new URL(request.url).origin}/callback`;
 }
 
-export function oauthCookieOptions(request: Request) {
+export function oauthCookieOptions(_request: Request) {
   return {
     httpOnly: true,
     sameSite: 'lax' as const,
-    secure: new URL(request.url).protocol === 'https:',
+    secure: !IS_DEV,
     path: '/',
   };
 }
 
 let flowSigningKey: CryptoKey | null = null;
+let flowSigningKeySecret = '';
 
 async function getFlowSigningKey(): Promise<CryptoKey> {
-  if (flowSigningKey) {
+  if (flowSigningKey && flowSigningKeySecret === OAUTH_FLOW_SIGNING_SECRET) {
     return flowSigningKey;
   }
   flowSigningKey = await crypto.subtle.importKey(
@@ -47,6 +52,7 @@ async function getFlowSigningKey(): Promise<CryptoKey> {
     false,
     ['sign', 'verify'],
   );
+  flowSigningKeySecret = OAUTH_FLOW_SIGNING_SECRET;
   return flowSigningKey;
 }
 

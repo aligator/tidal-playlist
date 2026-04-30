@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <rect x="24" y="24" width="208" height="208" rx="48" fill="#0B1220" />
+
+  <!-- Playlist lines -->
+  <rect x="64" y="76" width="128" height="20" rx="10" fill="#334155" />
+  <rect x="64" y="112" width="96" height="20" rx="10" fill="#334155" />
+  <rect x="64" y="148" width="112" height="20" rx="10" fill="#334155" />
+
+  <!-- Red heart -->
+  <path
+    d="M152 118c0-14 18-20 28-8 10-12 28-6 28 8
+           0 18-28 34-28 34s-28-16-28-34z"
+    fill="#EF4444"
+  />
+</svg>
