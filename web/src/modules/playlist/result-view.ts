@@ -5,8 +5,8 @@ import '@material/web/list/list.js';
 import '@material/web/list/list-item.js';
 import '@material/web/button/filled-button.js';
 import '@material/web/button/text-button.js';
-import '@material/web/dialog/dialog.js';
 import '@material/web/progress/linear-progress.js';
+import './playlist-save-dialog.ts';
 import '../../components/ui-top-bar.ts';
 import '../../components/ui-icon-label-button.ts';
 import { listStyles } from '../../styles/list.ts';
@@ -118,7 +118,6 @@ export class ResultView extends SignalWatcher(LitElement) {
 
   override render() {
     const tracks = result.get();
-    const s = settings.get();
     const pct = saveProgress.get();
     const isSaving = pct !== null;
 
@@ -158,21 +157,13 @@ export class ResultView extends SignalWatcher(LitElement) {
               : ''}
           </div>
 
-          <md-dialog ?open="${this._confirmOpen}" @closed="${() => {
-            this._confirmOpen = false;
-          }}">
-            <div slot="headline">Save playlist?</div>
-            <div slot="content">
-              This will replace any existing TIDAL playlist named "<strong>${s
-                .playlistName}</strong>".
-            </div>
-            <div slot="actions">
-              <md-text-button @click="${() => {
-                this._confirmOpen = false;
-              }}">Cancel</md-text-button>
-              <md-filled-button @click="${this._onSaveConfirmed}">Save</md-filled-button>
-            </div>
-          </md-dialog>
+          <playlist-save-dialog
+            ?open="${this._confirmOpen}"
+            @closed="${() => {
+              this._confirmOpen = false;
+            }}"
+            @confirmed="${this._onSaveConfirmed}"
+          ></playlist-save-dialog>
         </div>
       `}
     `;
