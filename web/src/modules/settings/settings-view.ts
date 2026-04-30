@@ -10,6 +10,7 @@ import '@material/web/button/filled-button.js';
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
 import '../../components/ui-top-bar.ts';
+import { listStyles } from '../../styles/list.ts';
 import '../impressum/impressum-modal.ts';
 import { logout } from '../auth/store.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
@@ -54,18 +55,9 @@ const name = 'settings-view';
 /** Full-page settings screen with export/import, account logout, and optional impressum. */
 @customElement(name)
 export class SettingsView extends SignalWatcher(LitElement) {
-  static override styles = css`
+  static override styles = [listStyles, css`
     :host {
       display: block;
-    }
-
-    md-list {
-      padding: 0;
-    }
-
-    md-list-item {
-      --md-list-item-leading-space: 16px;
-      --md-list-item-trailing-space: 8px;
     }
 
     .section-header {
@@ -113,7 +105,7 @@ export class SettingsView extends SignalWatcher(LitElement) {
         display: none;
       }
     }
-  `;
+  `];
 
   // -----------------------------------------------------------------------
   // State

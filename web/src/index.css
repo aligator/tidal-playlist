@@ -50,6 +50,10 @@
   --md-sys-color-surface-container: light-dark(#eceff3, #1d2022);
   --md-sys-color-surface-container-high: light-dark(#e7e8ec, #272a2c);
   --md-sys-color-surface-container-highest: light-dark(#e1e2e6, #323538);
+
+  /* md-list-item spacing defaults used consistently across all views */
+  --md-list-item-leading-space: 16px;
+  --md-list-item-trailing-space: 8px;
 }
 
 @layer base, components, overrides;

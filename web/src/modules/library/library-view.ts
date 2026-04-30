@@ -11,6 +11,7 @@ import '@material/web/iconbutton/icon-button.js';
 import '@material/web/icon/icon.js';
 import '../../components/ui-top-bar.ts';
 import '../../components/ui-icon-label-button.ts';
+import { listStyles } from '../../styles/list.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { settings, updateSettings } from '../settings/store.ts';
 import {
@@ -44,22 +45,13 @@ const name = 'library-view';
 /** Full-page library screen with tabbed lists for artists, albums, and blocked items. */
 @customElement(name)
 export class LibraryView extends SignalWatcher(LitElement) {
-  static override styles = css`
+  static override styles = [listStyles, css`
     :host {
       display: block;
     }
 
     md-tabs {
       width: 100%;
-    }
-
-    md-list {
-      padding: 0;
-    }
-
-    md-list-item {
-      --md-list-item-leading-space: 16px;
-      --md-list-item-trailing-space: 8px;
     }
 
     .empty-state {
@@ -105,7 +97,7 @@ export class LibraryView extends SignalWatcher(LitElement) {
       color: var(--md-sys-color-on-surface-variant);
       margin-top: 2px;
     }
-  `;
+  `];
 
   // -----------------------------------------------------------------------
   // State

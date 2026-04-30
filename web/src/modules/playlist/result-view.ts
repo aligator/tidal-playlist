@@ -3,13 +3,13 @@ import { customElement, state } from 'lit/decorators.js';
 import { SignalWatcher } from '@lit-labs/signals';
 import '@material/web/list/list.js';
 import '@material/web/list/list-item.js';
-import '@material/web/iconbutton/icon-button.js';
-import '@material/web/icon/icon.js';
 import '@material/web/button/filled-button.js';
 import '@material/web/button/text-button.js';
 import '@material/web/dialog/dialog.js';
 import '@material/web/progress/linear-progress.js';
 import '../../components/ui-top-bar.ts';
+import '../../components/ui-icon-label-button.ts';
+import { listStyles } from '../../styles/list.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { popView } from '../../app-shell.ts';
 import { blockAlbum, blockArtist, unblockAlbum, unblockArtist } from '../library/store.ts';
@@ -26,18 +26,9 @@ const name = 'result-view';
 /** Full-page result screen showing built tracks with block and save actions. */
 @customElement(name)
 export class ResultView extends SignalWatcher(LitElement) {
-  static override styles = css`
+  static override styles = [listStyles, css`
     :host {
       display: block;
-    }
-
-    md-list {
-      padding: 0;
-    }
-
-    md-list-item {
-      --md-list-item-leading-space: 16px;
-      --md-list-item-trailing-space: 8px;
     }
 
     .track-count {
@@ -99,12 +90,11 @@ export class ResultView extends SignalWatcher(LitElement) {
       color: var(--md-sys-color-on-surface-variant);
     }
 
-    .block-buttons {
+    .block-btns {
       display: flex;
-      flex-direction: column;
-      gap: 0;
+      gap: 2px;
     }
-  `;
+  `];
 
   // -----------------------------------------------------------------------
   // State
@@ -190,28 +180,23 @@ export class ResultView extends SignalWatcher(LitElement) {
   // -----------------------------------------------------------------------
 
   private _renderTrack(song: SelectedSong) {
-    const headline = song.trackTitle;
-    const supporting = song.artistName;
-
     return html`
       <md-list-item>
-        <span slot="headline">${headline}</span>
-        <span slot="supporting-text">${supporting}</span>
-        <div slot="end" class="block-buttons">
-          <md-icon-button
+        <span slot="headline">${song.trackTitle}</span>
+        <span slot="supporting-text">${song.artistName}</span>
+        <div slot="end" class="block-btns">
+          <ui-icon-label-button
+            icon="person_remove"
+            label="Artist"
             aria-label="Block artist ${song.artistName}"
-            title="Block artist"
             @click="${() => this._onBlockArtist(song)}"
-          >
-            <md-icon>person_off</md-icon>
-          </md-icon-button>
-          <md-icon-button
+          ></ui-icon-label-button>
+          <ui-icon-label-button
+            icon="album"
+            label="Album"
             aria-label="Block album ${song.albumTitle}"
-            title="Block album"
             @click="${() => this._onBlockAlbum(song)}"
-          >
-            <md-icon>album</md-icon>
-          </md-icon-button>
+          ></ui-icon-label-button>
         </div>
       </md-list-item>
     `;

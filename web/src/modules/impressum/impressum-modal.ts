@@ -24,10 +24,6 @@ export class ImpressumModal extends LitElement {
     ui-icon-label-button {
       margin: 4px 8px;
     }
-    md-list-item {
-      --md-list-item-leading-space: 16px;
-      --md-list-item-trailing-space: 8px;
-    }
     .impressum-body p {
       margin: 0.4rem 0;
     }

@@ -17,6 +17,7 @@ import '@material/web/icon/icon.js';
 import '@material/web/dialog/dialog.js';
 import '../../components/ui-top-bar.ts';
 import '../../components/ui-icon-label-button.ts';
+import { listStyles } from '../../styles/list.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { viewStack } from '../../app-shell.ts';
 import { settings, updateSettings } from '../settings/store.ts';
@@ -41,7 +42,7 @@ const name = 'playlist-view';
 /** Full-page playlist builder: config, inline result list, unified sticky action bar. */
 @customElement(name)
 export class PlaylistView extends SignalWatcher(LitElement) {
-  static override styles = css`
+  static override styles = [listStyles, css`
     :host {
       display: flex;
       flex-direction: column;
@@ -144,15 +145,6 @@ export class PlaylistView extends SignalWatcher(LitElement) {
     .result-count {
       font-size: 0.875rem;
       color: var(--md-sys-color-on-surface-variant);
-    }
-
-    md-list {
-      padding: 0;
-    }
-
-    md-list-item {
-      --md-list-item-leading-space: 16px;
-      --md-list-item-trailing-space: 8px;
     }
 
     .block-btns {
@@ -265,7 +257,7 @@ export class PlaylistView extends SignalWatcher(LitElement) {
     .config-body > .config-inner {
       overflow: hidden;
     }
-  `;
+  `];
 
   @state()
   private _descriptionVisible = false;

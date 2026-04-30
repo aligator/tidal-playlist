@@ -9,6 +9,7 @@ import '@material/web/icon/icon.js';
 import '@material/web/progress/circular-progress.js';
 import '../../components/ui-bottom-sheet.ts';
 import '../../components/ui-icon-label-button.ts';
+import { listStyles } from '../../styles/list.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { settings } from '../settings/store.ts';
 import { TidalApi } from '../tidal/api.ts';
@@ -22,7 +23,7 @@ const name = 'playlist-import-sheet';
 /** Bottom sheet: browse TIDAL playlists, then block artists/albums from tracks. */
 @customElement(name)
 export class PlaylistImportSheet extends SignalWatcher(LitElement) {
-  static override styles = css`
+  static override styles = [listStyles, css`
     .sheet-header {
       display: flex;
       align-items: center;
@@ -55,15 +56,6 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
       text-align: center;
     }
 
-    md-list {
-      padding: 0;
-    }
-
-    md-list-item {
-      --md-list-item-leading-space: 16px;
-      --md-list-item-trailing-space: 8px;
-    }
-
     .track-meta {
       font-size: 0.8125rem;
       color: var(--md-sys-color-on-surface-variant);
@@ -73,8 +65,7 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
       display: flex;
       gap: 2px;
     }
-
-  `;
+  `];
 
   @property({ type: Boolean })
   open = false;

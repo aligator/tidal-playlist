@@ -13,8 +13,8 @@
     "build": "deno task build:web",
     "dev": "deno task build:web && DENO_ENV=development deno run --env-file=.env --allow-net --allow-read --allow-env server/main.ts",
     "serve": "deno run --env-file=.env --allow-net --allow-read --allow-env server/main.ts",
-    "test": "deno run -A --node-modules-dir=auto npm:vitest run",
-    "test:watch": "deno run -A --node-modules-dir=auto npm:vitest",
+    "test": "deno run -A --node-modules-dir=auto vitest run",
+    "test:watch": "deno run -A --node-modules-dir=auto vitest",
     "check": "deno check server/main.ts web/src/index.ts",
     "lint": "deno lint server/ web/src/"
   },
@@ -35,6 +35,6 @@
     "@tidal-music/common": "npm:@tidal-music/common@^0.2.0",
     "lit": "npm:lit@^3.3.1",
     "vite": "npm:vite@^7.3.1",
-    "vitest": "npm:vitest@^4.0.18"
+    "vitest": "npm:vitest@^4.1.5"
   }
 }
