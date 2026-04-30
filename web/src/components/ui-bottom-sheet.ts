@@ -83,8 +83,6 @@ export class UiBottomSheet extends LitElement {
 
   private _touchStartY = 0;
   private _touchCurrentY = 0;
-  private _scrolledAtStart = 0;
-  private _swipeFromHandle = false;
   private _sheetEl: HTMLElement | null = null;
 
   override firstUpdated(): void {
@@ -100,11 +98,14 @@ export class UiBottomSheet extends LitElement {
       </div>
       <div
         class="sheet ${this.open ? 'open' : ''}"
-        @touchstart="${this._onTouchStart}"
-        @touchmove="${this._onTouchMove}"
-        @touchend="${this._onTouchEnd}"
       >
-        <div class="drag-handle" aria-hidden="true"></div>
+        <div
+          class="drag-handle"
+          aria-hidden="true"
+          @touchstart="${this._onTouchStart}"
+          @touchmove="${this._onTouchMove}"
+          @touchend="${this._onTouchEnd}"
+        ></div>
         <div class="content">
           <slot></slot>
         </div>
@@ -114,9 +115,7 @@ export class UiBottomSheet extends LitElement {
 
   protected override updated(changed: PropertyValues): void {
     super.updated(changed);
-    // Nothing extra needed — open/closed handled purely by CSS class
     if (changed.has('open') && !this.open && this._sheetEl) {
-      // Reset any inline transform set during swipe
       this._sheetEl.style.transform = '';
       this._sheetEl.style.transition = '';
     }
@@ -131,18 +130,12 @@ export class UiBottomSheet extends LitElement {
   }
 
   // -----------------------------------------------------------------------
-  // Swipe-to-dismiss
+  // Swipe-to-dismiss (handle only)
   // -----------------------------------------------------------------------
 
   private _onTouchStart(e: TouchEvent): void {
     this._touchStartY = e.touches[0].clientY;
     this._touchCurrentY = this._touchStartY;
-    const path = e.composedPath() as EventTarget[];
-    const handle = this.shadowRoot!.querySelector('.drag-handle');
-    this._swipeFromHandle = handle ? path.includes(handle) : false;
-    this._scrolledAtStart = path
-      .filter((node): node is Element => (node as Node).nodeType === Node.ELEMENT_NODE)
-      .reduce((max, el) => Math.max(max, (el as HTMLElement).scrollTop ?? 0), 0);
     if (this._sheetEl) {
       this._sheetEl.style.transition = 'none';
     }
@@ -151,12 +144,6 @@ export class UiBottomSheet extends LitElement {
   private _onTouchMove(e: TouchEvent): void {
     this._touchCurrentY = e.touches[0].clientY;
     const delta = this._touchCurrentY - this._touchStartY;
-    if (this._scrolledAtStart > 0 || (!this._swipeFromHandle && delta > 0)) {
-      if (this._sheetEl) {
-        this._sheetEl.style.transform = '';
-      }
-      return;
-    }
     if (delta > 0 && this._sheetEl) {
       e.preventDefault();
       this._sheetEl.style.transform = `translateY(${delta}px)`;
@@ -168,7 +155,7 @@ export class UiBottomSheet extends LitElement {
     if (this._sheetEl) {
       this._sheetEl.style.transition = '';
     }
-    if (this._swipeFromHandle && delta > 80) {
+    if (delta > 80) {
       this._close();
     } else {
       if (this._sheetEl) {
