@@ -5,6 +5,7 @@ import '@material/web/progress/linear-progress.js';
 import '@material/web/button/filled-button.js';
 import '@material/web/button/text-button.js';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
+import { t } from '../../i18n/index.ts';
 import { settings } from '../settings/store.ts';
 import {
   buildError,
@@ -99,7 +100,7 @@ export class PlaylistActionBar extends SignalWatcher(LitElement) {
             <md-linear-progress .value="${pct / 100}"></md-linear-progress>
             <span class="progress-pct">${pct}%</span>
           </div>
-          <div class="building-label">Building "${playlistName}"…</div>
+          <div class="building-label">${t('playlist.building', { name: playlistName })}</div>
         `
         : isDone
         ? html`
@@ -117,11 +118,11 @@ export class PlaylistActionBar extends SignalWatcher(LitElement) {
             : ''}
           <div class="btn-row">
             <md-filled-button ?disabled="${isSaving}" @click="${this._onSaveClick}">
-              ${isSaving ? 'Saving…' : 'Save to TIDAL'}
+              ${isSaving ? t('playlist.saving') : t('playlist.save')}
             </md-filled-button>
             ${this._saveState === 'error'
               ? html`
-                <md-text-button @click="${this._onSaveClick}">Retry</md-text-button>
+                <md-text-button @click="${this._onSaveClick}">${t('playlist.retry')}</md-text-button>
               `
               : ''}
           </div>
@@ -129,21 +130,19 @@ export class PlaylistActionBar extends SignalWatcher(LitElement) {
         : html`
           <div class="btn-row">
             <md-filled-button ?disabled="${!hasSources}" @click="${this._onBuild}">
-              Build Playlist
+              ${t('playlist.build')}
             </md-filled-button>
           </div>
           ${!hasSources
             ? html`
-              <div class="hint">Add artists or albums to Library first.</div>
+              <div class="hint">${t('playlist.hint.addFirst')}</div>
             `
             : ''} ${status === 'error' && lastError
             ? html`
               <div class="error-text">${lastError}</div>
               ${lastError.toLowerCase().includes('no tracks')
                 ? html`
-                  <div class="hint">
-                    TIDAL may be rate limiting requests — wait a moment, then try again.
-                  </div>
+                  <div class="hint">${t('playlist.hint.rateLimit')}</div>
                 `
                 : ''}
             `
@@ -176,7 +175,7 @@ export class PlaylistActionBar extends SignalWatcher(LitElement) {
     this._saveState = 'idle';
     this._saveError = '';
     savePlaylist(s.playlistName, s.playlistDescription)
-      .then(() => showSnackbar('Playlist saved to TIDAL!', 'success'))
+      .then(() => showSnackbar(t('playlist.saved'), 'success'))
       .catch((err: unknown) => {
         this._saveState = 'error';
         this._saveError = err instanceof Error ? err.message : String(err);

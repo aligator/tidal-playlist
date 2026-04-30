@@ -3,34 +3,11 @@ import { customElement } from 'lit/decorators.js';
 import { SignalWatcher } from '@lit-labs/signals';
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
-import { locale, t } from '../../i18n/index.ts';
+import { LOCALE_LABELS, SUPPORTED_LOCALES, t } from '../../i18n/index.ts';
 import { settings, updateSettings } from './store.ts';
 
-const COUNTRY_CODES = [
-  'AT',
-  'AU',
-  'BE',
-  'CA',
-  'CH',
-  'DE',
-  'DK',
-  'ES',
-  'FI',
-  'FR',
-  'GB',
-  'IE',
-  'IT',
-  'NL',
-  'NO',
-  'NZ',
-  'PL',
-  'PT',
-  'SE',
-  'US',
-];
-
-@customElement('settings-country-select')
-export class SettingsCountrySelect extends SignalWatcher(LitElement) {
+@customElement('settings-language-select')
+export class SettingsLanguageSelect extends SignalWatcher(LitElement) {
   static override styles = css`
     :host {
       display: flex;
@@ -53,16 +30,14 @@ export class SettingsCountrySelect extends SignalWatcher(LitElement) {
 
   override render() {
     const s = settings.get();
-    const loc = locale.get();
-    const countryNames = new Intl.DisplayNames([loc === 'nb' ? 'nb-NO' : loc], { type: 'region' });
     return html`
-      <span class="label">${t('settings.country')}</span>
-      <md-outlined-select .value="${s.countryCode}" @change="${this._onChange}">
-        ${COUNTRY_CODES.map(
-          (code) =>
+      <span class="label">${t('settings.language')}</span>
+      <md-outlined-select .value="${s.locale}" @change="${this._onChange}">
+        ${SUPPORTED_LOCALES.map(
+          (loc) =>
             html`
-              <md-select-option .value="${code}" ?selected="${s.countryCode === code}">
-                <div slot="headline">${code} — ${countryNames.of(code)}</div>
+              <md-select-option .value="${loc}" ?selected="${s.locale === loc}">
+                <div slot="headline">${LOCALE_LABELS[loc]}</div>
               </md-select-option>
             `,
         )}
@@ -74,13 +49,13 @@ export class SettingsCountrySelect extends SignalWatcher(LitElement) {
     const select = event.target as HTMLElement & { value?: string };
     const value = select.value ?? '';
     if (value) {
-      updateSettings({ countryCode: value });
+      updateSettings({ locale: value });
     }
   }
 }
 
 declare global {
   interface HTMLElementTagNameMap {
-    'settings-country-select': SettingsCountrySelect;
+    'settings-language-select': SettingsLanguageSelect;
   }
 }

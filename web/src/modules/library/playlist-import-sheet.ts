@@ -11,6 +11,7 @@ import '../../components/ui-bottom-sheet.ts';
 import '../../components/ui-icon-label-button.ts';
 import { listStyles } from '../../styles/list.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
+import { t } from '../../i18n/index.ts';
 import { settings } from '../settings/store.ts';
 import { TidalApi } from '../tidal/api.ts';
 import { blockAlbum, blockArtist, blocked, unblockAlbum, unblockArtist } from './store.ts';
@@ -100,7 +101,7 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
     const blockedState = blocked.get();
     const title = this._phase === 'tracks' && this._selectedPlaylist
       ? this._selectedPlaylist.name
-      : 'Your playlists';
+      : t('library.yourPlaylists');
 
     return html`
       <ui-bottom-sheet .open="${this.open}" @close="${this._onClose}">
@@ -133,7 +134,7 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
   private _renderPlaylists() {
     if (this._playlists.length === 0) {
       return html`
-        <div class="center">No playlists found.</div>
+        <div class="center">${t('library.noPlaylists')}</div>
       `;
     }
     return html`
@@ -154,7 +155,7 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
   private _renderTracks(blockedState: { artists: string[]; albums: string[] }) {
     if (this._tracks.length === 0) {
       return html`
-        <div class="center">No tracks in this playlist.</div>
+        <div class="center">${t('library.noPlaylistTracks')}</div>
       `;
     }
 
@@ -183,10 +184,9 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
                       ? html`
                         <ui-icon-label-button
                           icon="${artistBlocked ? 'person_off' : 'person_remove'}"
-                          label="${artistBlocked ? 'Unblock' : 'Artist'}"
+                          label="${artistBlocked ? t('block.undo') : t('block.artist')}"
                           ?error="${artistBlocked}"
-                          aria-label="${artistBlocked ? 'Unblock' : 'Block'} artist ${song
-                            .artistName}"
+                          aria-label="${artistBlocked ? 'Unblock' : 'Block'} artist ${song.artistName}"
                           @click="${() => this._onToggleArtist(song, artistBlocked)}"
                         ></ui-icon-label-button>
                       `
@@ -194,10 +194,9 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
                       ? html`
                         <ui-icon-label-button
                           icon="${albumBlocked ? 'check_circle' : 'block'}"
-                          label="${albumBlocked ? 'Unblock' : 'Album'}"
+                          label="${albumBlocked ? t('block.undo') : t('block.album')}"
                           ?error="${albumBlocked}"
-                          aria-label="${albumBlocked ? 'Unblock' : 'Block'} album ${song
-                            .albumTitle}"
+                          aria-label="${albumBlocked ? 'Unblock' : 'Block'} album ${song.albumTitle}"
                           @click="${() => this._onToggleAlbum(song, albumBlocked)}"
                         ></ui-icon-label-button>
                       `
@@ -219,7 +218,7 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
       const api = new TidalApi(settings.get());
       this._playlists = await api.userPlaylists();
     } catch {
-      this._error = 'Failed to load playlists.';
+      this._error = t('library.failedPlaylists');
     } finally {
       this._loading = false;
     }
@@ -234,7 +233,7 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
       this._tracks = await api.getPlaylistTracks(playlist.id);
       this._phase = 'tracks';
     } catch {
-      this._error = 'Failed to load tracks.';
+      this._error = t('library.failedTracks');
       this._selectedPlaylist = null;
     } finally {
       this._loading = false;
@@ -256,15 +255,15 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
   private _onToggleArtist(song: SelectedSong, currentlyBlocked: boolean): void {
     if (currentlyBlocked) {
       unblockArtist(song.artistId);
-      showSnackbar(`Unblocked artist "${song.artistName}"`, 'info', {
+      showSnackbar(t('library.unblocked.artist', { name: song.artistName }), 'info', {
         duration: 5000,
-        action: { label: 'Undo', callback: () => blockArtist(song.artistId, { label: song.artistName, subLabel: '' }) },
+        action: { label: t('block.undo'), callback: () => blockArtist(song.artistId, { label: song.artistName, subLabel: '' }) },
       });
     } else {
       blockArtist(song.artistId, { label: song.artistName, subLabel: '' });
-      showSnackbar(`Blocked artist "${song.artistName}"`, 'success', {
+      showSnackbar(t('library.blocked.artist', { name: song.artistName }), 'success', {
         duration: 5000,
-        action: { label: 'Undo', callback: () => unblockArtist(song.artistId) },
+        action: { label: t('block.undo'), callback: () => unblockArtist(song.artistId) },
       });
     }
   }
@@ -272,15 +271,15 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
   private _onToggleAlbum(song: SelectedSong, currentlyBlocked: boolean): void {
     if (currentlyBlocked) {
       unblockAlbum(song.albumId);
-      showSnackbar(`Unblocked album "${song.albumTitle}"`, 'info', {
+      showSnackbar(t('library.unblocked.album', { name: song.albumTitle }), 'info', {
         duration: 5000,
-        action: { label: 'Undo', callback: () => blockAlbum(song.albumId, { label: song.albumTitle, subLabel: song.artistName }) },
+        action: { label: t('block.undo'), callback: () => blockAlbum(song.albumId, { label: song.albumTitle, subLabel: song.artistName }) },
       });
     } else {
       blockAlbum(song.albumId, { label: song.albumTitle, subLabel: song.artistName });
-      showSnackbar(`Blocked album "${song.albumTitle}"`, 'success', {
+      showSnackbar(t('library.blocked.album', { name: song.albumTitle }), 'success', {
         duration: 5000,
-        action: { label: 'Undo', callback: () => unblockAlbum(song.albumId) },
+        action: { label: t('block.undo'), callback: () => unblockAlbum(song.albumId) },
       });
     }
   }

@@ -12,6 +12,7 @@ import '../../components/ui-icon-label-button.ts';
 import { listStyles } from '../../styles/list.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { popView } from '../../app-shell.ts';
+import { t } from '../../i18n/index.ts';
 import { blockAlbum, blockArtist, unblockAlbum, unblockArtist } from '../library/store.ts';
 import { settings } from '../settings/store.ts';
 import { result, savePlaylist, saveProgress } from './store.ts';
@@ -128,11 +129,13 @@ export class ResultView extends SignalWatcher(LitElement) {
     const isSaving = pct !== null;
 
     return html`
-      <ui-top-bar heading="Result" back logo @back="${this._onBack}"></ui-top-bar>
+      <ui-top-bar heading="${t('result.heading')}" back logo @back="${this._onBack}"></ui-top-bar>
 
       ${tracks.length === 0 ? this._renderEmptyState() : html`
         <div class="scrollable">
-          <div class="track-count">${tracks.length} track${tracks.length === 1 ? '' : 's'}</div>
+          <div class="track-count">
+            ${tracks.length} ${tracks.length === 1 ? t('playlist.track') : t('playlist.tracks')}
+          </div>
           <md-list>
             ${tracks.map((song) => this._renderTrack(song))}
           </md-list>
@@ -156,11 +159,11 @@ export class ResultView extends SignalWatcher(LitElement) {
               ?disabled="${isSaving}"
               @click="${this._onSaveClick}"
             >
-              ${isSaving ? 'Saving…' : 'Save to TIDAL'}
+              ${isSaving ? t('playlist.saving') : t('playlist.save')}
             </md-filled-button>
             ${this._saveState === 'error'
               ? html`
-                <md-text-button @click="${this._onSaveClick}">Retry</md-text-button>
+                <md-text-button @click="${this._onSaveClick}">${t('playlist.retry')}</md-text-button>
               `
               : ''}
           </div>
@@ -189,13 +192,13 @@ export class ResultView extends SignalWatcher(LitElement) {
         <div slot="end" class="block-btns">
           <ui-icon-label-button
             icon="person_remove"
-            label="Artist"
+            label="${t('block.artist')}"
             aria-label="Block artist ${song.artistName}"
             @click="${() => this._onBlockArtist(song)}"
           ></ui-icon-label-button>
           <ui-icon-label-button
             icon="album"
-            label="Album"
+            label="${t('block.album')}"
             aria-label="Block album ${song.albumTitle}"
             @click="${() => this._onBlockAlbum(song)}"
           ></ui-icon-label-button>
@@ -211,9 +214,9 @@ export class ResultView extends SignalWatcher(LitElement) {
   private _renderEmptyState() {
     return html`
       <div class="empty-state">
-        <span>No tracks found.</span>
-        <span>Try adding more sources or adjusting settings.</span>
-        <md-text-button @click="${this._onBack}">Go back</md-text-button>
+        <span>${t('result.noTracks')}</span>
+        <span>${t('result.noTracks.hint')}</span>
+        <md-text-button @click="${this._onBack}">${t('result.goBack')}</md-text-button>
       </div>
     `;
   }
@@ -228,10 +231,10 @@ export class ResultView extends SignalWatcher(LitElement) {
 
   private _onBlockArtist(song: SelectedSong): void {
     blockArtist(song.artistId, { label: song.artistName, subLabel: '' });
-    showSnackbar(`Added "${song.artistName}" to Blocked`, 'info', {
+    showSnackbar(t('block.addedToBlocked', { name: song.artistName }), 'info', {
       duration: 5000,
       action: {
-        label: 'Undo',
+        label: t('block.undo'),
         callback: () => unblockArtist(song.artistId),
       },
     });
@@ -239,10 +242,10 @@ export class ResultView extends SignalWatcher(LitElement) {
 
   private _onBlockAlbum(song: SelectedSong): void {
     blockAlbum(song.albumId, { label: song.albumTitle, subLabel: song.artistName });
-    showSnackbar(`Added "${song.albumTitle}" to Blocked`, 'info', {
+    showSnackbar(t('block.addedToBlocked', { name: song.albumTitle }), 'info', {
       duration: 5000,
       action: {
-        label: 'Undo',
+        label: t('block.undo'),
         callback: () => unblockAlbum(song.albumId),
       },
     });
@@ -260,7 +263,7 @@ export class ResultView extends SignalWatcher(LitElement) {
 
     savePlaylist(s.playlistName, s.playlistDescription)
       .then(() => {
-        showSnackbar('Playlist saved to TIDAL!', 'success');
+        showSnackbar(t('playlist.saved'), 'success');
       })
       .catch((err: unknown) => {
         const message = err instanceof Error ? err.message : String(err);

@@ -6,6 +6,7 @@ import '@material/web/progress/circular-progress.js';
 import { pushView } from '../../app-shell.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { appLogo, logoColors } from '../../components/app-logo.ts';
+import { t } from '../../i18n/index.ts';
 import { finishLogin, startLogin } from './api.ts';
 import '../impressum/impressum-modal.ts';
 
@@ -112,7 +113,7 @@ export class LoginPage extends SignalWatcher(LitElement) {
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      showSnackbar(`Could not connect. ${msg}`, 'error');
+      showSnackbar(t('auth.error', { msg }), 'error');
       this._loginState = 'idle';
     }
   }
@@ -124,7 +125,7 @@ export class LoginPage extends SignalWatcher(LitElement) {
       // Browser redirects — no further action needed
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      showSnackbar(`Could not connect. ${msg}`, 'error');
+      showSnackbar(t('auth.error', { msg }), 'error');
       this._loginState = 'idle';
     }
   }
@@ -143,13 +144,13 @@ export class LoginPage extends SignalWatcher(LitElement) {
     return html`
       <div class="container">
         ${appLogo(80)}
-        <h1 class="title">TIDAL Playlist</h1>
-        <p class="subtitle">Build personalised playlists from your library</p>
+        <h1 class="title">${t('auth.title')}</h1>
+        <p class="subtitle">${t('auth.subtitle')}</p>
         <md-filled-button
           ?disabled="${connecting}"
           @click="${this._onConnectClick}"
         >
-          ${connecting ? 'Connecting…' : 'Connect TIDAL'}
+          ${connecting ? t('auth.connecting') : t('auth.connect')}
         </md-filled-button>
       </div>
       <footer class="login-footer">

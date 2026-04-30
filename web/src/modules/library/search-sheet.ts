@@ -1,9 +1,11 @@
 import { html, LitElement } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import { SignalWatcher } from '@lit-labs/signals';
 import '@material/web/list/list.js';
 import '@material/web/list/list-item.js';
 import '../../components/ui-search-sheet.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
+import { t } from '../../i18n/index.ts';
 import { settings } from '../settings/store.ts';
 import { TidalApi } from '../tidal/api.ts';
 import { addAlbum, addArtist } from './store.ts';
@@ -26,7 +28,7 @@ const name = 'library-search-sheet';
 
 /** Bottom sheet that searches TIDAL and adds an artist or album to the library. */
 @customElement(name)
-export class LibrarySearchSheet extends LitElement {
+export class LibrarySearchSheet extends SignalWatcher(LitElement) {
   /** Controls sheet visibility. */
   @property({ type: Boolean })
   open = false;
@@ -46,7 +48,7 @@ export class LibrarySearchSheet extends LitElement {
   // -----------------------------------------------------------------------
 
   override render() {
-    const placeholder = this.type === 'artist' ? 'Search artists…' : 'Search albums…';
+    const placeholder = this.type === 'artist' ? t('search.artists') : t('search.albums');
 
     return html`
       <ui-search-sheet
@@ -141,7 +143,7 @@ export class LibrarySearchSheet extends LitElement {
         }));
       }
     } catch {
-      showSnackbar('Search failed', 'error');
+      showSnackbar(t('search.failed'), 'error');
       this._results = [];
     } finally {
       this._loading = false;

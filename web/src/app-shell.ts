@@ -5,6 +5,7 @@ import { isAuthenticated } from './modules/auth/store.ts';
 import '@material/web/labs/navigationbar/navigation-bar.js';
 import '@material/web/labs/navigationtab/navigation-tab.js';
 import './modules/impressum/impressum-modal.ts';
+import { t, type TranslationKey } from './i18n/index.ts';
 
 // ---------------------------------------------------------------------------
 // Signal-based view router (module-level, exported for other modules to use)
@@ -37,14 +38,14 @@ type MainView = (typeof MAIN_VIEWS)[number];
 
 interface NavTab {
   view: MainView;
-  label: string;
+  labelKey: TranslationKey;
   icon: string;
 }
 
 const NAV_TABS: NavTab[] = [
-  { view: 'playlist', label: 'Playlist', icon: 'queue_music' },
-  { view: 'library', label: 'Library', icon: 'library_music' },
-  { view: 'settings', label: 'Settings', icon: 'settings' },
+  { view: 'playlist', labelKey: 'nav.playlist', icon: 'queue_music' },
+  { view: 'library', labelKey: 'nav.library', icon: 'library_music' },
+  { view: 'settings', labelKey: 'nav.settings', icon: 'settings' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -193,19 +194,21 @@ export class AppShell extends SignalWatcher(LitElement) {
           ? html`
             <nav class="side-nav" role="navigation" aria-label="Main navigation">
               ${NAV_TABS.map(
-                (tab) =>
-                  html`
+                (tab) => {
+                  const label = t(tab.labelKey);
+                  return html`
                     <button
                       class="side-nav-tab"
                       role="tab"
                       aria-selected="${view === tab.view ? 'true' : 'false'}"
-                      aria-label="${tab.label}"
+                      aria-label="${label}"
                       @click="${() => this._onTabClick(tab.view)}"
                     >
                       <span class="nav-icon" aria-hidden="true">${tab.icon}</span>
-                      <span>${tab.label}</span>
+                      <span>${label}</span>
                     </button>
-                  `,
+                  `;
+                },
               )}
               <div style="flex:1"></div>
               <impressum-modal></impressum-modal>
@@ -227,16 +230,18 @@ export class AppShell extends SignalWatcher(LitElement) {
             @navigation-bar-activated="${this._onNavBarActivated}"
           >
             ${NAV_TABS.map(
-              (tab) =>
-                html`
+              (tab) => {
+                const label = t(tab.labelKey);
+                return html`
                   <md-navigation-tab
-                    .label="${tab.label}"
+                    .label="${label}"
                     .active="${view === tab.view}"
                   >
                     <md-icon slot="active-icon">${tab.icon}</md-icon>
                     <md-icon slot="inactive-icon">${tab.icon}</md-icon>
                   </md-navigation-tab>
-                `,
+                `;
+              },
             )}
           </md-navigation-bar>
         `

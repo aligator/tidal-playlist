@@ -1,13 +1,15 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { SignalWatcher } from '@lit-labs/signals';
 import '@material/web/list/list-item.js';
 import '@material/web/icon/icon.js';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
+import { t } from '../../i18n/index.ts';
 import { importSettings, settings } from './store.ts';
 import { TidalApi } from '../tidal/api.ts';
 
 @customElement('settings-import-item')
-export class SettingsImportItem extends LitElement {
+export class SettingsImportItem extends SignalWatcher(LitElement) {
   static override styles = css`
     input[type="file"] {
       display: none;
@@ -20,7 +22,7 @@ export class SettingsImportItem extends LitElement {
   override render() {
     return html`
       <md-list-item type="button" @click="${this._onImportClick}" ?disabled="${this._loading}">
-        <span slot="headline">${this._loading ? 'Importing…' : 'Import config'}</span>
+        <span slot="headline">${this._loading ? t('settings.importing') : t('settings.import')}</span>
         <md-icon slot="end">${this._loading ? 'hourglass_empty' : 'download'}</md-icon>
       </md-list-item>
 
@@ -55,7 +57,7 @@ export class SettingsImportItem extends LitElement {
           }),
         );
       } catch {
-        showSnackbar('Invalid JSON file.', 'error');
+        showSnackbar(t('settings.import.error.json'), 'error');
       }
     };
     reader.readAsText(file);
@@ -67,12 +69,12 @@ export class SettingsImportItem extends LitElement {
       const api = new TidalApi(settings.get());
       const success = await importSettings(pending, api);
       if (success) {
-        showSnackbar('Settings imported.', 'success');
+        showSnackbar(t('settings.import.success'), 'success');
       } else {
-        showSnackbar('Invalid settings file. Import failed.', 'error');
+        showSnackbar(t('settings.import.error.invalid'), 'error');
       }
     } catch {
-      showSnackbar('Import failed. Check your connection and try again.', 'error');
+      showSnackbar(t('settings.import.error.connection'), 'error');
     } finally {
       this._loading = false;
     }

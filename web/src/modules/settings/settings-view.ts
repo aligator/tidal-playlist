@@ -1,5 +1,6 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { SignalWatcher } from '@lit-labs/signals';
 import '@material/web/list/list.js';
 import '@material/web/divider/divider.js';
 import '@material/web/dialog/dialog.js';
@@ -9,15 +10,17 @@ import '../../components/ui-top-bar.ts';
 import { listStyles } from '../../styles/list.ts';
 import '../impressum/impressum-modal.ts';
 import './settings-country-select.ts';
+import './settings-language-select.ts';
 import './settings-export-item.ts';
 import './settings-import-item.ts';
 import type { SettingsImportItem } from './settings-import-item.ts';
 import '../auth/settings-logout-item.ts';
+import { t } from '../../i18n/index.ts';
 
 const name = 'settings-view';
 
 @customElement(name)
-export class SettingsView extends LitElement {
+export class SettingsView extends SignalWatcher(LitElement) {
   static override styles = [
     listStyles,
     css`
@@ -64,20 +67,21 @@ export class SettingsView extends LitElement {
 
   override render() {
     return html`
-      <ui-top-bar heading="Settings" logo></ui-top-bar>
+      <ui-top-bar heading="${t('settings.heading')}" logo></ui-top-bar>
 
       <div class="scrollable">
-        <div class="section-header">Playlist</div>
+        <div class="section-header">${t('settings.section.playlist')}</div>
         <settings-country-select></settings-country-select>
+        <settings-language-select></settings-language-select>
 
         <md-list @import-ready="${this._onImportReady}">
-          <div class="section-header">Config</div>
+          <div class="section-header">${t('settings.section.config')}</div>
           <settings-export-item></settings-export-item>
           <settings-import-item></settings-import-item>
 
           <md-divider></md-divider>
 
-          <div class="section-header">Account</div>
+          <div class="section-header">${t('settings.section.account')}</div>
           <settings-logout-item></settings-logout-item>
 
           <div class="impressum-row">
@@ -88,13 +92,11 @@ export class SettingsView extends LitElement {
       </div>
 
       <md-dialog ?open="${this._importPending !== null}" @closed="${this._onCancel}">
-        <div slot="headline">Replace current settings?</div>
-        <div slot="content">
-          This will overwrite all current settings with the imported file. This cannot be undone.
-        </div>
+        <div slot="headline">${t('settings.dialog.replace.headline')}</div>
+        <div slot="content">${t('settings.dialog.replace.content')}</div>
         <div slot="actions">
-          <md-text-button @click="${this._onCancel}">Cancel</md-text-button>
-          <md-filled-button @click="${this._onConfirm}">Replace</md-filled-button>
+          <md-text-button @click="${this._onCancel}">${t('settings.dialog.cancel')}</md-text-button>
+          <md-filled-button @click="${this._onConfirm}">${t('settings.dialog.replace')}</md-filled-button>
         </div>
       </md-dialog>
     `;

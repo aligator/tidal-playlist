@@ -8,6 +8,14 @@ import {
   SETTINGS_KEY,
   writeJson,
 } from '../tidal/shared.ts';
+import { detectLocale, SUPPORTED_LOCALES, type SupportedLocale } from '../../i18n/index.ts';
+
+function coerceSupportedLocale(value: unknown): SupportedLocale {
+  if (typeof value === 'string' && (SUPPORTED_LOCALES as string[]).includes(value)) {
+    return value as SupportedLocale;
+  }
+  return detectLocale();
+}
 
 const CURRENT_VERSION = 1;
 
@@ -50,6 +58,7 @@ export function loadSettings(): AppSettings {
   const defaults = defaultSettingsState();
 
   return {
+    locale: coerceSupportedLocale(raw.locale),
     countryCode: String(raw.countryCode ?? defaults.countryCode).trim().toUpperCase() || 'DE',
     playlistName: String(raw.playlistName ?? defaults.playlistName),
     playlistDescription: String(raw.playlistDescription ?? defaults.playlistDescription),

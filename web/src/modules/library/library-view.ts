@@ -13,6 +13,7 @@ import '../../components/ui-top-bar.ts';
 import '../../components/ui-icon-label-button.ts';
 import { listStyles } from '../../styles/list.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
+import { t } from '../../i18n/index.ts';
 import { settings, updateSettings } from '../settings/store.ts';
 import {
   addAlbum,
@@ -139,30 +140,30 @@ export class LibraryView extends SignalWatcher(LitElement) {
     const albumBlacklistMeta = s.albumBlacklistMeta;
 
     return html`
-      <ui-top-bar heading="Library" logo>
+      <ui-top-bar heading="${t('library.heading')}" logo>
         ${this._tab === 'blocked'
           ? html`
             <ui-icon-label-button
               icon="playlist_remove"
-              label="From playlist"
-              aria-label="Block from playlist"
+              label="${t('library.fromPlaylist')}"
+              aria-label="${t('library.fromPlaylist')}"
               @click="${this._onPlaylistImportClick}"
             ></ui-icon-label-button>
           `
           : html`
             <ui-icon-label-button
               icon="add"
-              label="Add"
-              aria-label="Add ${this._tab === 'artists' ? 'artist' : 'album'}"
+              label="${t('library.add')}"
+              aria-label="${t('library.add')} ${this._tab === 'artists' ? t('block.artist') : t('block.album')}"
               @click="${this._onAddClick}"
             ></ui-icon-label-button>
           `}
       </ui-top-bar>
 
       <md-tabs @change="${this._onTabChange}">
-        <md-primary-tab ?active="${this._tab === 'artists'}">Artists</md-primary-tab>
-        <md-primary-tab ?active="${this._tab === 'albums'}">Albums</md-primary-tab>
-        <md-primary-tab ?active="${this._tab === 'blocked'}">Blocked</md-primary-tab>
+        <md-primary-tab ?active="${this._tab === 'artists'}">${t('library.tab.artists')}</md-primary-tab>
+        <md-primary-tab ?active="${this._tab === 'albums'}">${t('library.tab.albums')}</md-primary-tab>
+        <md-primary-tab ?active="${this._tab === 'blocked'}">${t('library.tab.blocked')}</md-primary-tab>
       </md-tabs>
 
       <div class="scrollable">
@@ -195,19 +196,19 @@ export class LibraryView extends SignalWatcher(LitElement) {
     return html`
       <div class="liked-row">
         <div class="liked-row-info">
-          <div class="liked-row-title">Liked artists</div>
-          <div class="liked-row-sub">Include your TIDAL liked artists in pool</div>
+          <div class="liked-row-title">${t('library.likedArtists')}</div>
+          <div class="liked-row-sub">${t('library.likedArtists.sub')}</div>
         </div>
         <md-switch
           ?selected="${likedEnabled}"
-          aria-label="Include liked artists"
+          aria-label="${t('library.likedArtists')}"
           @change="${this._onToggleLikedArtists}"
         ></md-switch>
       </div>
       <md-divider></md-divider>
       ${list.length === 0
         ? html`
-          <div class="empty-state">No custom artists added</div>
+          <div class="empty-state">${t('library.noCustomArtists')}</div>
         `
         : html`
           <md-list>
@@ -237,19 +238,19 @@ export class LibraryView extends SignalWatcher(LitElement) {
     return html`
       <div class="liked-row">
         <div class="liked-row-info">
-          <div class="liked-row-title">Liked albums</div>
-          <div class="liked-row-sub">Include your TIDAL liked albums in pool</div>
+          <div class="liked-row-title">${t('library.likedAlbums')}</div>
+          <div class="liked-row-sub">${t('library.likedAlbums.sub')}</div>
         </div>
         <md-switch
           ?selected="${likedEnabled}"
-          aria-label="Include liked albums"
+          aria-label="${t('library.likedAlbums')}"
           @change="${this._onToggleLikedAlbums}"
         ></md-switch>
       </div>
       <md-divider></md-divider>
       ${list.length === 0
         ? html`
-          <div class="empty-state">No custom albums added</div>
+          <div class="empty-state">${t('library.noCustomAlbums')}</div>
         `
         : html`
           <md-list>
@@ -284,14 +285,14 @@ export class LibraryView extends SignalWatcher(LitElement) {
 
     if (!hasAny) {
       return html`
-        <div class="empty-state">No blocked items</div>
+        <div class="empty-state">${t('library.noBlocked')}</div>
       `;
     }
 
     return html`
       ${blockedSets.artists.length > 0
         ? html`
-          <div class="section-header">Blocked Artists</div>
+          <div class="section-header">${t('library.section.blockedArtists')}</div>
           <md-list>
             ${blockedSets.artists.map(
               (id) => {
@@ -314,7 +315,7 @@ export class LibraryView extends SignalWatcher(LitElement) {
         `
         : ''} ${blockedSets.albums.length > 0
         ? html`
-          <div class="section-header">Blocked Albums</div>
+          <div class="section-header">${t('library.section.blockedAlbums')}</div>
           <md-list>
             ${blockedSets.albums.map(
               (id) => {
@@ -382,8 +383,8 @@ export class LibraryView extends SignalWatcher(LitElement) {
   private _onAdded(event: Event): void {
     const e = event as CustomEvent<{ name: string }>;
     const itemName = e.detail?.name ?? '';
-    const kind = this._tab === 'albums' ? 'album' : 'artist';
-    showSnackbar(`Added ${kind}: ${itemName}`, 'success');
+    const kind = this._tab === 'albums' ? t('block.album') : t('block.artist');
+    showSnackbar(t('library.added', { kind, name: itemName }), 'success');
     this._searchOpen = false;
   }
 
@@ -392,10 +393,10 @@ export class LibraryView extends SignalWatcher(LitElement) {
     const label = s.artistPoolMeta[id]?.label ?? id;
     const meta = s.artistPoolMeta[id];
     removeArtist(id);
-    showSnackbar(`Removed "${label}"`, 'info', {
+    showSnackbar(t('library.removed', { name: label }), 'info', {
       duration: 5000,
       action: {
-        label: 'Undo',
+        label: t('block.undo'),
         callback: () => addArtist(id, meta),
       },
     });
@@ -406,10 +407,10 @@ export class LibraryView extends SignalWatcher(LitElement) {
     const label = s.albumPoolMeta[id]?.label ?? id;
     const meta = s.albumPoolMeta[id];
     removeAlbum(id);
-    showSnackbar(`Removed "${label}"`, 'info', {
+    showSnackbar(t('library.removed', { name: label }), 'info', {
       duration: 5000,
       action: {
-        label: 'Undo',
+        label: t('block.undo'),
         callback: () => addAlbum(id, meta),
       },
     });
@@ -420,10 +421,10 @@ export class LibraryView extends SignalWatcher(LitElement) {
     const label = s.artistBlacklistMeta[id]?.label ?? id;
     const meta = s.artistBlacklistMeta[id];
     unblockArtist(id);
-    showSnackbar(`Unblocked artist "${label}"`, 'info', {
+    showSnackbar(t('library.unblocked.artist', { name: label }), 'info', {
       duration: 5000,
       action: {
-        label: 'Undo',
+        label: t('block.undo'),
         callback: () => blockArtist(id, meta),
       },
     });
@@ -434,10 +435,10 @@ export class LibraryView extends SignalWatcher(LitElement) {
     const label = s.albumBlacklistMeta[id]?.label ?? id;
     const meta = s.albumBlacklistMeta[id];
     unblockAlbum(id);
-    showSnackbar(`Unblocked album "${label}"`, 'info', {
+    showSnackbar(t('library.unblocked.album', { name: label }), 'info', {
       duration: 5000,
       action: {
-        label: 'Undo',
+        label: t('block.undo'),
         callback: () => blockAlbum(id, meta),
       },
     });

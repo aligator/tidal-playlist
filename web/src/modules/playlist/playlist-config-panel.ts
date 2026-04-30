@@ -9,6 +9,7 @@ import '@material/web/button/text-button.js';
 import '@material/web/list/list-item.js';
 import '@material/web/icon/icon.js';
 import { listStyles } from '../../styles/list.ts';
+import { t } from '../../i18n/index.ts';
 import { viewStack } from '../../app-shell.ts';
 import { settings, updateSettings } from '../settings/store.ts';
 
@@ -91,10 +92,10 @@ export class PlaylistConfigPanel extends SignalWatcher(LitElement) {
     return html`
       <!-- Pool -->
       <div class="section">
-        <div class="section-label">Pool</div>
+        <div class="section-label">${t('playlist.config.pool')}</div>
         <div class="pool-card">
           <md-list-item type="button" @click="${this._onManageLibrary}">
-            <span slot="headline">Manage Library</span>
+            <span slot="headline">${t('playlist.config.manageLibrary')}</span>
             <md-icon slot="end">arrow_forward</md-icon>
           </md-list-item>
         </div>
@@ -102,9 +103,9 @@ export class PlaylistConfigPanel extends SignalWatcher(LitElement) {
 
       <!-- Settings -->
       <div class="section">
-        <div class="section-label">Settings</div>
+        <div class="section-label">${t('playlist.config.settings')}</div>
         <div class="field-row">
-          <span class="field-label">Tracks</span>
+          <span class="field-label">${t('playlist.config.tracks')}</span>
           <md-outlined-select .value="${String(s.count)}" @change="${this._onCountChange}">
             ${TRACK_COUNT_OPTIONS.map(
               (n) =>
@@ -117,7 +118,7 @@ export class PlaylistConfigPanel extends SignalWatcher(LitElement) {
           </md-outlined-select>
         </div>
         <div class="switch-row">
-          <span class="switch-label">Shuffle</span>
+          <span class="switch-label">${t('playlist.config.shuffle')}</span>
           <md-switch ?selected="${s.shufflePlaylist}" @change="${this
             ._onShuffleChange}"></md-switch>
         </div>
@@ -125,16 +126,16 @@ export class PlaylistConfigPanel extends SignalWatcher(LitElement) {
 
       <!-- Playlist name / description -->
       <div class="section">
-        <div class="section-label">Playlist</div>
+        <div class="section-label">${t('playlist.config.playlist')}</div>
         <md-filled-text-field
-          label="Playlist name"
+          label="${t('playlist.config.name')}"
           .value="${s.playlistName}"
           @input="${this._onNameInput}"
         ></md-filled-text-field>
         ${this._descriptionVisible
           ? html`
             <md-filled-text-field
-              label="Description"
+              label="${t('playlist.config.description')}"
               type="textarea"
               rows="3"
               .value="${s.playlistDescription}"
@@ -144,7 +145,7 @@ export class PlaylistConfigPanel extends SignalWatcher(LitElement) {
           : html`
             <md-text-button @click="${this._onToggleDescription}">
               <md-icon slot="icon">add</md-icon>
-              Add description
+              ${t('playlist.config.addDescription')}
             </md-text-button>
           `}
       </div>
@@ -158,7 +159,9 @@ export class PlaylistConfigPanel extends SignalWatcher(LitElement) {
   private _onCountChange(event: Event): void {
     const select = event.target as HTMLElement & { value?: string };
     const parsed = Number(select.value ?? '');
-    if (Number.isInteger(parsed) && parsed > 0) updateSettings({ count: parsed });
+    if (Number.isInteger(parsed) && parsed > 0) {
+      updateSettings({ count: parsed });
+    }
   }
 
   private _onShuffleChange(event: Event): void {

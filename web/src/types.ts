@@ -14,6 +14,7 @@ export type PlaylistSettingsFormValues = {
 };
 
 export type AppSettings = PlaylistSettingsFormValues & {
+  locale: string;
   includeLikedArtistsPool: boolean;
   includeLikedAlbumsPool: boolean;
   poolArtists: string[];
