@@ -7,6 +7,7 @@ export const APP_ENV = (Deno.env.get('DENO_ENV') ?? Deno.env.get('NODE_ENV') ?? 
   .trim()
   .toLowerCase();
 export const IS_DEV = APP_ENV === 'dev' || APP_ENV === 'development';
+export const TRUST_PROXY = Deno.env.get('TRUST_PROXY') === 'true';
 export const WEB_DIST_DIR = 'web/dist';
 export const IMPRESSUM_NAME = Deno.env.get('IMPRESSUM_NAME') ?? '';
 export const IMPRESSUM_ADDRESS = (Deno.env.get('IMPRESSUM_ADDRESS') ?? '').replace(/\\n/g, '\n');

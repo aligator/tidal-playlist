@@ -1,5 +1,5 @@
 import { Application, Router, send } from '@oak/oak';
-import { assertServerConfig, HOST, PORT, WEB_DIST_DIR } from './config.ts';
+import { assertServerConfig, HOST, PORT, TRUST_PROXY, WEB_DIST_DIR } from './config.ts';
 import { createAuthRouter } from './routes/auth.ts';
 
 assertServerConfig();
@@ -22,7 +22,7 @@ router.all('/(.*)', async (ctx) => {
   });
 });
 
-const app = new Application();
+const app = new Application({ proxy: TRUST_PROXY });
 app.use(async (ctx, next) => {
   const start = Date.now();
   await next();
