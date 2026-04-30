@@ -126,7 +126,7 @@ export class LibraryView extends SignalWatcher(LitElement) {
     const blockedSets = blocked.get();
 
     return html`
-      <ui-top-bar heading="Library">
+      <ui-top-bar heading="Library" logo>
         ${this._tab === 'blocked'
           ? html`
             <ui-icon-label-button

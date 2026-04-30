@@ -1,9 +1,23 @@
-import { css, html, LitElement } from 'lit';
+import { css, html, LitElement, svg } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import '@material/web/icon/icon.js';
 import '@material/web/iconbutton/icon-button.js';
 
 const name = 'ui-top-bar';
+
+const appLogo = svg`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="32" height="32">
+    <rect x="24" y="24" width="208" height="208" rx="48" fill="#0B1220" />
+    <rect x="64" y="76" width="128" height="20" rx="10" fill="#334155" />
+    <rect x="64" y="112" width="96" height="20" rx="10" fill="#334155" />
+    <rect x="64" y="148" width="112" height="20" rx="10" fill="#334155" />
+    <path
+      d="M152 118c0-14 18-20 28-8 10-12 28-6 28 8
+             0 18-28 34-28 34s-28-16-28-34z"
+      fill="#EF4444"
+    />
+  </svg>
+`;
 
 /** Sticky 56 px app bar with optional back button and trailing action slot. */
 @customElement(name)
@@ -27,6 +41,13 @@ export class UiTopBar extends LitElement {
       height: 56px;
       padding: 0 8px;
       gap: 4px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      padding: 0 4px;
     }
 
     .heading {
@@ -56,6 +77,10 @@ export class UiTopBar extends LitElement {
   @property({ type: Boolean })
   back = false;
 
+  /** When true, shows the app logo before the heading. */
+  @property({ type: Boolean })
+  logo = false;
+
   override render() {
     return html`
       <div class="bar">
@@ -66,6 +91,7 @@ export class UiTopBar extends LitElement {
             </md-icon-button>
           `
           : ''}
+        ${this.logo ? html`<div class="logo">${appLogo}</div>` : ''}
         <span class="heading">${this.heading}</span>
         <div class="trailing">
           <slot></slot>

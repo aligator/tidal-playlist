@@ -117,7 +117,7 @@ export class PlaylistView extends SignalWatcher(LitElement) {
     const tracks = result.get();
 
     return html`
-      <ui-top-bar heading="Tidal Playlist"></ui-top-bar>
+      <ui-top-bar heading="Tidal Playlist" logo></ui-top-bar>
 
       <div class="scrollable">
         <button class="config-toggle" @click="${this._onToggleConfig}">
@@ -138,7 +138,7 @@ export class PlaylistView extends SignalWatcher(LitElement) {
                 <span>${tracks.length} track${tracks.length === 1 ? '' : 's'}</span>
                 <md-icon class="${this._tracksOpen ? '' : 'rotated'}">expand_less</md-icon>
               </button>
-              <md-text-button @click="${resetBuild}">
+              <md-text-button @click="${this._onNew}">
                 <md-icon slot="icon">refresh</md-icon>
                 New
               </md-text-button>
@@ -181,12 +181,19 @@ export class PlaylistView extends SignalWatcher(LitElement) {
     `;
   }
 
+  private _onNew(): void {
+    resetBuild();
+    this._configOpen = true;
+  }
+
   private _onToggleConfig(): void {
-    this._configOpen = !this._configOpen;
+    this._configOpen = true;
+    this._tracksOpen = false;
   }
 
   private _onToggleTracks(): void {
-    this._tracksOpen = !this._tracksOpen;
+    this._tracksOpen = true;
+    this._configOpen = false;
   }
 
   private _onBlockArtist(song: SelectedSong): void {

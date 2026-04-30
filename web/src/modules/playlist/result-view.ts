@@ -122,7 +122,7 @@ export class ResultView extends SignalWatcher(LitElement) {
     const isSaving = pct !== null;
 
     return html`
-      <ui-top-bar heading="Result" back @back="${this._onBack}"></ui-top-bar>
+      <ui-top-bar heading="Result" back logo @back="${this._onBack}"></ui-top-bar>
 
       ${tracks.length === 0 ? this._renderEmptyState() : html`
         <div class="track-count">${tracks.length} track${tracks.length === 1 ? '' : 's'}</div>

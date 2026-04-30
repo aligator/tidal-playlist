@@ -48,7 +48,7 @@ export class SettingsView extends LitElement {
 
   override render() {
     return html`
-      <ui-top-bar heading="Settings"></ui-top-bar>
+      <ui-top-bar heading="Settings" logo></ui-top-bar>
 
       <div class="section-header">Playlist</div>
       <settings-country-select></settings-country-select>
