@@ -5,6 +5,7 @@ import '@material/web/button/filled-button.js';
 import '@material/web/progress/circular-progress.js';
 import { pushView } from '../../app-shell.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
+import { appLogo, logoColors } from '../../components/app-logo.ts';
 import { finishLogin, startLogin } from './api.ts';
 import '../impressum/impressum-modal.ts';
 
@@ -31,6 +32,7 @@ export class LoginPage extends SignalWatcher(LitElement) {
       min-height: 100dvh;
       background: var(--md-sys-color-background);
       color: var(--md-sys-color-on-background);
+      ${logoColors}
     }
 
     .container {
@@ -140,6 +142,7 @@ export class LoginPage extends SignalWatcher(LitElement) {
 
     return html`
       <div class="container">
+        ${appLogo(80)}
         <h1 class="title">TIDAL Playlist</h1>
         <p class="subtitle">Build personalised playlists from your library</p>
         <md-filled-button

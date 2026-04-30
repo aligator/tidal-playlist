@@ -3,7 +3,6 @@ import { customElement, state } from 'lit/decorators.js';
 import { SignalWatcher } from '@lit-labs/signals';
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
-import '@material/web/slider/slider.js';
 import '@material/web/switch/switch.js';
 import '@material/web/textfield/filled-text-field.js';
 import '@material/web/button/text-button.js';
@@ -65,22 +64,6 @@ export class PlaylistConfigPanel extends SignalWatcher(LitElement) {
         flex: 1;
       }
 
-      .slider-section {
-        padding: 8px 0;
-      }
-
-      .slider-labels {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.75rem;
-        color: var(--md-sys-color-on-surface-variant);
-        margin-bottom: 4px;
-      }
-
-      md-slider {
-        width: 100%;
-      }
-
       .switch-row {
         display: flex;
         align-items: center;
@@ -133,18 +116,6 @@ export class PlaylistConfigPanel extends SignalWatcher(LitElement) {
             )}
           </md-outlined-select>
         </div>
-        <div class="slider-section">
-          <div class="slider-labels">
-            <span>More artists</span>
-            <span>More albums</span>
-          </div>
-          <md-slider
-            min="0"
-            max="100"
-            .value="${Math.round(s.albumPoolWeight * 100)}"
-            @change="${this._onSliderChange}"
-          ></md-slider>
-        </div>
         <div class="switch-row">
           <span class="switch-label">Shuffle</span>
           <md-switch ?selected="${s.shufflePlaylist}" @change="${this
@@ -188,11 +159,6 @@ export class PlaylistConfigPanel extends SignalWatcher(LitElement) {
     const select = event.target as HTMLElement & { value?: string };
     const parsed = Number(select.value ?? '');
     if (Number.isInteger(parsed) && parsed > 0) updateSettings({ count: parsed });
-  }
-
-  private _onSliderChange(event: Event): void {
-    const slider = event.target as HTMLElement & { value?: number };
-    updateSettings({ albumPoolWeight: (slider.value ?? 0) / 100 });
   }
 
   private _onShuffleChange(event: Event): void {

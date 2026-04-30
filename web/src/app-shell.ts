@@ -77,11 +77,8 @@ export class AppShell extends SignalWatcher(LitElement) {
 
     .content {
       flex: 1;
-      overflow-y: auto;
+      overflow: hidden;
       min-height: 0;
-      padding: 16px;
-      /* Reserve space for fixed bottom nav on mobile */
-      padding-bottom: calc(16px + 80px);
     }
 
     /* ------------------------------------------------------------------ */
@@ -89,11 +86,7 @@ export class AppShell extends SignalWatcher(LitElement) {
     /* ------------------------------------------------------------------ */
 
     md-navigation-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
+      flex-shrink: 0;
     }
 
     /* ------------------------------------------------------------------ */
@@ -160,8 +153,7 @@ export class AppShell extends SignalWatcher(LitElement) {
       }
 
       .content {
-        /* Remove bottom padding reserved for mobile nav; add side padding */
-        padding-bottom: 16px;
+        padding: 0;
       }
 
       /* Hide mobile bottom nav on desktop */

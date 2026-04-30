@@ -49,7 +49,16 @@ export class LibraryView extends SignalWatcher(LitElement) {
     listStyles,
     css`
       :host {
-        display: block;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+      }
+
+      .scrollable {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
       }
 
       md-tabs {
@@ -124,6 +133,10 @@ export class LibraryView extends SignalWatcher(LitElement) {
     const artistList = artists.get();
     const albumList = albums.get();
     const blockedSets = blocked.get();
+    const artistPoolMeta = s.artistPoolMeta;
+    const albumPoolMeta = s.albumPoolMeta;
+    const artistBlacklistMeta = s.artistBlacklistMeta;
+    const albumBlacklistMeta = s.albumBlacklistMeta;
 
     return html`
       <ui-top-bar heading="Library" logo>
@@ -152,11 +165,13 @@ export class LibraryView extends SignalWatcher(LitElement) {
         <md-primary-tab ?active="${this._tab === 'blocked'}">Blocked</md-primary-tab>
       </md-tabs>
 
-      ${this._tab === 'artists'
-        ? this._renderArtistsTab(artistList, s.includeLikedArtistsPool)
-        : this._tab === 'albums'
-        ? this._renderAlbumsTab(albumList, s.includeLikedAlbumsPool)
-        : this._renderBlockedTab(blockedSets)}
+      <div class="scrollable">
+        ${this._tab === 'artists'
+          ? this._renderArtistsTab(artistList, artistPoolMeta, s.includeLikedArtistsPool)
+          : this._tab === 'albums'
+          ? this._renderAlbumsTab(albumList, albumPoolMeta, s.includeLikedAlbumsPool)
+          : this._renderBlockedTab(blockedSets, artistBlacklistMeta, albumBlacklistMeta)}
+      </div>
 
       <library-search-sheet
         .open="${this._searchOpen}"
@@ -176,7 +191,7 @@ export class LibraryView extends SignalWatcher(LitElement) {
   // Tab renderers
   // -----------------------------------------------------------------------
 
-  private _renderArtistsTab(list: string[], likedEnabled: boolean) {
+  private _renderArtistsTab(list: string[], meta: Record<string, { label: string }>, likedEnabled: boolean) {
     return html`
       <div class="liked-row">
         <div class="liked-row-info">
@@ -197,26 +212,28 @@ export class LibraryView extends SignalWatcher(LitElement) {
         : html`
           <md-list>
             ${list.map(
-              (name) =>
-                html`
+              (id) => {
+                const label = meta[id]?.label ?? id;
+                return html`
                   <md-list-item>
-                    <span slot="headline">${name}</span>
+                    <span slot="headline">${label}</span>
                     <md-icon-button
                       slot="end"
-                      aria-label="Remove ${name}"
-                      @click="${() => this._onRemoveArtist(name)}"
+                      aria-label="Remove ${label}"
+                      @click="${() => this._onRemoveArtist(id)}"
                     >
                       <md-icon>delete</md-icon>
                     </md-icon-button>
                   </md-list-item>
-                `,
+                `;
+              },
             )}
           </md-list>
         `}
     `;
   }
 
-  private _renderAlbumsTab(list: string[], likedEnabled: boolean) {
+  private _renderAlbumsTab(list: string[], meta: Record<string, { label: string }>, likedEnabled: boolean) {
     return html`
       <div class="liked-row">
         <div class="liked-row-info">
@@ -237,26 +254,32 @@ export class LibraryView extends SignalWatcher(LitElement) {
         : html`
           <md-list>
             ${list.map(
-              (name) =>
-                html`
+              (id) => {
+                const label = meta[id]?.label ?? id;
+                return html`
                   <md-list-item>
-                    <span slot="headline">${name}</span>
+                    <span slot="headline">${label}</span>
                     <md-icon-button
                       slot="end"
-                      aria-label="Remove ${name}"
-                      @click="${() => this._onRemoveAlbum(name)}"
+                      aria-label="Remove ${label}"
+                      @click="${() => this._onRemoveAlbum(id)}"
                     >
                       <md-icon>delete</md-icon>
                     </md-icon-button>
                   </md-list-item>
-                `,
+                `;
+              },
             )}
           </md-list>
         `}
     `;
   }
 
-  private _renderBlockedTab(blockedSets: { artists: string[]; albums: string[] }) {
+  private _renderBlockedTab(
+    blockedSets: { artists: string[]; albums: string[] },
+    artistMeta: Record<string, { label: string }>,
+    albumMeta: Record<string, { label: string }>,
+  ) {
     const hasAny = blockedSets.artists.length > 0 || blockedSets.albums.length > 0;
 
     if (!hasAny) {
@@ -271,19 +294,21 @@ export class LibraryView extends SignalWatcher(LitElement) {
           <div class="section-header">Blocked Artists</div>
           <md-list>
             ${blockedSets.artists.map(
-              (name) =>
-                html`
+              (id) => {
+                const label = artistMeta[id]?.label ?? id;
+                return html`
                   <md-list-item>
-                    ${name}
+                    ${label}
                     <md-icon-button
                       slot="end"
-                      aria-label="Unblock ${name}"
-                      @click="${() => this._onUnblockArtist(name)}"
+                      aria-label="Unblock ${label}"
+                      @click="${() => this._onUnblockArtist(id)}"
                     >
                       <md-icon>block</md-icon>
                     </md-icon-button>
                   </md-list-item>
-                `,
+                `;
+              },
             )}
           </md-list>
         `
@@ -292,19 +317,21 @@ export class LibraryView extends SignalWatcher(LitElement) {
           <div class="section-header">Blocked Albums</div>
           <md-list>
             ${blockedSets.albums.map(
-              (name) =>
-                html`
+              (id) => {
+                const label = albumMeta[id]?.label ?? id;
+                return html`
                   <md-list-item>
-                    ${name}
+                    ${label}
                     <md-icon-button
                       slot="end"
-                      aria-label="Unblock ${name}"
-                      @click="${() => this._onUnblockAlbum(name)}"
+                      aria-label="Unblock ${label}"
+                      @click="${() => this._onUnblockAlbum(id)}"
                     >
                       <md-icon>block</md-icon>
                     </md-icon-button>
                   </md-list-item>
-                `,
+                `;
+              },
             )}
           </md-list>
         `
@@ -360,46 +387,58 @@ export class LibraryView extends SignalWatcher(LitElement) {
     this._searchOpen = false;
   }
 
-  private _onRemoveArtist(artistName: string): void {
-    removeArtist(artistName);
-    showSnackbar(`Removed "${artistName}"`, 'info', {
+  private _onRemoveArtist(id: string): void {
+    const s = settings.get();
+    const label = s.artistPoolMeta[id]?.label ?? id;
+    const meta = s.artistPoolMeta[id];
+    removeArtist(id);
+    showSnackbar(`Removed "${label}"`, 'info', {
       duration: 5000,
       action: {
         label: 'Undo',
-        callback: () => addArtist(artistName),
+        callback: () => addArtist(id, meta),
       },
     });
   }
 
-  private _onRemoveAlbum(albumName: string): void {
-    removeAlbum(albumName);
-    showSnackbar(`Removed "${albumName}"`, 'info', {
+  private _onRemoveAlbum(id: string): void {
+    const s = settings.get();
+    const label = s.albumPoolMeta[id]?.label ?? id;
+    const meta = s.albumPoolMeta[id];
+    removeAlbum(id);
+    showSnackbar(`Removed "${label}"`, 'info', {
       duration: 5000,
       action: {
         label: 'Undo',
-        callback: () => addAlbum(albumName),
+        callback: () => addAlbum(id, meta),
       },
     });
   }
 
-  private _onUnblockArtist(artistName: string): void {
-    unblockArtist(artistName);
-    showSnackbar(`Unblocked artist "${artistName}"`, 'info', {
+  private _onUnblockArtist(id: string): void {
+    const s = settings.get();
+    const label = s.artistBlacklistMeta[id]?.label ?? id;
+    const meta = s.artistBlacklistMeta[id];
+    unblockArtist(id);
+    showSnackbar(`Unblocked artist "${label}"`, 'info', {
       duration: 5000,
       action: {
         label: 'Undo',
-        callback: () => blockArtist(artistName),
+        callback: () => blockArtist(id, meta),
       },
     });
   }
 
-  private _onUnblockAlbum(albumName: string): void {
-    unblockAlbum(albumName);
-    showSnackbar(`Unblocked album "${albumName}"`, 'info', {
+  private _onUnblockAlbum(id: string): void {
+    const s = settings.get();
+    const label = s.albumBlacklistMeta[id]?.label ?? id;
+    const meta = s.albumBlacklistMeta[id];
+    unblockAlbum(id);
+    showSnackbar(`Unblocked album "${label}"`, 'info', {
       duration: 5000,
       action: {
         label: 'Undo',
-        callback: () => blockAlbum(albumName),
+        callback: () => blockAlbum(id, meta),
       },
     });
   }

@@ -2,11 +2,9 @@ import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '@material/web/list/list-item.js';
 import '@material/web/icon/icon.js';
-import '@material/web/dialog/dialog.js';
-import '@material/web/button/filled-button.js';
-import '@material/web/button/text-button.js';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
-import { importSettings } from './store.ts';
+import { importSettings, settings } from './store.ts';
+import { TidalApi } from '../tidal/api.ts';
 
 @customElement('settings-import-item')
 export class SettingsImportItem extends LitElement {
@@ -17,29 +15,16 @@ export class SettingsImportItem extends LitElement {
   `;
 
   @state()
-  private _open = false;
-  @state()
-  private _pending: unknown = null;
+  private _loading = false;
 
   override render() {
     return html`
-      <md-list-item type="button" @click="${this._onImportClick}">
-        <span slot="headline">Import config</span>
-        <md-icon slot="end">download</md-icon>
+      <md-list-item type="button" @click="${this._onImportClick}" ?disabled="${this._loading}">
+        <span slot="headline">${this._loading ? 'Importing…' : 'Import config'}</span>
+        <md-icon slot="end">${this._loading ? 'hourglass_empty' : 'download'}</md-icon>
       </md-list-item>
 
       <input type="file" accept=".json" @change="${this._onFileSelected}" />
-
-      <md-dialog ?open="${this._open}" @closed="${this._onCancel}">
-        <div slot="headline">Replace current settings?</div>
-        <div slot="content">
-          This will overwrite all current settings with the imported file. This cannot be undone.
-        </div>
-        <div slot="actions">
-          <md-text-button @click="${this._onCancel}">Cancel</md-text-button>
-          <md-filled-button @click="${this._onConfirm}">Replace</md-filled-button>
-        </div>
-      </md-dialog>
     `;
   }
 
@@ -54,13 +39,21 @@ export class SettingsImportItem extends LitElement {
   private _onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        this._pending = JSON.parse(reader.result as string);
-        this._open = true;
+        const parsed = JSON.parse(reader.result as string);
+        this.dispatchEvent(
+          new CustomEvent<{ pending: unknown }>('import-ready', {
+            detail: { pending: parsed },
+            bubbles: true,
+            composed: true,
+          }),
+        );
       } catch {
         showSnackbar('Invalid JSON file.', 'error');
       }
@@ -68,19 +61,20 @@ export class SettingsImportItem extends LitElement {
     reader.readAsText(file);
   }
 
-  private _onCancel(): void {
-    this._pending = null;
-    this._open = false;
-  }
-
-  private _onConfirm(): void {
-    const success = importSettings(this._pending);
-    this._pending = null;
-    this._open = false;
-    if (success) {
-      showSnackbar('Settings imported.', 'success');
-    } else {
-      showSnackbar('Invalid settings file. Import failed.', 'error');
+  async runImport(pending: unknown): Promise<void> {
+    this._loading = true;
+    try {
+      const api = new TidalApi(settings.get());
+      const success = await importSettings(pending, api);
+      if (success) {
+        showSnackbar('Settings imported.', 'success');
+      } else {
+        showSnackbar('Invalid settings file. Import failed.', 'error');
+      }
+    } catch {
+      showSnackbar('Import failed. Check your connection and try again.', 'error');
+    } finally {
+      this._loading = false;
     }
   }
 }

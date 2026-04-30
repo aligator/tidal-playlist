@@ -141,18 +141,18 @@ export class PlaylistView extends SignalWatcher(LitElement) {
   }
 
   private _onBlockArtist(song: SelectedSong): void {
-    blockArtist(song.artistName);
+    blockArtist(song.artistId, { label: song.artistName, subLabel: '' });
     showSnackbar(`Added "${song.artistName}" to Blocked`, 'info', {
       duration: 5000,
-      action: { label: 'Undo', callback: () => unblockArtist(song.artistName) },
+      action: { label: 'Undo', callback: () => unblockArtist(song.artistId) },
     });
   }
 
   private _onBlockAlbum(song: SelectedSong): void {
-    blockAlbum(song.albumTitle);
+    blockAlbum(song.albumId, { label: song.albumTitle, subLabel: song.artistName });
     showSnackbar(`Added "${song.albumTitle}" to Blocked`, 'info', {
       duration: 5000,
-      action: { label: 'Undo', callback: () => unblockAlbum(song.albumTitle) },
+      action: { label: 'Undo', callback: () => unblockAlbum(song.albumId) },
     });
   }
 }

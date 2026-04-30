@@ -1,5 +1,5 @@
 import { applyAlbumFilters } from '../tidal/filters.ts';
-import { parseListField, uniqueCaseInsensitive } from '../tidal/list-utils.ts';
+import { uniqueCaseInsensitive } from '../tidal/list-utils.ts';
 import type {
   AlbumPoolEntryResolved,
   AppSettings,
@@ -73,22 +73,20 @@ export class PlaylistBuilder {
       throw new Error('Track count must be at least 1.');
     }
 
-    const poolArtists = parseListField(settings.poolArtists);
-    const poolAlbums = parseListField(settings.poolAlbums);
-    const artistBlacklist = parseListField(settings.blacklist);
-    const albumBlacklist = parseListField(settings.albumBlacklist);
+    const artistBlacklist = settings.blacklistedArtists;
+    const albumBlacklist = settings.blacklistedAlbums;
 
     const likedArtists = settings.includeLikedArtistsPool ? await this.api.favoriteArtistIds() : [];
     const likedAlbums = settings.includeLikedAlbumsPool ? await this.api.favoriteAlbumIds() : [];
 
     const artistPool = uniqueCaseInsensitive([
       ...likedArtists,
-      ...poolArtists,
+      ...settings.poolArtists,
     ]).filter((id) => !artistBlacklist.some((b) => b.toLowerCase() === id.toLowerCase()));
 
     const requestedAlbumInputs = uniqueCaseInsensitive([
       ...likedAlbums,
-      ...poolAlbums,
+      ...settings.poolAlbums,
     ]).filter((idOrTitle) => {
       const value = idOrTitle.toLowerCase();
       return !albumBlacklist.some((blocked) => blocked.toLowerCase() === value);
@@ -132,7 +130,16 @@ export class PlaylistBuilder {
     );
     const pickOne = <T>(items: T[]): T => items[Math.floor(Math.random() * items.length)];
 
+    let consecutiveFailedSlots = 0;
+
     for (let i = 0; i < settings.count; i += 1) {
+      if (consecutiveFailedSlots >= 10) {
+        this.logger(
+          `Stopped early after 10 consecutive failed slots — pool likely exhausted. Collected ${selectedSongs.length} track(s).`,
+        );
+        break;
+      }
+
       let attempts = 0;
       let picked = false;
 
@@ -141,8 +148,11 @@ export class PlaylistBuilder {
         if ((i > 0 || attempts > 1) && this.requestGapMs > 0) {
           await this.sleep(this.requestGapMs);
         }
+        const albumPoolWeight = resolvedAlbums.length /
+          (artistPool.length + resolvedAlbums.length);
+        console.log(`[builder] albumPoolWeight=${albumPoolWeight.toFixed(3)} (artists=${artistPool.length}, albums=${resolvedAlbums.length})`);
         const useAlbumPool = resolvedAlbums.length > 0 &&
-          (artistPool.length === 0 || Math.random() < settings.albumPoolWeight);
+          (artistPool.length === 0 || Math.random() < albumPoolWeight);
 
         const chosenAlbumFromPool = useAlbumPool ? pickOne(resolvedAlbums) : null;
         let chosenAlbumId = '';
@@ -226,9 +236,11 @@ export class PlaylistBuilder {
         this.logger(`${chosenAlbumLabel} -> ${track.title}`);
         onProgress?.(Math.round((selectedSongs.length / settings.count) * 100));
         picked = true;
+        consecutiveFailedSlots = 0;
       }
       if (!picked) {
         this.logger(`Slot ${i + 1}: no unique track found after ${attempts} attempts.`);
+        consecutiveFailedSlots += 1;
       }
     }
 

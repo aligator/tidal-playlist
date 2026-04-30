@@ -40,7 +40,7 @@ export class UiBottomSheet extends LitElement {
       transform: translateY(100%);
       transition: transform 300ms cubic-bezier(0.2, 0, 0, 1);
       overflow: hidden;
-      max-height: 80vh;
+      height: 80vh;
       display: flex;
       flex-direction: column;
     }
@@ -83,6 +83,8 @@ export class UiBottomSheet extends LitElement {
 
   private _touchStartY = 0;
   private _touchCurrentY = 0;
+  private _scrolledAtStart = 0;
+  private _swipeFromHandle = false;
   private _sheetEl: HTMLElement | null = null;
 
   override firstUpdated(): void {
@@ -135,8 +137,13 @@ export class UiBottomSheet extends LitElement {
   private _onTouchStart(e: TouchEvent): void {
     this._touchStartY = e.touches[0].clientY;
     this._touchCurrentY = this._touchStartY;
+    const path = e.composedPath() as EventTarget[];
+    const handle = this.shadowRoot!.querySelector('.drag-handle');
+    this._swipeFromHandle = handle ? path.includes(handle) : false;
+    this._scrolledAtStart = path
+      .filter((node): node is Element => (node as Node).nodeType === Node.ELEMENT_NODE)
+      .reduce((max, el) => Math.max(max, (el as HTMLElement).scrollTop ?? 0), 0);
     if (this._sheetEl) {
-      // Disable CSS transition so the sheet tracks the finger directly
       this._sheetEl.style.transition = 'none';
     }
   }
@@ -144,8 +151,14 @@ export class UiBottomSheet extends LitElement {
   private _onTouchMove(e: TouchEvent): void {
     this._touchCurrentY = e.touches[0].clientY;
     const delta = this._touchCurrentY - this._touchStartY;
+    if (this._scrolledAtStart > 0 || (!this._swipeFromHandle && delta > 0)) {
+      if (this._sheetEl) {
+        this._sheetEl.style.transform = '';
+      }
+      return;
+    }
     if (delta > 0 && this._sheetEl) {
-      // Only allow dragging downward
+      e.preventDefault();
       this._sheetEl.style.transform = `translateY(${delta}px)`;
     }
   }
@@ -153,13 +166,11 @@ export class UiBottomSheet extends LitElement {
   private _onTouchEnd(): void {
     const delta = this._touchCurrentY - this._touchStartY;
     if (this._sheetEl) {
-      // Restore CSS transition before animating back or away
       this._sheetEl.style.transition = '';
     }
-    if (delta > 80) {
+    if (this._swipeFromHandle && delta > 80) {
       this._close();
     } else {
-      // Snap back to fully open
       if (this._sheetEl) {
         this._sheetEl.style.transform = '';
       }

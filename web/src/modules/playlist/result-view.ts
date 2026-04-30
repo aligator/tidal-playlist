@@ -30,7 +30,16 @@ export class ResultView extends SignalWatcher(LitElement) {
     listStyles,
     css`
       :host {
-        display: block;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+      }
+
+      .scrollable {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
       }
 
       .track-count {
@@ -40,8 +49,6 @@ export class ResultView extends SignalWatcher(LitElement) {
       }
 
       .action-row {
-        position: sticky;
-        bottom: 0;
         display: flex;
         flex-direction: column;
         align-items: stretch;
@@ -49,7 +56,6 @@ export class ResultView extends SignalWatcher(LitElement) {
         gap: 8px;
         background: var(--md-sys-color-background);
         border-top: 1px solid var(--md-sys-color-outline-variant);
-        z-index: 1;
       }
 
       .save-progress {
@@ -125,10 +131,12 @@ export class ResultView extends SignalWatcher(LitElement) {
       <ui-top-bar heading="Result" back logo @back="${this._onBack}"></ui-top-bar>
 
       ${tracks.length === 0 ? this._renderEmptyState() : html`
-        <div class="track-count">${tracks.length} track${tracks.length === 1 ? '' : 's'}</div>
-        <md-list>
-          ${tracks.map((song) => this._renderTrack(song))}
-        </md-list>
+        <div class="scrollable">
+          <div class="track-count">${tracks.length} track${tracks.length === 1 ? '' : 's'}</div>
+          <md-list>
+            ${tracks.map((song) => this._renderTrack(song))}
+          </md-list>
+        </div>
 
         <div class="action-row">
           ${isSaving
@@ -219,23 +227,23 @@ export class ResultView extends SignalWatcher(LitElement) {
   }
 
   private _onBlockArtist(song: SelectedSong): void {
-    blockArtist(song.artistName);
+    blockArtist(song.artistId, { label: song.artistName, subLabel: '' });
     showSnackbar(`Added "${song.artistName}" to Blocked`, 'info', {
       duration: 5000,
       action: {
         label: 'Undo',
-        callback: () => unblockArtist(song.artistName),
+        callback: () => unblockArtist(song.artistId),
       },
     });
   }
 
   private _onBlockAlbum(song: SelectedSong): void {
-    blockAlbum(song.albumTitle);
+    blockAlbum(song.albumId, { label: song.albumTitle, subLabel: song.artistName });
     showSnackbar(`Added "${song.albumTitle}" to Blocked`, 'info', {
       duration: 5000,
       action: {
         label: 'Undo',
-        callback: () => unblockAlbum(song.albumTitle),
+        callback: () => unblockAlbum(song.albumId),
       },
     });
   }

@@ -101,9 +101,9 @@ export class LibrarySearchSheet extends LitElement {
 
   private _onItemClick(result: SearchResult): void {
     if (this.type === 'artist') {
-      addArtist(result.name);
+      addArtist(result.id, { label: result.name, subLabel: '' });
     } else {
-      addAlbum(result.name);
+      addAlbum(result.id, { label: result.name, subLabel: result.subName ?? '' });
     }
 
     this.dispatchEvent(

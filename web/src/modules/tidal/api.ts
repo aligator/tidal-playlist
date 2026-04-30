@@ -305,6 +305,80 @@ export class TidalApi {
       .slice(0, limit);
   }
 
+  async artistsByIds(ids: string[]): Promise<ItemMetaMap> {
+    const out: ItemMetaMap = {};
+    for (const id of ids) {
+      try {
+        const artist = await this.artist(id);
+        out[id] = { label: artist.attributes.name, subLabel: '' };
+      } catch {
+        out[id] = { label: id, subLabel: '' };
+      }
+    }
+    return out;
+  }
+
+  async albumsByIds(ids: string[]): Promise<ItemMetaMap> {
+    if (ids.length === 0) {
+      return {};
+    }
+    const out: ItemMetaMap = {};
+    try {
+      const batchResult = await this.client.GET('/albums', {
+        params: {
+          query: {
+            'filter[id]': ids,
+            include: ['artists'],
+            countryCode: this.settings.countryCode,
+          },
+        },
+      });
+      const batchData = batchResult.data as JsonLike | undefined;
+      if (batchData) {
+        const artistNameById = new Map<string, string>();
+        for (const artist of this.byType(this.included(batchData), 'artists')) {
+          const artistId = asString(artist.id);
+          const name = asString(asObject(artist.attributes)?.name);
+          if (artistId) {
+            artistNameById.set(artistId, name);
+          }
+        }
+        const albumArtistIdMap = new Map<string, string>();
+        const batchAlbums = Array.isArray(batchData.data) ? batchData.data as JsonObject[] : [];
+        for (const album of batchAlbums) {
+          const albumId = asString(album.id);
+          const rels = asObject(album.relationships);
+          const artistsRel = asObject(rels?.artists);
+          const relData = Array.isArray(artistsRel?.data) ? artistsRel.data : [];
+          const artistId = asString(asObject(relData[0])?.id);
+          if (albumId && artistId) {
+            albumArtistIdMap.set(albumId, artistId);
+          }
+        }
+        for (const album of batchAlbums) {
+          const albumId = asString(album.id);
+          if (!albumId) {
+            continue;
+          }
+          const title = asString(asObject(album.attributes)?.title, albumId);
+          const artistId = albumArtistIdMap.get(albumId) ?? '';
+          const artistName = artistId ? (artistNameById.get(artistId) ?? '') : '';
+          out[albumId] = { label: title, subLabel: artistName };
+        }
+        for (const id of ids) {
+          if (!out[id]) {
+            out[id] = { label: id, subLabel: '' };
+          }
+        }
+      }
+    } catch {
+      for (const id of ids) {
+        out[id] = { label: id, subLabel: '' };
+      }
+    }
+    return out;
+  }
+
   async searchAlbums(
     query: string,
     limit = 30,

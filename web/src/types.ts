@@ -10,17 +10,16 @@ export type PlaylistSettingsFormValues = {
   playlistName: string;
   playlistDescription: string;
   count: number;
-  albumPoolWeight: number;
   shufflePlaylist: boolean;
 };
 
 export type AppSettings = PlaylistSettingsFormValues & {
   includeLikedArtistsPool: boolean;
   includeLikedAlbumsPool: boolean;
-  poolArtists: string;
-  poolAlbums: string;
-  blacklist: string;
-  albumBlacklist: string;
+  poolArtists: string[];
+  poolAlbums: string[];
+  blacklistedArtists: string[];
+  blacklistedAlbums: string[];
   artistPoolMeta: ItemMetaMap;
   artistBlacklistMeta: ItemMetaMap;
   albumPoolMeta: ItemMetaMap;

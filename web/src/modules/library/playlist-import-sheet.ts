@@ -158,18 +158,14 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
       `;
     }
 
-    const blockedArtists = new Set(blockedState.artists.map((a) => a.toLowerCase()));
-    const blockedAlbums = new Set(blockedState.albums.map((a) => a.toLowerCase()));
+    const blockedArtistIds = new Set(blockedState.artists);
+    const blockedAlbumIds = new Set(blockedState.albums);
 
     return html`
       <md-list>
         ${this._tracks.map((song) => {
-          const artistBlocked = song.artistName
-            ? blockedArtists.has(song.artistName.toLowerCase())
-            : false;
-          const albumBlocked = song.albumTitle
-            ? blockedAlbums.has(song.albumTitle.toLowerCase())
-            : false;
+          const artistBlocked = song.artistId ? blockedArtistIds.has(song.artistId) : false;
+          const albumBlocked = song.albumId ? blockedAlbumIds.has(song.albumId) : false;
           const hasActions = song.artistName || song.albumTitle;
 
           return html`
@@ -191,7 +187,7 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
                           ?error="${artistBlocked}"
                           aria-label="${artistBlocked ? 'Unblock' : 'Block'} artist ${song
                             .artistName}"
-                          @click="${() => this._onToggleArtist(song.artistName, artistBlocked)}"
+                          @click="${() => this._onToggleArtist(song, artistBlocked)}"
                         ></ui-icon-label-button>
                       `
                       : ''} ${song.albumTitle
@@ -202,7 +198,7 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
                           ?error="${albumBlocked}"
                           aria-label="${albumBlocked ? 'Unblock' : 'Block'} album ${song
                             .albumTitle}"
-                          @click="${() => this._onToggleAlbum(song.albumTitle, albumBlocked)}"
+                          @click="${() => this._onToggleAlbum(song, albumBlocked)}"
                         ></ui-icon-label-button>
                       `
                       : ''}
@@ -257,34 +253,34 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
     this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
   }
 
-  private _onToggleArtist(artistName: string, currentlyBlocked: boolean): void {
+  private _onToggleArtist(song: SelectedSong, currentlyBlocked: boolean): void {
     if (currentlyBlocked) {
-      unblockArtist(artistName);
-      showSnackbar(`Unblocked artist "${artistName}"`, 'info', {
+      unblockArtist(song.artistId);
+      showSnackbar(`Unblocked artist "${song.artistName}"`, 'info', {
         duration: 5000,
-        action: { label: 'Undo', callback: () => blockArtist(artistName) },
+        action: { label: 'Undo', callback: () => blockArtist(song.artistId, { label: song.artistName, subLabel: '' }) },
       });
     } else {
-      blockArtist(artistName);
-      showSnackbar(`Blocked artist "${artistName}"`, 'success', {
+      blockArtist(song.artistId, { label: song.artistName, subLabel: '' });
+      showSnackbar(`Blocked artist "${song.artistName}"`, 'success', {
         duration: 5000,
-        action: { label: 'Undo', callback: () => unblockArtist(artistName) },
+        action: { label: 'Undo', callback: () => unblockArtist(song.artistId) },
       });
     }
   }
 
-  private _onToggleAlbum(albumTitle: string, currentlyBlocked: boolean): void {
+  private _onToggleAlbum(song: SelectedSong, currentlyBlocked: boolean): void {
     if (currentlyBlocked) {
-      unblockAlbum(albumTitle);
-      showSnackbar(`Unblocked album "${albumTitle}"`, 'info', {
+      unblockAlbum(song.albumId);
+      showSnackbar(`Unblocked album "${song.albumTitle}"`, 'info', {
         duration: 5000,
-        action: { label: 'Undo', callback: () => blockAlbum(albumTitle) },
+        action: { label: 'Undo', callback: () => blockAlbum(song.albumId, { label: song.albumTitle, subLabel: song.artistName }) },
       });
     } else {
-      blockAlbum(albumTitle);
-      showSnackbar(`Blocked album "${albumTitle}"`, 'success', {
+      blockAlbum(song.albumId, { label: song.albumTitle, subLabel: song.artistName });
+      showSnackbar(`Blocked album "${song.albumTitle}"`, 'success', {
         duration: 5000,
-        action: { label: 'Undo', callback: () => unblockAlbum(albumTitle) },
+        action: { label: 'Undo', callback: () => unblockAlbum(song.albumId) },
       });
     }
   }

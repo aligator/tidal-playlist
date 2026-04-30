@@ -9,14 +9,13 @@ function makeSettings(overrides: Partial<AppSettings> = {}): AppSettings {
     playlistName: 'Test',
     playlistDescription: '',
     count: 3,
-    albumPoolWeight: 0,
     shufflePlaylist: false,
     includeLikedArtistsPool: false,
     includeLikedAlbumsPool: false,
-    poolArtists: 'artist1\nartist2',
-    poolAlbums: '',
-    blacklist: '',
-    albumBlacklist: '',
+    poolArtists: ['artist1', 'artist2'],
+    poolAlbums: [],
+    blacklistedArtists: [],
+    blacklistedAlbums: [],
     artistPoolMeta: {},
     artistBlacklistMeta: {},
     albumPoolMeta: {},
@@ -63,7 +62,7 @@ describe('PlaylistBuilder', () => {
   it('throws when pool is empty', async () => {
     const builder = makeBuilder(makeApi());
     await expect(
-      builder.build(makeSettings({ poolArtists: '', poolAlbums: '' })),
+      builder.build(makeSettings({ poolArtists: [], poolAlbums: [] })),
     ).rejects.toThrow('Pool is empty');
   });
 
@@ -95,7 +94,7 @@ describe('PlaylistBuilder', () => {
     });
     const builder = makeBuilder(api);
     const result = await builder.build(
-      makeSettings({ poolArtists: 'artist1\nartist2', blacklist: 'artist1', count: 2 }),
+      makeSettings({ poolArtists: ['artist1', 'artist2'], blacklistedArtists: ['artist1'], count: 2 }),
     );
     expect(result.selectedSongs.every((s) => s.artistId !== 'artist1')).toBe(true);
   });
