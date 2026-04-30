@@ -23,49 +23,52 @@ const name = 'playlist-import-sheet';
 /** Bottom sheet: browse TIDAL playlists, then block artists/albums from tracks. */
 @customElement(name)
 export class PlaylistImportSheet extends SignalWatcher(LitElement) {
-  static override styles = [listStyles, css`
-    .sheet-header {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 0 8px 8px;
-      border-bottom: 1px solid var(--md-sys-color-outline-variant);
-    }
+  static override styles = [
+    listStyles,
+    css`
+      .sheet-header {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 0 8px 8px;
+        border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      }
 
-    .sheet-header h2 {
-      flex: 1;
-      margin: 0;
-      font-size: 1rem;
-      font-weight: 500;
-      color: var(--md-sys-color-on-surface);
-      padding-left: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+      .sheet-header h2 {
+        flex: 1;
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--md-sys-color-on-surface);
+        padding-left: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
-    .center {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 24px;
-      gap: 12px;
-      color: var(--md-sys-color-on-surface-variant);
-      font-size: 0.9375rem;
-      text-align: center;
-    }
+      .center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 24px;
+        gap: 12px;
+        color: var(--md-sys-color-on-surface-variant);
+        font-size: 0.9375rem;
+        text-align: center;
+      }
 
-    .track-meta {
-      font-size: 0.8125rem;
-      color: var(--md-sys-color-on-surface-variant);
-    }
+      .track-meta {
+        font-size: 0.8125rem;
+        color: var(--md-sys-color-on-surface-variant);
+      }
 
-    .block-btns {
-      display: flex;
-      gap: 2px;
-    }
-  `];
+      .block-btns {
+        display: flex;
+        gap: 2px;
+      }
+    `,
+  ];
 
   @property({ type: Boolean })
   open = false;
@@ -186,7 +189,8 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
                           icon="${artistBlocked ? 'person_off' : 'person_remove'}"
                           label="${artistBlocked ? 'Unblock' : 'Artist'}"
                           ?error="${artistBlocked}"
-                          aria-label="${artistBlocked ? 'Unblock' : 'Block'} artist ${song.artistName}"
+                          aria-label="${artistBlocked ? 'Unblock' : 'Block'} artist ${song
+                            .artistName}"
                           @click="${() => this._onToggleArtist(song.artistName, artistBlocked)}"
                         ></ui-icon-label-button>
                       `
@@ -196,7 +200,8 @@ export class PlaylistImportSheet extends SignalWatcher(LitElement) {
                           icon="${albumBlocked ? 'check_circle' : 'block'}"
                           label="${albumBlocked ? 'Unblock' : 'Album'}"
                           ?error="${albumBlocked}"
-                          aria-label="${albumBlocked ? 'Unblock' : 'Block'} album ${song.albumTitle}"
+                          aria-label="${albumBlocked ? 'Unblock' : 'Block'} album ${song
+                            .albumTitle}"
                           @click="${() => this._onToggleAlbum(song.albumTitle, albumBlocked)}"
                         ></ui-icon-label-button>
                       `

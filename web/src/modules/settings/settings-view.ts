@@ -1,296 +1,74 @@
 import { css, html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import { SignalWatcher } from '@lit-labs/signals';
+import { customElement } from 'lit/decorators.js';
 import '@material/web/list/list.js';
-import '@material/web/list/list-item.js';
 import '@material/web/divider/divider.js';
-import '@material/web/dialog/dialog.js';
-import '@material/web/icon/icon.js';
-import '@material/web/button/filled-button.js';
-import '@material/web/select/outlined-select.js';
-import '@material/web/select/select-option.js';
 import '../../components/ui-top-bar.ts';
 import { listStyles } from '../../styles/list.ts';
 import '../impressum/impressum-modal.ts';
-import { logout } from '../auth/store.ts';
-import { showSnackbar } from '../../components/ui-snackbar.ts';
-import { exportSettings, importSettings, settings, updateSettings } from './store.ts';
-
-const COUNTRY_CODES = [
-  'AT',
-  'AU',
-  'BE',
-  'CA',
-  'CH',
-  'DE',
-  'DK',
-  'ES',
-  'FI',
-  'FR',
-  'GB',
-  'IE',
-  'IT',
-  'NL',
-  'NO',
-  'NZ',
-  'PL',
-  'PT',
-  'SE',
-  'US',
-];
-const countryNames = new Intl.DisplayNames(['en'], { type: 'region' });
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-type DialogMode = 'none' | 'import-confirm';
-
-// ---------------------------------------------------------------------------
-// Element
-// ---------------------------------------------------------------------------
+import './settings-country-select.ts';
+import './settings-export-item.ts';
+import './settings-import-item.ts';
+import '../auth/settings-logout-item.ts';
 
 const name = 'settings-view';
 
-/** Full-page settings screen with export/import, account logout, and optional impressum. */
 @customElement(name)
-export class SettingsView extends SignalWatcher(LitElement) {
-  static override styles = [listStyles, css`
-    :host {
-      display: block;
-    }
-
-    .section-header {
-      padding: 12px 16px 4px;
-      font-size: 0.75rem;
-      font-weight: 500;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--md-sys-color-on-surface-variant);
-    }
-
-    md-divider {
-      margin: 4px 0;
-    }
-
-    .field-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 8px 16px;
-    }
-
-    .field-label {
-      font-size: 0.9375rem;
-      color: var(--md-sys-color-on-surface);
-      min-width: 80px;
-      flex-shrink: 0;
-    }
-
-    md-outlined-select {
-      flex: 1;
-    }
-
-    /* Hidden file input */
-    input[type="file"] {
-      display: none;
-    }
-
-    .impressum-row {
-      display: block;
-    }
-
-    @media (min-width: 768px) {
-      .impressum-row {
-        display: none;
+export class SettingsView extends LitElement {
+  static override styles = [
+    listStyles,
+    css`
+      :host {
+        display: block;
       }
-    }
-  `];
 
-  // -----------------------------------------------------------------------
-  // State
-  // -----------------------------------------------------------------------
+      .section-header {
+        padding: 12px 16px 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--md-sys-color-on-surface-variant);
+      }
 
-  @state()
-  private _dialogMode: DialogMode = 'none';
+      md-divider {
+        margin: 4px 0;
+      }
 
-  @state()
-  private _pendingImportJson: unknown = null;
+      .impressum-row {
+        display: block;
+      }
 
-  // -----------------------------------------------------------------------
-  // Render
-  // -----------------------------------------------------------------------
+      @media (min-width: 768px) {
+        .impressum-row {
+          display: none;
+        }
+      }
+    `,
+  ];
 
   override render() {
-    const s = settings.get();
-
     return html`
       <ui-top-bar heading="Settings"></ui-top-bar>
 
-      <!-- Playlist settings -->
       <div class="section-header">Playlist</div>
-      <div class="field-row">
-        <span class="field-label">Country</span>
-        <md-outlined-select
-          .value="${s.countryCode}"
-          @change="${this._onCountryChange}"
-        >
-          ${COUNTRY_CODES.map(
-            (code) =>
-              html`
-                <md-select-option
-                  .value="${code}"
-                  ?selected="${s.countryCode === code}"
-                >
-                  <div slot="headline">${code} — ${countryNames.of(code)}</div>
-                </md-select-option>
-              `,
-          )}
-        </md-outlined-select>
-      </div>
+      <settings-country-select></settings-country-select>
 
       <md-list>
-        <!-- Export / Import -->
-        <md-list-item
-          type="button"
-          @click="${this._onExport}"
-        >
-          <span slot="headline">Export config</span>
-          <md-icon slot="end">upload</md-icon>
-        </md-list-item>
-
-        <md-list-item
-          type="button"
-          @click="${this._onImportClick}"
-        >
-          <span slot="headline">Import config</span>
-          <md-icon slot="end">download</md-icon>
-        </md-list-item>
+        <div class="section-header">Config</div>
+        <settings-export-item></settings-export-item>
+        <settings-import-item></settings-import-item>
 
         <md-divider></md-divider>
 
-        <!-- Account -->
         <div class="section-header">Account</div>
-        <md-list-item
-          type="button"
-          @click="${this._onLogout}"
-        >
-          <md-icon slot="start">logout</md-icon>
-          <span slot="headline">Logout</span>
-        </md-list-item>
+        <settings-logout-item></settings-logout-item>
 
         <div class="impressum-row">
           <md-divider></md-divider>
           <impressum-modal list-item></impressum-modal>
         </div>
       </md-list>
-
-      <!-- Hidden file input for import -->
-      <input
-        type="file"
-        accept=".json"
-        id="file-input"
-        @change="${this._onFileSelected}"
-      />
-
-      <!-- Import confirmation dialog -->
-      <md-dialog ?open="${this._dialogMode === 'import-confirm'}">
-        <div slot="headline">Replace current settings?</div>
-        <div slot="content">
-          This will overwrite all current settings with the imported file. This cannot be undone.
-        </div>
-        <div slot="actions">
-          <md-text-button @click="${this._onImportCancel}">Cancel</md-text-button>
-          <md-filled-button @click="${this._onImportConfirm}">Replace</md-filled-button>
-        </div>
-      </md-dialog>
     `;
-  }
-
-  // -----------------------------------------------------------------------
-  // Country
-  // -----------------------------------------------------------------------
-
-  private _onCountryChange(event: Event): void {
-    const select = event.target as HTMLElement & { value?: string };
-    const value = select.value ?? '';
-    if (value) {
-      updateSettings({ countryCode: value });
-    }
-  }
-
-  // -----------------------------------------------------------------------
-  // Export
-  // -----------------------------------------------------------------------
-
-  private _onExport(): void {
-    const blob = new Blob([exportSettings()], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'tidal-playlist-settings.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  // -----------------------------------------------------------------------
-  // Import
-  // -----------------------------------------------------------------------
-
-  private _onImportClick(): void {
-    const input = this.shadowRoot?.getElementById('file-input') as HTMLInputElement | null;
-    if (input) {
-      input.value = '';
-      input.click();
-    }
-  }
-
-  private _onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const parsed: unknown = JSON.parse(reader.result as string);
-        this._pendingImportJson = parsed;
-        this._dialogMode = 'import-confirm';
-      } catch {
-        showSnackbar('Invalid JSON file.', 'error');
-      }
-    };
-    reader.readAsText(file);
-  }
-
-  private _onImportCancel(): void {
-    this._pendingImportJson = null;
-    this._dialogMode = 'none';
-  }
-
-  private _onImportConfirm(): void {
-    const success = importSettings(this._pendingImportJson);
-    this._pendingImportJson = null;
-    this._dialogMode = 'none';
-    if (success) {
-      showSnackbar('Settings imported.', 'success');
-    } else {
-      showSnackbar('Invalid settings file. Import failed.', 'error');
-    }
-  }
-
-  // -----------------------------------------------------------------------
-  // Logout
-  // -----------------------------------------------------------------------
-
-  private _onLogout(): void {
-    logout();
-  }
-
-  private _closeDialog(): void {
-    this._dialogMode = 'none';
   }
 }
 

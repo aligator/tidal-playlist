@@ -14,11 +14,16 @@ import '@material/web/icon/icon.js';
  */
 @customElement('ui-icon-label-button')
 export class UiIconLabelButton extends LitElement {
-  @property() icon = '';
-  @property() label = '';
-  @property({ type: Boolean }) error = false;
-  @property({ type: Boolean }) nav = false;
-  @property({ type: Boolean }) selected = false;
+  @property()
+  icon = '';
+  @property()
+  label = '';
+  @property({ type: Boolean })
+  error = false;
+  @property({ type: Boolean })
+  nav = false;
+  @property({ type: Boolean })
+  selected = false;
 
   static override styles = css`
     :host {

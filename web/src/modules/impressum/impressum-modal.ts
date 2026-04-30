@@ -12,13 +12,20 @@ export class ImpressumModal extends LitElement {
   @property({ type: Boolean, attribute: 'list-item' })
   listItem = false;
 
-  @state() private available = false;
-  @state() private open = false;
-  @state() private name = '';
-  @state() private address = '';
-  @state() private email = '';
-  @state() private loading = false;
-  @state() private error = '';
+  @state()
+  private available = false;
+  @state()
+  private open = false;
+  @state()
+  private name = '';
+  @state()
+  private address = '';
+  @state()
+  private email = '';
+  @state()
+  private loading = false;
+  @state()
+  private error = '';
 
   static override styles = css`
     ui-icon-label-button {
@@ -104,13 +111,21 @@ export class ImpressumModal extends LitElement {
         <div slot="headline">Impressum</div>
         <div slot="content">
           ${this.loading
-            ? html`<p>Lädt...</p>`
+            ? html`
+              <p>Lädt...</p>
+            `
             : this.error
-            ? html`<p>${this.error}</p>`
+            ? html`
+              <p>${this.error}</p>
+            `
             : html`
               <div class="impressum-body">
                 <p><strong>${this.name}</strong></p>
-                ${addressLines.map((line) => html`<p>${line}</p>`)}
+                ${addressLines.map((line) =>
+                  html`
+                    <p>${line}</p>
+                  `
+                )}
                 <p><a href="mailto:${this.email}">${this.email}</a></p>
               </div>
             `}

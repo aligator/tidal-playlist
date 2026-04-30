@@ -45,59 +45,62 @@ const name = 'library-view';
 /** Full-page library screen with tabbed lists for artists, albums, and blocked items. */
 @customElement(name)
 export class LibraryView extends SignalWatcher(LitElement) {
-  static override styles = [listStyles, css`
-    :host {
-      display: block;
-    }
+  static override styles = [
+    listStyles,
+    css`
+      :host {
+        display: block;
+      }
 
-    md-tabs {
-      width: 100%;
-    }
+      md-tabs {
+        width: 100%;
+      }
 
-    .empty-state {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 24px;
-      font-size: 0.9375rem;
-      color: var(--md-sys-color-on-surface-variant);
-      text-align: center;
-    }
+      .empty-state {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 24px;
+        font-size: 0.9375rem;
+        color: var(--md-sys-color-on-surface-variant);
+        text-align: center;
+      }
 
-    .section-header {
-      padding: 16px 16px 4px;
-      font-size: 0.75rem;
-      font-weight: 500;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--md-sys-color-on-surface-variant);
-    }
+      .section-header {
+        padding: 16px 16px 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--md-sys-color-on-surface-variant);
+      }
 
-    .liked-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 14px 16px 14px 16px;
-      background: var(--md-sys-color-surface-container-low);
-    }
+      .liked-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 16px 14px 16px;
+        background: var(--md-sys-color-surface-container-low);
+      }
 
-    .liked-row-info {
-      flex: 1;
-      min-width: 0;
-    }
+      .liked-row-info {
+        flex: 1;
+        min-width: 0;
+      }
 
-    .liked-row-title {
-      font-size: 0.9375rem;
-      color: var(--md-sys-color-on-surface);
-    }
+      .liked-row-title {
+        font-size: 0.9375rem;
+        color: var(--md-sys-color-on-surface);
+      }
 
-    .liked-row-sub {
-      font-size: 0.8125rem;
-      color: var(--md-sys-color-on-surface-variant);
-      margin-top: 2px;
-    }
-  `];
+      .liked-row-sub {
+        font-size: 0.8125rem;
+        color: var(--md-sys-color-on-surface-variant);
+        margin-top: 2px;
+      }
+    `,
+  ];
 
   // -----------------------------------------------------------------------
   // State

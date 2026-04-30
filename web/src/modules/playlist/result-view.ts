@@ -26,75 +26,78 @@ const name = 'result-view';
 /** Full-page result screen showing built tracks with block and save actions. */
 @customElement(name)
 export class ResultView extends SignalWatcher(LitElement) {
-  static override styles = [listStyles, css`
-    :host {
-      display: block;
-    }
+  static override styles = [
+    listStyles,
+    css`
+      :host {
+        display: block;
+      }
 
-    .track-count {
-      padding: 12px 16px 4px;
-      font-size: 0.875rem;
-      color: var(--md-sys-color-on-surface-variant);
-    }
+      .track-count {
+        padding: 12px 16px 4px;
+        font-size: 0.875rem;
+        color: var(--md-sys-color-on-surface-variant);
+      }
 
-    .action-row {
-      position: sticky;
-      bottom: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      padding: 16px;
-      gap: 8px;
-      background: var(--md-sys-color-background);
-      border-top: 1px solid var(--md-sys-color-outline-variant);
-      z-index: 1;
-    }
+      .action-row {
+        position: sticky;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 16px;
+        gap: 8px;
+        background: var(--md-sys-color-background);
+        border-top: 1px solid var(--md-sys-color-outline-variant);
+        z-index: 1;
+      }
 
-    .save-progress {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.875rem;
-      color: var(--md-sys-color-on-surface-variant);
-    }
+      .save-progress {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.875rem;
+        color: var(--md-sys-color-on-surface-variant);
+      }
 
-    .save-progress md-linear-progress {
-      flex: 1;
-    }
+      .save-progress md-linear-progress {
+        flex: 1;
+      }
 
-    .save-error {
-      font-size: 0.875rem;
-      color: var(--md-sys-color-error);
-      padding: 0 4px;
-    }
+      .save-error {
+        font-size: 0.875rem;
+        color: var(--md-sys-color-error);
+        padding: 0 4px;
+      }
 
-    .save-btn-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
+      .save-btn-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
 
-    .save-btn-row md-filled-button {
-      flex: 1;
-    }
+      .save-btn-row md-filled-button {
+        flex: 1;
+      }
 
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 24px;
-      gap: 16px;
-      text-align: center;
-      font-size: 0.9375rem;
-      color: var(--md-sys-color-on-surface-variant);
-    }
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 24px;
+        gap: 16px;
+        text-align: center;
+        font-size: 0.9375rem;
+        color: var(--md-sys-color-on-surface-variant);
+      }
 
-    .block-btns {
-      display: flex;
-      gap: 2px;
-    }
-  `];
+      .block-btns {
+        display: flex;
+        gap: 2px;
+      }
+    `,
+  ];
 
   // -----------------------------------------------------------------------
   // State
