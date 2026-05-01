@@ -6,6 +6,8 @@ import '@material/web/list/list-item.js';
 import '@material/web/button/filled-button.js';
 import '@material/web/button/text-button.js';
 import '@material/web/progress/linear-progress.js';
+import '@material/web/iconbutton/icon-button.js';
+import '@material/web/icon/icon.js';
 import './playlist-save-dialog.ts';
 import '../../components/ui-top-bar.ts';
 import '../../components/ui-icon-label-button.ts';
@@ -13,9 +15,9 @@ import { listStyles } from '../../styles/list.ts';
 import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { popView } from '../../app-shell.ts';
 import { t } from '../../i18n/index.ts';
-import { blockAlbum, blockArtist, unblockAlbum, unblockArtist } from '../library/store.ts';
+import { blockAlbum, blockArtist, blocked, unblockAlbum, unblockArtist } from '../library/store.ts';
 import { settings } from '../settings/store.ts';
-import { result, savePlaylist, saveProgress } from './store.ts';
+import { removeFromResult, result, savePlaylist, saveProgress } from './store.ts';
 import type { SelectedSong } from '../../types.ts';
 
 // ---------------------------------------------------------------------------
@@ -185,6 +187,9 @@ export class ResultView extends SignalWatcher(LitElement) {
   // -----------------------------------------------------------------------
 
   private _renderTrack(song: SelectedSong) {
+    const blockedSets = blocked.get();
+    const artistBlocked = blockedSets.artists.includes(song.artistId);
+    const albumBlocked = blockedSets.albums.includes(song.albumId);
     return html`
       <md-list-item>
         <span slot="headline">${song.trackTitle}</span>
@@ -193,15 +198,23 @@ export class ResultView extends SignalWatcher(LitElement) {
           <ui-icon-label-button
             icon="person_remove"
             label="${t('block.artist')}"
+            ?error="${artistBlocked}"
             aria-label="Block artist ${song.artistName}"
             @click="${() => this._onBlockArtist(song)}"
           ></ui-icon-label-button>
           <ui-icon-label-button
             icon="album"
             label="${t('block.album')}"
+            ?error="${albumBlocked}"
             aria-label="Block album ${song.albumTitle}"
             @click="${() => this._onBlockAlbum(song)}"
           ></ui-icon-label-button>
+          <md-icon-button
+            aria-label="Remove ${song.trackTitle}"
+            @click="${() => removeFromResult(song.trackId)}"
+          >
+            <md-icon>delete</md-icon>
+          </md-icon-button>
         </div>
       </md-list-item>
     `;

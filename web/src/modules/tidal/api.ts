@@ -135,8 +135,9 @@ export class TidalApi {
     const userId = await this.getUserId();
     const all: string[] = [];
     let cursor = '';
+    let pages = 0;
 
-    for (;;) {
+    while (pages++ < 500) {
       const makeRequest = type === 'artists'
         ? () =>
           this.client.GET('/userCollections/{id}/relationships/artists', {
@@ -556,55 +557,141 @@ export class TidalApi {
   }
 
   async getPlaylistTracks(playlistId: string): Promise<SelectedSong[]> {
-    const data = await this.call(() =>
-      this.client.GET('/playlists/{id}', {
+    const trackIds: string[] = [];
+    let cursor = '';
+    let pages = 0;
+
+    while (pages++ < 500) {
+      const page = await this.call(() =>
+        this.client.GET('/playlists/{id}/relationships/items', {
+          params: {
+            path: { id: playlistId },
+            query: {
+              'page[cursor]': cursor || undefined,
+              countryCode: this.settings.countryCode,
+            },
+          },
+        })
+      ) as JsonLike;
+
+      const items = Array.isArray(page.data) ? page.data : [];
+      for (const item of items) {
+        const id = asString(asObject(item)?.id);
+        if (id) {
+          trackIds.push(id);
+        }
+      }
+
+      const nextCursor = asString(asObject(asObject(page.links)?.meta)?.nextCursor);
+      if (!nextCursor) {
+        break;
+      }
+      cursor = nextCursor;
+    }
+
+    if (trackIds.length === 0) {
+      return [];
+    }
+
+    const chunkSize = 20;
+    const artistsById = new Map<string, string>();
+    const albumsById = new Map<string, string>();
+    type TrackData = { trackId: string; trackTitle: string; artistId: string; albumId: string };
+    const tracksById = new Map<string, TrackData>();
+
+    for (let i = 0; i < trackIds.length; i += chunkSize) {
+      const chunk = trackIds.slice(i, i + chunkSize);
+      const batchData = await this.call(() =>
+        this.client.GET('/tracks', {
+          params: {
+            query: {
+              'filter[id]': chunk,
+              include: ['artists', 'albums'],
+              countryCode: this.settings.countryCode,
+            },
+          },
+        })
+      ) as JsonLike;
+
+      const inc = this.included(batchData);
+
+      for (const a of this.byType(inc, 'artists')) {
+        const id = asString(a.id);
+        const name = asString(asObject(a.attributes)?.name, id);
+        if (id) {
+          artistsById.set(id, name);
+        }
+      }
+
+      for (const al of this.byType(inc, 'albums')) {
+        const id = asString(al.id);
+        const title = asString(asObject(al.attributes)?.title, id);
+        if (id) {
+          albumsById.set(id, title);
+        }
+      }
+
+      const trackEntries = Array.isArray(batchData.data) ? batchData.data as JsonObject[] : [];
+      for (const track of trackEntries) {
+        const trackId = asString(track.id);
+        if (!trackId) {
+          continue;
+        }
+        const attributes = asObject(track.attributes);
+        const trackTitle = asString(attributes?.title, trackId);
+        const relationships = asObject(track.relationships);
+
+        const artistsRel = asObject(relationships?.artists);
+        const artistData = Array.isArray(artistsRel?.data) ? artistsRel.data : [];
+        const artistId = asString(asObject(artistData[0])?.id, '');
+
+        const albumsRel = asObject(relationships?.albums);
+        const albumData = Array.isArray(albumsRel?.data) ? albumsRel.data : [];
+        const albumId = asString(asObject(albumData[0])?.id, '');
+
+        tracksById.set(trackId, { trackId, trackTitle, artistId, albumId });
+      }
+    }
+
+    return trackIds.flatMap((id) => {
+      const t = tracksById.get(id);
+      if (!t) {
+        return [];
+      }
+      const artistName = t.artistId ? (artistsById.get(t.artistId) ?? t.artistId) : '';
+      const albumTitle = t.albumId ? (albumsById.get(t.albumId) ?? t.albumId) : '';
+      return [{ trackId: t.trackId, trackTitle: t.trackTitle, artistId: t.artistId, artistName, albumId: t.albumId, albumTitle }];
+    });
+  }
+
+  private async _batchArtistNames(ids: string[]): Promise<Record<string, string>> {
+    if (ids.length === 0) {
+      return {};
+    }
+    const out: Record<string, string> = {};
+    try {
+      const result = await this.client.GET('/artists', {
         params: {
-          path: { id: playlistId },
           query: {
-            include: ['items', 'items.artists', 'items.albums'],
+            'filter[id]': ids,
             countryCode: this.settings.countryCode,
           },
         },
-      })
-    ) as JsonLike;
-
-    const inc = this.included(data);
-
-    const artistsById = new Map<string, string>();
-    for (const a of this.byType(inc, 'artists')) {
-      const id = asString(a.id);
-      const name = asString(asObject(a.attributes)?.name, id);
-      if (id) artistsById.set(id, name);
+      });
+      const data = result.data as JsonLike | undefined;
+      if (data) {
+        for (const entry of Array.isArray(data.data) ? data.data as JsonObject[] : []) {
+          const id = asString(entry.id);
+          const name = asString(asObject(entry.attributes)?.name);
+          if (id) {
+            out[id] = name || id;
+          }
+        }
+      }
+    } catch {
+      // best-effort
     }
-
-    const albumsById = new Map<string, string>();
-    for (const al of this.byType(inc, 'albums')) {
-      const id = asString(al.id);
-      const title = asString(asObject(al.attributes)?.title, id);
-      if (id) albumsById.set(id, title);
-    }
-
-    return this.byType(inc, 'tracks').map((track) => {
-      const trackId = asString(track.id);
-      const attributes = asObject(track.attributes);
-      const trackTitle = asString(attributes?.title, trackId);
-
-      const relationships = asObject(track.relationships);
-
-      const artistsRel = asObject(relationships?.artists);
-      const artistData = Array.isArray(artistsRel?.data) ? artistsRel.data : [];
-      const firstArtist = asObject(artistData[0]);
-      const artistId = asString(firstArtist?.id, '');
-      const artistName = artistId ? (artistsById.get(artistId) ?? '') : '';
-
-      const albumsRel = asObject(relationships?.albums);
-      const albumData = Array.isArray(albumsRel?.data) ? albumsRel.data : [];
-      const firstAlbum = asObject(albumData[0]);
-      const albumId = asString(firstAlbum?.id, '');
-      const albumTitle = albumId ? (albumsById.get(albumId) ?? '') : '';
-
-      return { trackId, trackTitle, artistId, artistName, albumId, albumTitle };
-    });
+    return out;
   }
 
   async userPlaylists(): Promise<PlaylistSummary[]> {

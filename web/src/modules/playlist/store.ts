@@ -103,6 +103,11 @@ export async function buildPlaylist(): Promise<void> {
   }
 }
 
+/** Remove a single track from the current result by trackId. */
+export function removeFromResult(trackId: string): void {
+  result.set(result.get().filter((s) => s.trackId !== trackId));
+}
+
 /** Creates or replaces a TIDAL playlist with the current result tracks. Throws on error. */
 export async function savePlaylist(name: string, description: string): Promise<void> {
   const currentSettings = settings.get();
