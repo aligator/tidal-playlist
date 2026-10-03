@@ -8,7 +8,7 @@ import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { t } from '../../i18n/index.ts';
 import { settings } from '../settings/store.ts';
 import { TidalApi } from '../tidal/api.ts';
-import { addAlbum, addArtist } from './store.ts';
+import { addAlbum, addArtist, blockAlbum, blockArtist } from './store.ts';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -26,7 +26,7 @@ type SearchResult = {
 
 const name = 'library-search-sheet';
 
-/** Bottom sheet that searches TIDAL and adds an artist or album to the library. */
+/** Bottom sheet that searches TIDAL and adds an artist or album to the pool or the blocklist. */
 @customElement(name)
 export class LibrarySearchSheet extends SignalWatcher(LitElement) {
   /** Controls sheet visibility. */
@@ -36,6 +36,10 @@ export class LibrarySearchSheet extends SignalWatcher(LitElement) {
   /** Whether to search artists or albums. */
   @property({ type: String })
   type: 'artist' | 'album' = 'artist';
+
+  /** Whether a picked result goes into the pool or into the blocklist. */
+  @property({ type: String })
+  mode: 'pool' | 'blacklist' = 'pool';
 
   @state()
   private _loading = false;
@@ -102,10 +106,20 @@ export class LibrarySearchSheet extends SignalWatcher(LitElement) {
   }
 
   private _onItemClick(result: SearchResult): void {
-    if (this.type === 'artist') {
-      addArtist(result.id, { label: result.name, subLabel: '' });
+    const meta = { label: result.name, subLabel: result.subName ?? '' };
+
+    if (this.mode === 'blacklist') {
+      if (this.type === 'artist') {
+        blockArtist(result.id, meta);
+      } else {
+        blockAlbum(result.id, meta);
+      }
     } else {
-      addAlbum(result.id, { label: result.name, subLabel: result.subName ?? '' });
+      if (this.type === 'artist') {
+        addArtist(result.id, { label: result.name, subLabel: '' });
+      } else {
+        addAlbum(result.id, meta);
+      }
     }
 
     this.dispatchEvent(

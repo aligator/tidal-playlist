@@ -123,6 +123,12 @@ export class LibraryView extends SignalWatcher(LitElement) {
   private _searchOpen = false;
 
   @state()
+  private _searchType: 'artist' | 'album' = 'artist';
+
+  @state()
+  private _searchMode: 'pool' | 'blacklist' = 'pool';
+
+  @state()
   private _playlistImportOpen = false;
 
   // -----------------------------------------------------------------------
@@ -143,6 +149,18 @@ export class LibraryView extends SignalWatcher(LitElement) {
       <ui-top-bar heading="${t('library.heading')}" logo>
         ${this._tab === 'blocked'
           ? html`
+            <ui-icon-label-button
+              icon="person_add"
+              label="${t('block.artist')}"
+              aria-label="${t('library.add')} ${t('block.artist')}"
+              @click="${this._onBlockArtistSearchClick}"
+            ></ui-icon-label-button>
+            <ui-icon-label-button
+              icon="library_add"
+              label="${t('block.album')}"
+              aria-label="${t('library.add')} ${t('block.album')}"
+              @click="${this._onBlockAlbumSearchClick}"
+            ></ui-icon-label-button>
             <ui-icon-label-button
               icon="playlist_remove"
               label="${t('library.fromPlaylist')}"
@@ -176,7 +194,8 @@ export class LibraryView extends SignalWatcher(LitElement) {
 
       <library-search-sheet
         .open="${this._searchOpen}"
-        .type="${this._tab === 'albums' ? 'album' : 'artist'}"
+        .type="${this._searchType}"
+        .mode="${this._searchMode}"
         @close="${this._onSearchClose}"
         @added="${this._onAdded}"
       ></library-search-sheet>
@@ -365,6 +384,20 @@ export class LibraryView extends SignalWatcher(LitElement) {
   }
 
   private _onAddClick(): void {
+    this._searchType = this._tab === 'albums' ? 'album' : 'artist';
+    this._searchMode = 'pool';
+    this._searchOpen = true;
+  }
+
+  private _onBlockArtistSearchClick(): void {
+    this._searchType = 'artist';
+    this._searchMode = 'blacklist';
+    this._searchOpen = true;
+  }
+
+  private _onBlockAlbumSearchClick(): void {
+    this._searchType = 'album';
+    this._searchMode = 'blacklist';
     this._searchOpen = true;
   }
 
@@ -383,8 +416,14 @@ export class LibraryView extends SignalWatcher(LitElement) {
   private _onAdded(event: Event): void {
     const e = event as CustomEvent<{ name: string }>;
     const itemName = e.detail?.name ?? '';
-    const kind = this._tab === 'albums' ? t('block.album') : t('block.artist');
-    showSnackbar(t('library.added', { kind, name: itemName }), 'success');
+
+    if (this._searchMode === 'blacklist') {
+      showSnackbar(t('block.addedToBlocked', { name: itemName }), 'success');
+    } else {
+      const kind = this._searchType === 'album' ? t('block.album') : t('block.artist');
+      showSnackbar(t('library.added', { kind, name: itemName }), 'success');
+    }
+
     this._searchOpen = false;
   }
 
