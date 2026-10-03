@@ -31,6 +31,8 @@ export const en = {
   'playlist.build': 'Build Playlist',
   'playlist.hint.addFirst': 'Add artists or albums to Library first.',
   'playlist.hint.rateLimit': 'TIDAL may be rate limiting requests — wait a moment, then try again.',
+  'playlist.hint.keepOpen':
+    'Deliberately slowed down to stay under TIDAL\'s rate limit. Please wait and keep this page open.',
   'playlist.saved': 'Playlist saved to TIDAL!',
   // Playlist config panel
   'playlist.config.pool': 'Pool',
@@ -49,7 +51,6 @@ export const en = {
   'playlist.save.confirm': 'Save',
   // Playlist view
   'playlist.heading': 'Tidal Playlist',
-  'playlist.buildingPage': 'Building playlist…',
   'playlist.new': 'New',
   'playlist.track': 'track',
   'playlist.tracks': 'tracks',

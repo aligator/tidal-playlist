@@ -33,6 +33,8 @@ export const de: Record<TranslationKey, string> = {
   'playlist.build': 'Playlist erstellen',
   'playlist.hint.addFirst': 'Zuerst Künstler oder Alben zur Bibliothek hinzufügen.',
   'playlist.hint.rateLimit': 'TIDAL drosselt möglicherweise Anfragen — kurz warten und erneut versuchen.',
+  'playlist.hint.keepOpen':
+    'Vorgang wird bewusst verlangsamt, um nicht in das Ratelimit zu laufen. Bitte warten und die Seite geöffnet lassen.',
   'playlist.saved': 'Playlist auf TIDAL gespeichert!',
   // Playlist config panel
   'playlist.config.pool': 'Pool',
@@ -51,7 +53,6 @@ export const de: Record<TranslationKey, string> = {
   'playlist.save.confirm': 'Speichern',
   // Playlist view
   'playlist.heading': 'Tidal Playlist',
-  'playlist.buildingPage': 'Playlist wird erstellt…',
   'playlist.new': 'Neu',
   'playlist.track': 'Titel',
   'playlist.tracks': 'Titel',

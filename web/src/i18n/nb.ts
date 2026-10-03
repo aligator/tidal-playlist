@@ -33,6 +33,8 @@ export const nb: Record<TranslationKey, string> = {
   'playlist.build': 'Bygg spilleliste',
   'playlist.hint.addFirst': 'Legg til artister eller album i biblioteket først.',
   'playlist.hint.rateLimit': 'TIDAL begrenser kanskje forespørsler — vent litt og prøv igjen.',
+  'playlist.hint.keepOpen':
+    'Prosessen går med vilje sakte for å unngå TIDALs ratebegrensning. Vent, og hold denne siden åpen.',
   'playlist.saved': 'Spilleliste lagret til TIDAL!',
   // Playlist config panel
   'playlist.config.pool': 'Pool',
@@ -51,7 +53,6 @@ export const nb: Record<TranslationKey, string> = {
   'playlist.save.confirm': 'Lagre',
   // Playlist view
   'playlist.heading': 'Tidal spilleliste',
-  'playlist.buildingPage': 'Bygger spilleliste…',
   'playlist.new': 'Ny',
   'playlist.track': 'spor',
   'playlist.tracks': 'spor',

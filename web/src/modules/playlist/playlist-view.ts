@@ -13,6 +13,7 @@ import { showSnackbar } from '../../components/ui-snackbar.ts';
 import { t } from '../../i18n/index.ts';
 import { blockAlbum, blockArtist, blocked, unblockAlbum, unblockArtist } from '../library/store.ts';
 import type { SelectedSong } from '../../types.ts';
+import { settings } from '../settings/store.ts';
 import { buildStatus, removeFromResult, resetBuild, result } from './store.ts';
 import './playlist-config-panel.ts';
 import './playlist-action-bar.ts';
@@ -46,6 +47,13 @@ export class PlaylistView extends SignalWatcher(LitElement) {
         gap: 16px;
         color: var(--md-sys-color-on-surface-variant);
         font-size: 0.9375rem;
+      }
+
+      .building-hint {
+        max-width: 32ch;
+        text-align: center;
+        font-size: 0.875rem;
+        margin-top: -8px;
       }
 
       .result-header {
@@ -94,7 +102,8 @@ export class PlaylistView extends SignalWatcher(LitElement) {
     return html`
       <div class="building-page">
         <md-icon style="font-size:48px;color:var(--md-sys-color-primary)">hourglass_top</md-icon>
-        <span>${t('playlist.buildingPage')}</span>
+        <span>${t('playlist.building', { name: settings.get().playlistName })}</span>
+        <span class="building-hint">${t('playlist.hint.keepOpen')}</span>
       </div>
     `;
   }

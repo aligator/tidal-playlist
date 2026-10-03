@@ -5,6 +5,7 @@ import { albums, artists } from '../library/store.ts';
 import { TidalApi } from '../tidal/api.ts';
 import { PlaylistBuilder } from './builder.ts';
 import { handleAuthFailure } from '../auth/store.ts';
+import { withScreenWakeLock } from './wake-lock.ts';
 
 // ---------------------------------------------------------------------------
 // Signals
@@ -85,7 +86,9 @@ export async function buildPlaylist(): Promise<void> {
   });
 
   try {
-    const buildResult = await builder.build(currentSettings, (pct) => buildProgress.set(pct));
+    const buildResult = await withScreenWakeLock(() =>
+      builder.build(currentSettings, (pct) => buildProgress.set(pct))
+    );
     result.set(buildResult.selectedSongs);
     buildProgress.set(null);
     buildStatus.set('done');
@@ -115,7 +118,9 @@ export async function savePlaylist(name: string, description: string): Promise<v
   const trackIds = result.get().map((song) => song.trackId);
   saveProgress.set(0);
   try {
-    await api.replacePlaylist(name, description, trackIds, (pct) => saveProgress.set(pct));
+    await withScreenWakeLock(() =>
+      api.replacePlaylist(name, description, trackIds, (pct) => saveProgress.set(pct))
+    );
     saveProgress.set(null);
   } catch (err: unknown) {
     saveProgress.set(null);

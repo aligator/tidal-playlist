@@ -59,11 +59,6 @@ export class PlaylistActionBar extends SignalWatcher(LitElement) {
       text-align: right;
     }
 
-    .building-label {
-      font-size: 0.875rem;
-      color: var(--md-sys-color-on-surface-variant);
-    }
-
     .hint {
       font-size: 0.875rem;
       color: var(--md-sys-color-on-surface-variant);
@@ -91,7 +86,6 @@ export class PlaylistActionBar extends SignalWatcher(LitElement) {
     const isSaving = savePct !== null;
     const hasSources = hasPoolSources.get();
     const lastError = buildError.get();
-    const { playlistName } = settings.get();
 
     return html`
       ${isBuilding
@@ -100,7 +94,6 @@ export class PlaylistActionBar extends SignalWatcher(LitElement) {
             <md-linear-progress .value="${pct / 100}"></md-linear-progress>
             <span class="progress-pct">${pct}%</span>
           </div>
-          <div class="building-label">${t('playlist.building', { name: playlistName })}</div>
         `
         : isDone
         ? html`
@@ -110,6 +103,7 @@ export class PlaylistActionBar extends SignalWatcher(LitElement) {
                 <md-linear-progress .value="${(savePct ?? 0) / 100}"></md-linear-progress>
                 <span class="progress-pct">${savePct}%</span>
               </div>
+              <div class="hint">${t('playlist.hint.keepOpen')}</div>
             `
             : ''} ${this._saveState === 'error'
             ? html`

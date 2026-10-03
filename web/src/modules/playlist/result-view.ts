@@ -73,6 +73,12 @@ export class ResultView extends SignalWatcher(LitElement) {
         flex: 1;
       }
 
+      .save-hint {
+        font-size: 0.875rem;
+        color: var(--md-sys-color-on-surface-variant);
+        padding: 0 4px;
+      }
+
       .save-error {
         font-size: 0.875rem;
         color: var(--md-sys-color-error);
@@ -150,6 +156,7 @@ export class ResultView extends SignalWatcher(LitElement) {
                 <md-linear-progress .value="${(pct ?? 0) / 100}"></md-linear-progress>
                 <span>${pct}%</span>
               </div>
+              <div class="save-hint">${t('playlist.hint.keepOpen')}</div>
             `
             : ''} ${this._saveState === 'error'
             ? html`
