@@ -28,6 +28,17 @@ type JsonLike = JsonObject & {
   links?: unknown;
 };
 
+const RATE_LIMIT_RETRIES = 3;
+
+function retryDelayMs(response: Response, attempt: number): number {
+  const retryAfter = Number(response.headers.get('retry-after'));
+  return retryAfter > 0 ? retryAfter * 1000 : 2 ** attempt * 1000;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export class TidalApi {
   private settings: AppSettings;
   private client: ReturnType<typeof createAPIClient>;
@@ -41,11 +52,17 @@ export class TidalApi {
     this.settings = settings;
   }
 
+  // TIDAL answers 429 with an empty body, so openapi-fetch reports neither data nor
+  // error — without the status check a throttled write would look like a success.
+  private failure(response: Response, error: unknown): Error {
+    return new Error(
+      `TIDAL API ${response.status}${error ? `: ${JSON.stringify(error)}` : ''}`,
+    );
+  }
+
   private unwrap<T>(result: ApiResult<T>): T {
-    if (result.error) {
-      throw new Error(
-        `TIDAL API ${result.response.status}: ${JSON.stringify(result.error)}`,
-      );
+    if (result.error || !result.response.ok) {
+      throw this.failure(result.response, result.error);
     }
     if (!result.data) {
       throw new Error('TIDAL API returned no data.');
@@ -53,8 +70,18 @@ export class TidalApi {
     return result.data;
   }
 
+  private async send<T>(fn: () => Promise<ApiResult<T>>): Promise<ApiResult<T>> {
+    for (let attempt = 0;; attempt++) {
+      const result = await fn();
+      if (result.response.status !== 429 || attempt === RATE_LIMIT_RETRIES) {
+        return result;
+      }
+      await delay(retryDelayMs(result.response, attempt));
+    }
+  }
+
   private async call<T>(fn: () => Promise<ApiResult<T>>): Promise<T> {
-    const first = await fn();
+    const first = await this.send(fn);
     if (first.response.status !== 401) {
       return this.unwrap(first);
     }
@@ -64,14 +91,12 @@ export class TidalApi {
       handleAuthFailure();
       throw new Error('Session expired. Please log in again.');
     }
-    return this.unwrap(await fn());
+    return this.unwrap(await this.send(fn));
   }
 
   private ensureWriteSucceeded(result: ApiResult<unknown>): void {
-    if (result.error) {
-      throw new Error(
-        `TIDAL API ${result.response.status}: ${JSON.stringify(result.error)}`,
-      );
+    if (result.error || !result.response.ok) {
+      throw this.failure(result.response, result.error);
     }
   }
 
@@ -88,8 +113,27 @@ export class TidalApi {
     );
   }
 
+  // `included` is an unordered side-load bag; relevance order only lives in the
+  // searchResults relationship, so hits must be re-ordered through it.
+  private searchHits(doc: JsonLike, type: 'artists' | 'albums'): JsonObject[] {
+    const root = asObject(Array.isArray(doc.data) ? doc.data[0] : doc.data);
+    const relationship = asObject(asObject(root?.relationships)?.[type]);
+    const order = (Array.isArray(relationship?.data) ? relationship.data : [])
+      .map((entry) => asString(asObject(entry)?.id))
+      .filter(Boolean);
+
+    const byId = new Map(
+      this.byType(this.included(doc), type).map((entry) => [asString(entry.id), entry]),
+    );
+
+    return order
+      .map((id) => byId.get(id))
+      .filter((entry): entry is JsonObject => entry !== undefined);
+  }
+
   private albumRowsFromIncluded(
     included: JsonObject[],
+    albums: JsonObject[],
   ): Array<{ id: string; title: string; artistName: string; artistId: string }> {
     const artistsById = new Map<string, string>();
     for (const artistEntry of this.byType(included, 'artists')) {
@@ -101,7 +145,7 @@ export class TidalApi {
       artistsById.set(artistId, asString(artistAttributes?.name, artistId));
     }
 
-    return this.byType(included, 'albums').map((albumEntry) => {
+    return albums.map((albumEntry) => {
       const attributes = asObject(albumEntry.attributes);
       const relationships = asObject(albumEntry.relationships);
       const artistsRel = asObject(relationships?.artists);
@@ -120,7 +164,9 @@ export class TidalApi {
   }
 
   private async getUserId(): Promise<string> {
-    const data = await this.call(() => this.client.GET('/users/me', { parseAs: 'json' }));
+    const data = await this.call(() =>
+      this.client.GET('/users/{id}', { params: { path: { id: 'me' } }, parseAs: 'json' })
+    );
     const user = asObject((data as JsonObject).data);
     const userId = user?.id;
     if (typeof userId !== 'string' || !userId) {
@@ -132,31 +178,25 @@ export class TidalApi {
   private async favoriteCollectionIds(
     type: 'artists' | 'albums',
   ): Promise<string[]> {
-    const userId = await this.getUserId();
     const all: string[] = [];
     let cursor = '';
     let pages = 0;
 
     while (pages++ < 500) {
+      // The collection resource is addressed by the literal `me`, not by the user id.
       const makeRequest = type === 'artists'
         ? () =>
-          this.client.GET('/userCollections/{id}/relationships/artists', {
+          this.client.GET('/userCollectionArtists/{id}/relationships/items', {
             params: {
-              path: { id: userId },
-              query: {
-                'page[cursor]': cursor || undefined,
-                countryCode: this.settings.countryCode,
-              },
+              path: { id: 'me' },
+              query: { 'page[cursor]': cursor || undefined },
             },
           })
         : () =>
-          this.client.GET('/userCollections/{id}/relationships/albums', {
+          this.client.GET('/userCollectionAlbums/{id}/relationships/items', {
             params: {
-              path: { id: userId },
-              query: {
-                'page[cursor]': cursor || undefined,
-                countryCode: this.settings.countryCode,
-              },
+              path: { id: 'me' },
+              query: { 'page[cursor]': cursor || undefined },
             },
           });
       const page = await this.call(makeRequest) as JsonLike;
@@ -284,10 +324,10 @@ export class TidalApi {
     limit = 30,
   ): Promise<Array<{ id: string; name: string }>> {
     const data = await this.call(() =>
-      this.client.GET('/searchResults/{id}/relationships/artists', {
+      this.client.GET('/searchResults', {
         params: {
-          path: { id: query },
           query: {
+            'filter[query]': query,
             countryCode: this.settings.countryCode,
             include: ['artists'],
           },
@@ -295,7 +335,7 @@ export class TidalApi {
       })
     ) as JsonLike;
 
-    return this.byType(this.included(data), 'artists')
+    return this.searchHits(data, 'artists')
       .map((entry) => {
         const attributes = asObject(entry.attributes);
         return {
@@ -385,10 +425,10 @@ export class TidalApi {
     limit = 30,
   ): Promise<Array<{ id: string; title: string; artistName: string }>> {
     const searchData = await this.call(() =>
-      this.client.GET('/searchResults/{id}', {
+      this.client.GET('/searchResults', {
         params: {
-          path: { id: query },
           query: {
+            'filter[query]': query,
             countryCode: this.settings.countryCode,
             include: ['albums'],
           },
@@ -396,7 +436,7 @@ export class TidalApi {
       })
     ) as JsonLike;
 
-    const searchAlbumEntries = this.byType(this.included(searchData), 'albums').slice(0, limit);
+    const searchAlbumEntries = this.searchHits(searchData, 'albums').slice(0, limit);
     const albumIds = searchAlbumEntries.map((a) => asString(a.id)).filter(Boolean);
     if (albumIds.length === 0) return [];
 
@@ -489,10 +529,10 @@ export class TidalApi {
     }
 
     const data = await this.call(() =>
-      this.client.GET('/searchResults/{id}', {
+      this.client.GET('/searchResults', {
         params: {
-          path: { id: raw },
           query: {
+            'filter[query]': raw,
             countryCode: this.settings.countryCode,
             include: ['albums', 'albums.artists'],
           },
@@ -500,7 +540,7 @@ export class TidalApi {
       })
     ) as JsonLike;
 
-    const rows = this.albumRowsFromIncluded(this.included(data));
+    const rows = this.albumRowsFromIncluded(this.included(data), this.searchHits(data, 'albums'));
     const targetTitle = normalizeTextMatch(raw);
     const exactTitleRows = rows.filter((row) => normalizeTextMatch(row.title) === targetTitle);
     if (exactTitleRows.length === 0) {
@@ -660,7 +700,14 @@ export class TidalApi {
       }
       const artistName = t.artistId ? (artistsById.get(t.artistId) ?? t.artistId) : '';
       const albumTitle = t.albumId ? (albumsById.get(t.albumId) ?? t.albumId) : '';
-      return [{ trackId: t.trackId, trackTitle: t.trackTitle, artistId: t.artistId, artistName, albumId: t.albumId, albumTitle }];
+      return [{
+        trackId: t.trackId,
+        trackTitle: t.trackTitle,
+        artistId: t.artistId,
+        artistName,
+        albumId: t.albumId,
+        albumTitle,
+      }];
     });
   }
 
@@ -720,9 +767,11 @@ export class TidalApi {
   }
 
   async deletePlaylist(playlistId: string): Promise<void> {
-    const result = await this.client.DELETE('/playlists/{id}', {
-      params: { path: { id: playlistId } },
-    });
+    const result = await this.send(() =>
+      this.client.DELETE('/playlists/{id}', {
+        params: { path: { id: playlistId } },
+      })
+    );
     this.ensureWriteSucceeded(result);
   }
 
@@ -752,12 +801,14 @@ export class TidalApi {
     playlistId: string,
     trackIds: string[],
   ): Promise<void> {
-    const result = await this.client.POST('/playlists/{id}/relationships/items', {
-      params: { path: { id: playlistId } },
-      body: {
-        data: trackIds.map((trackId) => ({ type: 'tracks' as const, id: trackId })),
-      },
-    });
+    const result = await this.send(() =>
+      this.client.POST('/playlists/{id}/relationships/items', {
+        params: { path: { id: playlistId } },
+        body: {
+          data: trackIds.map((trackId) => ({ type: 'tracks' as const, id: trackId })),
+        },
+      })
+    );
 
     this.ensureWriteSucceeded(result);
   }

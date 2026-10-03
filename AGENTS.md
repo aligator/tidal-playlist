@@ -2,12 +2,11 @@
 
 ## Codebase State (Read This First)
 
-> Security and UX findings tracked in **`docs/BOARD.md`** — individual tickets under
-> `docs/tickets/`.
+The app is functional end-to-end: PKCE login, library management, playlist building and saving to
+TIDAL all work. `deno task build` produces a shippable bundle.
 
-Single frontend tree: `web/src/` — Lit 3 rewrite, **in progress**. Playlist functionality, settings
-UI, and TIDAL API integration are not yet implemented. `deno task build` produces a stub shell; the
-app is not end-user functional yet.
+Frontend lives entirely in `web/src/`, organised by **feature module** (`modules/<feature>/`), not
+by technical layer. Each module owns its Lit elements, its `@lit-labs/signals` store and its logic.
 
 ---
 
@@ -15,10 +14,12 @@ app is not end-user functional yet.
 
 - **Runtime:** Deno 2.x
 - **Backend:** Oak (`@oak/oak`) — `server/`
-- **Frontend:** Lit 3 + `@lit-labs/signals` — `web/src/` (in-progress rewrite)
+- **Frontend:** Lit 3 + `@lit-labs/signals` + `@material/web` — `web/src/`
+- **TIDAL:** `@tidal-music/api` (generated OpenAPI client) + `@tidal-music/auth` (credential
+  storage)
 - **Build:** Vite (npm via Deno node-modules compat)
-- **Auth:** Backend-proxied PKCE OAuth 2.0 flow; signed HttpOnly cookie for state/verifier
-  transport; tokens handled client-side after exchange
+- **Auth:** Backend-proxied PKCE OAuth 2.0; signed HttpOnly cookie carries state/verifier; tokens
+  are held client-side by the TIDAL SDK after exchange
 
 ---
 
@@ -29,8 +30,9 @@ deno task build        # Build web/src/ with Vite → web/dist/
 deno task serve        # Start backend; serves web/dist/
 deno task dev          # build + serve in one step
 deno task dev:web      # Vite dev server only (web/ root)
-deno task test         # Run Vitest (see Testing section)
+deno task test         # Run Vitest
 deno task check        # deno check server/main.ts web/src/index.ts
+deno task lint         # deno lint server/ web/src/
 ```
 
 ---
@@ -40,55 +42,37 @@ deno task check        # deno check server/main.ts web/src/index.ts
 ```
 tidal-playlist/
 ├── server/                         Backend (Deno + Oak)
-│   ├── main.ts                     App entry, security-header middleware, static serving
+│   ├── main.ts                     Entry, request log, CSP + security headers, static serving
 │   ├── config.ts                   Env-var constants, assertServerConfig()
 │   ├── token-validation.ts         validateTokenResponse() — validates upstream token shape
-│   ├── token-validation_test.ts    Only currently reachable test file
 │   ├── auth/
 │   │   ├── oauth.ts                PKCE generation, JWT cookie sign/verify, redirectUri()
-│   │   └── token-client.ts         exchangeCode() — fetches token from TIDAL
-│   ├── routes/
-│   │   └── auth.ts                 /api/config, /api/auth/start, /api/auth/token,
-│   │                               /api/impressum, /api/impressum/available
+│   │   └── token-client.ts         exchangeCode() / refreshToken() — 10s timeout
+│   ├── routes/auth.ts              /api/config, /api/auth/*, /api/impressum*
 │   └── http/
-│       └── errors.ts               errorResponse(), asMessage()
+│       ├── errors.ts               errorResponse(), asMessage()
+│       └── rate-limit.ts           In-memory per-IP sliding window
 │
-├── web/                            FRONTEND (Lit 3 rewrite — in progress)
-│   ├── index.html                  References /src/index.js (Vite resolves to index.ts)
-│   └── src/
-│       ├── index.ts                Entry — imports main-element and auth-guard for registration
-│       ├── main-element.ts         <main-element> shell (no real content yet)
-│       ├── styled-element.ts       StyledElement base (Lit + global CSS injection)
-│       ├── index.css               Global styles
-│       ├── types.ts
-│       ├── components/
-│       │   ├── app-toolbar.ts
-│       │   ├── impressum-modal.ts  (⚠ see C-1)
-│       │   ├── list-manager.ts
-│       │   ├── log-panel.ts
-│       │   └── selected-songs-panel.ts
-│       └── modules/
-│           ├── app-settings-store.ts
-│           ├── playlist-builder.ts
-│           ├── auth/
-│           │   ├── auth-guard.ts   <auth-guard> — functional; dispatches auth-token CustomEvent
-│           │   └── auth-store.ts   authentication signal — declared, never populated (dead code)
-│           └── tidal/
-│               ├── api.ts
-│               ├── auth.ts         startLogin() / finishLogin() — functional; token not consumed
-│               ├── filters.ts
-│               ├── list-utils.ts
-│               ├── settings.ts
-│               ├── shared.ts
-│               └── tidal-auth.ts
+├── web/src/
+│   ├── index.ts                    Entry — element registration, SDK init, auth bootstrap
+│   ├── app-shell.ts                <app-shell> — view stack, nav bar; exports pushView/popView
+│   ├── types.ts                    AppSettings and TIDAL domain types
+│   ├── i18n/                       de / en / nb, t() + locale signal
+│   ├── components/                 Reusable UI (top bar, bottom sheet, snackbar, search sheet)
+│   ├── styles/
+│   └── modules/
+│       ├── auth/                   sdk.ts (SDK init), api.ts (backend calls), store.ts, login-page
+│       ├── impressum/              impressum-modal (Lit templates — auto-escaped)
+│       ├── library/                library-view, search-sheet, playlist-import-sheet, store
+│       ├── playlist/               builder.ts (pure algorithm), views, store
+│       ├── settings/               persistence.ts (localStorage + migration), views, store
+│       └── tidal/                  api.ts (TIDAL client), filters, list-utils, shared
 │
 ├── Dockerfile                      Multi-stage; final image runs server/main.ts --cached-only
-├── deno.json                       Tasks, compiler options, import map
-├── deno.lock
-├── vite.config.ts                  root: 'web' — builds web/src/
+├── deno.json / deno.lock           Tasks, import map
+├── vite.config.ts                  root: 'web'
 ├── vitest.config.ts                include: server/**/*_test.ts, web/src/**/*_test.ts
-└── .github/workflows/
-    └── docker-image.yml            Build + push to GHCR on main/tags; no security scanning
+└── .github/workflows/docker.yml    Build + push to GHCR
 ```
 
 ---
@@ -100,9 +84,13 @@ tidal-playlist/
 | GET    | `/api/config`              | Returns `{ clientId }` for frontend OAuth init                      |
 | GET    | `/api/auth/start`          | Generates PKCE flow, sets signed cookie, returns `{ authorizeUrl }` |
 | POST   | `/api/auth/token`          | Verifies cookie state, exchanges code with TIDAL, returns token     |
+| POST   | `/api/auth/refresh`        | Exchanges a refresh token for a new access token                    |
 | GET    | `/api/impressum/available` | Returns `{ available: boolean }` — no PII                           |
 | GET    | `/api/impressum`           | Returns `{ name, address, email }` from env vars (optional)         |
 | ALL    | `/*`                       | Static file serving from `web/dist/`; `/callback` → `/`             |
+
+`/api/auth/start`, `/api/auth/token` and `/api/auth/refresh` are rate limited to 10 requests per
+minute per IP (`server/http/rate-limit.ts`).
 
 ---
 
@@ -139,6 +127,10 @@ Browser                 Backend                  TIDAL
   │◀────────────────────── │                        │
 ```
 
+The frontend hands the token to `@tidal-music/auth` (`setCredentials`), which owns storage from then
+on. On a 401 the API layer calls `/api/auth/refresh` once and retries; a failed refresh triggers
+`handleAuthFailure()`.
+
 **Invariants to preserve:**
 
 - `CLIENT_SECRET` is only ever used in `server/auth/token-client.ts`. Never expose it.
@@ -147,93 +139,141 @@ Browser                 Backend                  TIDAL
 - The backend cookie is single-use: deleted on the first `/api/auth/token` call regardless of
   outcome.
 - Backend never persists access tokens or refresh tokens.
+- `authorizeUrl` is origin-checked against `https://login.tidal.com` before navigation
+  (`web/src/modules/auth/api.ts`).
 
 ---
 
-## Environment Variables
+## TIDAL API Conventions (openapi.tidal.com/v2)
 
-| Variable                | Required             | Notes                                                                                                                               |
-| ----------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `TIDAL_CLIENT_ID`       | Always               |                                                                                                                                     |
-| `TIDAL_CLIENT_SECRET`   | Always               | Never leaves the backend                                                                                                            |
-| `OAUTH_FLOW_SECRET`     | Always               | HMAC-SHA256 key for flow cookie JWT. **Minimum 32 bytes of entropy.** A short or guessable value is a HIGH security risk (see H-1). |
-| `TIDAL_REDIRECT_URI`    | Outside dev          | Must exactly match a URI registered in your TIDAL app. Required when `DENO_ENV` / `NODE_ENV` ≠ `development`.                       |
-| `PORT`                  | No (default 8080)    |                                                                                                                                     |
-| `DENO_ENV` / `NODE_ENV` | Strongly recommended | Set to `production` in all non-local environments. Absence silently enables dev mode (see M-4).                                     |
-| `IMPRESSUM_NAME`        | No                   | All three impressum vars must be set together                                                                                       |
-| `IMPRESSUM_ADDRESS`     | No                   | Use `\n` for line breaks                                                                                                            |
-| `IMPRESSUM_EMAIL`       | No                   |                                                                                                                                     |
+The upstream API changes shape without notice and the generated client lags behind. Check the live
+spec before trusting a path:
+
+```
+curl -s https://tidal-music.github.io/tidal-api-reference/tidal-api-oas.json | jq '.paths | keys[]'
+```
+
+Hard-won rules:
+
+- **Resource IDs are opaque.** Never build one. The authenticated user's resources are addressed
+  with the literal `me` — `/users/me`, `/userCollectionArtists/me/...` — not with the numeric user
+  id.
+- **Collections are per type:** `/userCollectionArtists/{id}/relationships/items`,
+  `/userCollectionAlbums/...`. A combined `/userCollections/...` resource does not exist.
+- **Search** goes through `GET /searchResults?filter[query]=…&include=<type>`. The old
+  `/searchResults/{query}` form now answers `400 INVALID_RESOURCE_ID`.
+- **`included` is an unordered side-load bag.** Relevance order only exists in
+  `data[0].relationships.<type>.data`. `TidalApi.searchHits()` re-orders through it — use it for
+  every search response.
+- **`countryCode`** applies to catalogue endpoints (`/albums`, `/artists`, `/tracks`, `/playlists`,
+  `/searchResults`). The `userCollection*` endpoints do not declare it; they take `locale`.
+- **429 comes back with an empty body**, so `openapi-fetch` reports neither `data` nor `error`.
+  Every response must be checked with `response.ok`, never with `result.error` alone — otherwise a
+  throttled write looks like a success and silently drops tracks. `TidalApi.send()` retries 429 up
+  to 3 times, honouring `Retry-After`.
+- Pagination is cursor-based: follow `links.meta.nextCursor` until it is absent.
 
 ---
 
-## Key Classes and Their Responsibilities
+## Key Modules
 
 ### Backend
 
-| Class / Function          | File                          | Responsibility                           |
+| Function                  | File                          | Responsibility                           |
 | ------------------------- | ----------------------------- | ---------------------------------------- |
 | `assertServerConfig()`    | `server/config.ts`            | Fail-fast on missing/invalid env vars    |
 | `createOAuthStart()`      | `server/auth/oauth.ts`        | Build authorize URL + sign flow cookie   |
 | `verifyFlowPayload()`     | `server/auth/oauth.ts`        | Verify + decode signed flow cookie JWT   |
-| `oauthCookieOptions()`    | `server/auth/oauth.ts`        | Cookie attributes (⚠ see H-2)            |
+| `oauthCookieOptions()`    | `server/auth/oauth.ts`        | Cookie attributes (proxy-aware `Secure`) |
 | `exchangeCode()`          | `server/auth/token-client.ts` | POST to TIDAL token endpoint             |
 | `validateTokenResponse()` | `server/token-validation.ts`  | Validate shape of upstream token payload |
+| `rateLimitMiddleware()`   | `server/http/rate-limit.ts`   | Per-IP sliding window                    |
 
-### Frontend (`web/src/`)
+### Frontend
 
-| Module / Element         | File                                    | Status                         |
-| ------------------------ | --------------------------------------- | ------------------------------ |
-| `<auth-guard>`           | `web/src/modules/auth/auth-guard.ts`    | Functional                     |
-| `startLogin/finishLogin` | `web/src/modules/tidal/auth.ts`         | Functional; token not consumed |
-| `<main-element>`         | `web/src/main-element.ts`               | Shell only                     |
-| `AppSettingsStore`       | `web/src/modules/app-settings-store.ts` | In progress                    |
-| `PlaylistBuilder`        | `web/src/modules/playlist-builder.ts`   | In progress                    |
+| Module            | File                                  | Responsibility                                   |
+| ----------------- | ------------------------------------- | ------------------------------------------------ |
+| `<app-shell>`     | `web/src/app-shell.ts`                | View stack + navigation; `pushView`/`popView`    |
+| `TidalApi`        | `web/src/modules/tidal/api.ts`        | All TIDAL calls, retry/refresh, response shaping |
+| `PlaylistBuilder` | `web/src/modules/playlist/builder.ts` | Pure build algorithm — no signals, no DOM        |
+| `settings` signal | `web/src/modules/settings/store.ts`   | Single source of truth for `AppSettings`         |
+| `library` store   | `web/src/modules/library/store.ts`    | Pools and blocklists, derived from settings      |
+| `auth` store      | `web/src/modules/auth/store.ts`       | `isAuthenticated`, logout, auth failure          |
+| `initSdk()`       | `web/src/modules/auth/sdk.ts`         | Idempotent `@tidal-music/auth` bootstrap         |
+
+Settings (including pools and blocklists) live in `localStorage` via
+`web/src/modules/settings/persistence.ts`, which also migrates older payload shapes on load.
 
 ---
 
 ## Testing
 
 ```
-deno task test        # runs Vitest
+deno task test        # Vitest — server/**/*_test.ts and web/src/**/*_test.ts
 ```
 
-**Current state:**
+Covered today: token validation, playlist builder, album filters, list utils, JSON helpers, and the
+`TidalApi` rate-limit/error handling. UI elements have no tests.
 
-- `vitest.config.ts` includes `server/**/*_test.ts` and `web/src/**/*_test.ts`.
-- `web/src/` has no test files. The `web/src/**/*_test.ts` glob matches nothing.
-- The only reachable test is `server/token-validation_test.ts`.
+`TidalApi` builds its own client in the constructor; tests replace it by assigning to the private
+`client` field (see `web/src/modules/tidal/api_test.ts`).
 
 ---
 
-## Open Security Findings
+## Security Status
 
-Ticket board (all severities, statuses, links): `docs/BOARD.md`.\
-Individual ticket files: `docs/tickets/{high,medium,low,ux,arch,closed}/`.\
-Critical and high items that affect any auth or frontend work:
+Previously tracked findings that are now addressed:
 
-| ID  | Sev      | Summary                                                           |
-| --- | -------- | ----------------------------------------------------------------- |
-| C-1 | CRITICAL | XSS in `impressum-modal.ts` — server data unescaped in innerHTML  |
-| H-1 | HIGH     | `OAUTH_FLOW_SECRET` entropy not enforced — short secrets accepted |
-| H-2 | HIGH     | Cookie `Secure` flag wrong behind TLS-terminating proxy           |
-| H-3 | HIGH     | `authorizeUrl` not validated before `location.href` assignment    |
-| H-4 | HIGH     | Full token state (including refresh token) in `localStorage`      |
-| H-5 | HIGH     | No timeout on upstream TIDAL token fetch                          |
-| M-1 | MEDIUM   | HSTS header missing                                               |
-| M-3 | MEDIUM   | No rate limiting on `/api/auth/start` or `/api/auth/token`        |
-| M-4 | MEDIUM   | `IS_DEV` silently defaults to `development` when env unset        |
+- Impressum rendering uses Lit templates, so server data is escaped.
+- `OAUTH_FLOW_SECRET` must be ≥ 32 bytes outside development — `assertServerConfig()` exits
+  otherwise.
+- Cookie `Secure` derives from the forwarded protocol; `TRUST_PROXY=true` enables it behind a
+  TLS-terminating proxy.
+- `authorizeUrl` is origin-checked before navigation.
+- The upstream token fetch has a 10 s `AbortSignal.timeout`.
+- `/api/auth/*` is rate limited.
+- `APP_ENV` defaults to `production`; dev mode must be opted into.
+- Tokens are held by the TIDAL SDK's encrypted credential storage, not in plain `localStorage`.
+
+Still open:
+
+- **HSTS header is not set** in `server/main.ts`.
+- The rate limiter is in-memory, so it resets on restart and does not span instances.
+
+---
+
+## Environment Variables
+
+| Variable                | Required             | Notes                                                                         |
+| ----------------------- | -------------------- | ----------------------------------------------------------------------------- |
+| `TIDAL_CLIENT_ID`       | Always               |                                                                               |
+| `TIDAL_CLIENT_SECRET`   | Always               | Never leaves the backend                                                      |
+| `OAUTH_FLOW_SECRET`     | Always               | HMAC-SHA256 key for the flow cookie JWT. Minimum 32 bytes outside dev.        |
+| `TIDAL_REDIRECT_URI`    | Outside dev          | Must exactly match a URI registered in your TIDAL app                         |
+| `PORT`                  | No (default 8080)    |                                                                               |
+| `HOST`                  | No (default 0.0.0.0) |                                                                               |
+| `TRUST_PROXY`           | Behind a proxy       | `true` makes Oak honour `X-Forwarded-*` and keeps the cookie `Secure`         |
+| `DENO_ENV` / `NODE_ENV` | No                   | Defaults to `production`; set `development` for the dynamic redirect fallback |
+| `IMPRESSUM_NAME`        | No                   | All three impressum vars must be set together                                 |
+| `IMPRESSUM_ADDRESS`     | No                   | Use `\n` for line breaks                                                      |
+| `IMPRESSUM_EMAIL`       | No                   |                                                                               |
 
 ---
 
 ## Working Conventions
 
-- **Frontend:** all work goes in `web/src/`. Lit 3 + `@lit-labs/signals`.
+- **Frontend:** all work goes in `web/src/`. New features get their own `modules/<feature>/` folder
+  with the elements, the store and the logic together.
+- **State:** one signal store per module; `settings` is the single source of truth and everything
+  else derives from it with `computed`.
+- **TIDAL calls:** everything goes through `TidalApi`. Do not call `openapi.tidal.com` from an
+  element. Re-read the TIDAL API Conventions section before adding an endpoint.
 - **Auth changes:** any modification to the OAuth flow must account for both the backend cookie
-  lifecycle and the frontend SDK credential handling in `web/src/modules/tidal/auth.ts`. Re-read the
-  flow diagram above before touching either.
+  lifecycle and the SDK credential handling in `web/src/modules/auth/sdk.ts`.
 - **Secret handling:** `CLIENT_SECRET` must never appear in any frontend file or HTTP response.
   `CLIENT_ID` is intentionally public.
 - **Error messages:** prefer generic client-facing messages; log specifics server-side only.
 - **Cookie attributes:** always use `oauthCookieOptions()` for the flow cookie. Do not inline cookie
-  options. Fix H-2 before adding any new cookies.
-- **AGENTS.md:** update the "Codebase State" section summary when the build configuration changes.
+  options.
+- **i18n:** user-facing strings go through `t()`; add the key to all of `de`, `en` and `nb`.
+- **AGENTS.md:** update the "Codebase State" section when the structure or build changes.

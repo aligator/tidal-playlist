@@ -17,7 +17,8 @@ cp .env.example .env
 - `TIDAL_CLIENT_SECRET`
 - `TIDAL_REDIRECT_URI` (required outside development; must exactly match one URI registered in your
   TIDAL app)
-- `OAUTH_FLOW_SECRET` (random min 32bit string)
+- `OAUTH_FLOW_SECRET` (random string, at least 32 bytes — the server refuses to start with a shorter
+  one outside development)
 
 3. Build frontend with Deno + Vite:
 
@@ -33,6 +34,8 @@ deno task serve
 
 For convenience, `deno task dev` runs build + serve in one command. For frontend-only iteration with
 Vite dev server, use `deno task dev:web`.
+
+Run the checks with `deno task check`, `deno task lint` and `deno task test`.
 
 5. Open:
 
@@ -62,8 +65,12 @@ docker run --rm -p 8080:8080 \
 Optional env vars:
 
 - `PORT` (default `8080`)
-- `DENO_ENV` / `NODE_ENV` (`development` enables dynamic redirect fallback)
-- `OAUTH_FLOW_SECRET`
+- `HOST` (default `0.0.0.0`)
+- `DENO_ENV` / `NODE_ENV` (defaults to `production`; `development` enables the dynamic redirect
+  fallback)
+- `TRUST_PROXY` (`true` behind a TLS-terminating reverse proxy, so forwarded headers are honoured
+  and the OAuth cookie keeps its `Secure` flag)
+- `IMPRESSUM_NAME` / `IMPRESSUM_ADDRESS` / `IMPRESSUM_EMAIL` (all three or none)
 
 ## AI Use
 
